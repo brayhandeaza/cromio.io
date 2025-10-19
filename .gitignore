@@ -1,0 +1,7 @@
+gen/
+.idea/
+build
+grammar/*.tokens
+grammar/*.listener
+grammar/*.base
+grammar/antlr
