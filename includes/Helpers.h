@@ -18,7 +18,12 @@ class Helpers {
 
 public:
     static json createNode(const std::string &raw, const std::string &kind, const antlr4::Token *start, const antlr4::Token *stop);
+
     static long long parseInteger(std::string raw);
+
+    static std::string parseString(const std::string &rawInput);
+
+    static double parseFloat(std::string raw);
 };
 
 #endif //CROMIO_HELPERS_H

@@ -4,6 +4,104 @@
 
 #include "Helpers.h"
 
+double Helpers::parseFloat(std::string raw) {
+    bool isNegative = false;
+
+    // Detect negative sign
+    if(!raw.empty() && raw[0] == '-') {
+        isNegative = true;
+        raw = raw.substr(1);
+    }
+
+
+    raw.erase(std::remove(raw.begin(), raw.end(), '_'), raw.end());
+
+    double value = 0.0;
+
+    value = std::stod(raw);
+
+    if(isNegative) value = -value;
+
+    return value;
+}
+
+
+std::string Helpers::parseString(const std::string &rawInput) {
+    std::string raw = rawInput;
+
+    // Helper lambdas for starts_with and ends_with (C++11 compatible)
+    auto starts_with = [](const std::string &str, const std::string &prefix) {
+        return str.size() >= prefix.size() && str.compare(0, prefix.size(), prefix) == 0;
+    };
+    auto ends_with = [](const std::string &str, const std::string &suffix) {
+        return str.size() >= suffix.size() && str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0;
+    };
+
+    // 1️⃣ Detect triple-quoted string ("""...""" or '''...''')
+    bool triple = false;
+    if (raw.size() >= 6) {
+        if ((starts_with(raw, R"(""")") && ends_with(raw, R"(""")")) || (starts_with(raw, "'''") && ends_with(raw, "'''"))) {
+            triple = true;
+            raw = raw.substr(3, raw.size() - 6);
+        }
+    }
+
+    // 2️⃣ If not triple, strip single outer quotes
+    if (!triple && raw.size() >= 2 && ((raw.front() == '"' && raw.back() == '"') || (raw.front() == '\'' && raw.back() == '\''))) {
+        raw = raw.substr(1, raw.size() - 2);
+    }
+
+    // 3️⃣ Process escape sequences (skip for triple-quoted raw style)
+    std::string result;
+    result.reserve(raw.size());
+
+    for (size_t i = 0; i < raw.size(); ++i) {
+        if (!triple && raw[i] == '\\' && i + 1 < raw.size()) {
+            char next = raw[++i];
+            switch (next) {
+                case 'n': result += '\n';
+                    break;
+                case 'r': result += '\r';
+                    break;
+                case 't': result += '\t';
+                    break;
+                case '\\': result += '\\';
+                    break;
+                case '"': result += '"';
+                    break;
+                case '\'': result += '\'';
+                    break;
+                case 'b': result += '\b';
+                    break;
+                case 'f': result += '\f';
+                    break;
+                case 'u':
+                    result += '?'; // placeholder for \uXXXX
+                    i += 4;
+                    break;
+                default:
+                    result += next;
+                    break;
+            }
+        } else {
+            result += raw[i];
+        }
+    }
+
+    // 4️⃣ Normalize line endings for triple-quoted strings (optional)
+    if (triple) {
+        std::string normalized;
+        normalized.reserve(result.size());
+        for (size_t i = 0; i < result.size(); ++i) {
+            if (result[i] == '\r' && i + 1 < result.size() && result[i + 1] == '\n') continue;
+            normalized += result[i];
+        }
+        return normalized;
+    }
+
+    return result;
+}
+
 long long Helpers::parseInteger(std::string raw) {
     bool isNegative = false;
 
@@ -29,15 +127,13 @@ long long Helpers::parseInteger(std::string raw) {
         base = 8; // old-style octal like 0755
     }
 
-    // Remove underscores
-    raw.erase(std::remove(raw.begin(), raw.end(), '_'), raw.end());
+    std::erase(raw, '_');
 
     long long value = std::stoll(raw, nullptr, base);
     if (isNegative) value = -value;
 
     return value;
 }
-
 
 json Helpers::getPosition(const antlr4::Token *token) {
     json pos;
@@ -52,10 +148,7 @@ json Helpers::createNode(const std::string &raw, const std::string &kind, const 
     node["start"] = getPosition(start);
     node["end"] = getPosition(stop ? stop : start);
 
-    if (raw.empty() != true)
-        node["raw"] = raw;
+    if (raw.empty() != true) node["raw"] = raw;
 
     return node;
 }
-
-

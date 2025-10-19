@@ -61,22 +61,19 @@ public:
             json node = Helpers::createNode(ctx->getText(), "IntegerLiteral", ctx->start, ctx->stop);
             const std::any integerLiteral = visit(ctx->integerLiteral());
 
-            node["value"] = std::any_cast<json>(integerLiteral);
-            return node;
+            return std::any_cast<json>(integerLiteral);
         }
         if (ctx->floatLiteral()) {
             json node = Helpers::createNode(ctx->getText(), "FloatLiteral", ctx->start, ctx->stop);
             const std::any floatLiteral = visit(ctx->floatLiteral());
 
-            node["value"] = std::any_cast<json>(floatLiteral);
-            return node;
+            return std::any_cast<json>(floatLiteral);
         }
         if (ctx->booleanLiteral()) {
             json node = Helpers::createNode(ctx->getText(), "BooleanLiteral", ctx->start, ctx->stop);
             const std::any booleanLiteral = visit(ctx->booleanLiteral());
 
-            node["value"] = std::any_cast<json>(booleanLiteral);
-            return node;
+            return std::any_cast<json>(booleanLiteral);
         }
         if (ctx->noneLiteral()) {
             json node = Helpers::createNode(ctx->getText(), "NoneLiteral", ctx->start, ctx->stop);
@@ -102,19 +99,31 @@ public:
     }
 
     std::any visitIntegerLiteral(Grammar::IntegerLiteralContext *ctx) override {
-        return visitChildren(ctx);
+        json node = Helpers::createNode(ctx->getText(), "IntegerLiteral", ctx->start, ctx->stop);
+        node["value"] = Helpers::parseInteger(ctx->getText());
+
+        return node;
     }
 
     std::any visitFloatLiteral(Grammar::FloatLiteralContext *ctx) override {
-        return visitChildren(ctx);
+        json node = Helpers::createNode(ctx->getText(), "FloatLiteral", ctx->start, ctx->stop);
+        node["value"] = Helpers::parseFloat(ctx->getText());
+
+        return node;
     }
 
     std::any visitStringLiteral(Grammar::StringLiteralContext *ctx) override {
-        return visitChildren(ctx);
+        json node = Helpers::createNode(ctx->getText(), "StringLiteral", ctx->start, ctx->stop);
+        node["value"] = Helpers::parseString(ctx->getText());
+
+        return node;
     }
 
     std::any visitBooleanLiteral(Grammar::BooleanLiteralContext *ctx) override {
-        return visitChildren(ctx);
+        json node = Helpers::createNode(ctx->getText(), "BooleanLiteral", ctx->start, ctx->stop);
+        node["value"] = ctx->getText() == "true";
+
+        return node;
     }
 
     std::any visitNoneLiteral(Grammar::NoneLiteralContext *ctx) override {
