@@ -13,15 +13,12 @@ double Helpers::parseFloat(std::string raw) {
         raw = raw.substr(1);
     }
 
-
-    raw.erase(std::remove(raw.begin(), raw.end(), '_'), raw.end());
+    std::erase(raw, '_');
 
     double value = 0.0;
-
     value = std::stod(raw);
 
     if(isNegative) value = -value;
-
     return value;
 }
 

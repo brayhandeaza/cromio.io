@@ -8,12 +8,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # ---- Path to ANTLR-generated sources ----
 set(GENERATED_DIR "${CMAKE_SOURCE_DIR}/grammar/antlr")
 set(INCLUDES_DIR "${CMAKE_SOURCE_DIR}/includes")
-
+set(SOURCES_DIR "${CMAKE_SOURCE_DIR}/src")
+set(LIBS_DIR "${CMAKE_SOURCE_DIR}/libs")
 
 # ---- Collect all generated .cpp files ----
 file(GLOB GENERATED_SOURCES
         "${GENERATED_DIR}/*.cpp"
-        "${INCLUDES_DIR}/*.cpp"
+        "${SOURCES_DIR}/*.cpp"
 )
 
 # ---- ANTLR4 runtime include and lib paths ----
@@ -21,8 +22,9 @@ set(ANTLR4_RUNTIME_INCLUDE "/usr/local/include/antlr4-runtime")
 set(ANTLR4_RUNTIME_LIB "${CMAKE_SOURCE_DIR}/antlr4/runtime/Cpp/build/runtime")
 
 
+# ---- Add executable ----
 add_executable(${PROJECT_NAME}
-        main.cpp
+        "${SOURCES_DIR}/main.cpp"
         ${GENERATED_SOURCES}
 )
 
@@ -30,9 +32,8 @@ add_executable(${PROJECT_NAME}
 target_include_directories(${PROJECT_NAME} PUBLIC
         ${ANTLR4_RUNTIME_INCLUDE}
         ${GENERATED_DIR}
-        ${INCLUDES_DIR}/libs
-        ${INCLUDES_DIR}/visitor
         ${INCLUDES_DIR}
+        ${LIBS_DIR}
 )
 
 # Link ANTLR runtime

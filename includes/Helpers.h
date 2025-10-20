@@ -7,11 +7,8 @@
 
 #include "json.hpp"
 #include "antlr4-runtime.h"
-#include "Grammar.h"
-#include "GrammarVisitor.h"
 
 using json = nlohmann::ordered_json;
-
 
 class Helpers {
     static json getPosition(const antlr4::Token *token);
