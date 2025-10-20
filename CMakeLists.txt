@@ -24,7 +24,6 @@ set(ANTLR4_RUNTIME_LIB "${CMAKE_SOURCE_DIR}/antlr4/runtime/Cpp/build/runtime")
 add_executable(${PROJECT_NAME}
         main.cpp
         ${GENERATED_SOURCES}
-        ${CMAKE_SOURCE_DIR}/visitor/Visitor.h
 )
 
 # Include directories
@@ -32,8 +31,8 @@ target_include_directories(${PROJECT_NAME} PUBLIC
         ${ANTLR4_RUNTIME_INCLUDE}
         ${GENERATED_DIR}
         ${INCLUDES_DIR}/libs
-        ${INCLUDES_DIR}/
-        ${CMAKE_SOURCE_DIR}/visitor
+        ${INCLUDES_DIR}/visitor
+        ${INCLUDES_DIR}
 )
 
 # Link ANTLR runtime
@@ -45,10 +44,10 @@ target_link_libraries(${PROJECT_NAME}
         antlr4-runtime
 )
 
-# ✅ CUSTOM "make run" TARGET (dinámico)
-# Permite: make run FILE=../main.io
+# ---- Custom "make run" target ----
 set(DEFAULT_FILE "../test.io")
 
+# Add a custom target to run the program
 add_custom_target(run
         COMMAND ${PROJECT_NAME} ${FILE}
         DEPENDS ${PROJECT_NAME}
