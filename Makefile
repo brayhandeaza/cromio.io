@@ -10,8 +10,7 @@ run:
 
 
 grammar:
-	@cd ./grammar && antlr -Dlanguage=Cpp Tokens.g4 -o antlr/ -visitor
-	@cd ./grammar && antlr -Dlanguage=Cpp Expressions.g4 -o antlr/ -visitor
+	@cd ./grammar/Tokens && antlr -Dlanguage=Cpp Tokens.g4 -o ../antlr/ -visitor
 	@cd ./grammar && antlr -Dlanguage=Cpp Grammar.g4 -o antlr/ -visitor
 
 clean:
