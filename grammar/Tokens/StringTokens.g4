@@ -2,29 +2,48 @@ lexer grammar StringTokens;
 
 import Tokens, IntegerTokens;
 
-
-STRING:
-      '"'  (ESC_SEQ | ~["\\\r\n])* '"'
-    | '\'' (ESC_SEQ | ~['\\\r\n])* '\''
-    | '"""' ( ~["] | '"' ~["] | '""' ~["])* '"""'
-;
-
+// ------------------------------
+// Start f-string
+// ------------------------------
 FORMATTED_STRING_START
-    : 'f"' -> pushMode(FormattedStringMode)
+    : 'f"' -> pushMode(FSTRING_MODE)
     ;
 
-mode FormattedStringMode;
+// ------------------------------
+// F-STRING MODE
+// ------------------------------
+mode FSTRING_MODE;
 
+// NOTE: CLOSING BRACE — first rule!
+RBRACE_IN_FSTRING
+    : '}' -> pushMode(FSTRING_MODE)
+    ;
+
+// OPEN BRACE — EXIT FSTRING MODE
+LBRACE_IN_FSTRING
+    : '{' -> popMode
+    ;
+
+// RAW TEXT
+FORMATTED_STRING_TEXT
+    : ( ESC_SEQ | ~["\\{}] )+
+    ;
+
+// END QUOTE OF F-STRING
 FORMATTED_STRING_END
     : '"' -> popMode
     ;
 
-LBRACE_IN_FSTRING
-    : '{' -> type(LBRACE), popMode
+// escape sequences
+fragment ESC_SEQ
+    : '\\' .
     ;
 
-FORMATTED_STRING_TEXT: ( ESC_SEQ | ~["\\{] )+ ;
-
-FormattedStringModeRBrace
-    : '}' -> type(RBRACE), pushMode(FormattedStringMode)
+// ------------------------------
+// Normal strings (outside f-string)
+// ------------------------------
+STRING
+    : '"'  (ESC_SEQ | ~["\\\r\n])* '"'
+    | '\'' (ESC_SEQ | ~['\\\r\n])* '\''
+    | '"""' ( ~["] | '"' ~["] | '""' ~["])* '"""'
     ;

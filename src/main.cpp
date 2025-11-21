@@ -5,7 +5,7 @@
 #include "antlr4-runtime.h"
 #include "Tokens.h"
 #include "Grammar.h"
-#include "Visitor.h"
+#include "../includes/Parser/Parser.h"
 
 int main(int argc, const char *argv[]) {
     if (argc < 2) {
@@ -33,7 +33,7 @@ int main(int argc, const char *argv[]) {
 
     auto *tree = parser.program();
 
-    Visitor visitor;
+    Parser visitor;
     auto ast = std::any_cast<json>(visitor.visit(tree));
 
     std::cout << "ast: " << ast.dump(1)<< std::endl;

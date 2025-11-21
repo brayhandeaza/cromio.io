@@ -20,9 +20,18 @@ literal: integerLiteral
        | noneLiteral
        ;
 
-formattedString: FORMATTED_STRING_START formattedStringContent* FORMATTED_STRING_END;
-formattedStringContent: FORMATTED_STRING_TEXT | formattedStringExpression;
-formattedStringExpression: LBRACE expression RBRACE;
+formattedString
+    : FORMATTED_STRING_START formattedStringContent* FORMATTED_STRING_END
+    ;
+
+formattedStringContent
+    : FORMATTED_STRING_TEXT
+    | formattedStringExpression
+    ;
+
+formattedStringExpression
+    : LBRACE_IN_FSTRING expression RBRACE_IN_FSTRING
+    ;
 
 integerLiteral: INTEGER;
 floatLiteral: FLOAT;
