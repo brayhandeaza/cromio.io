@@ -36,7 +36,7 @@ int main(int argc, const char *argv[]) {
     Parser visitor;
     auto ast = std::any_cast<json>(visitor.visit(tree));
 
-    // std::cout << "ast: " << ast.dump(1)<< std::endl;
+    std::cout << "ast: " << ast.dump(1)<< std::endl;
 
     return 0;
 }
