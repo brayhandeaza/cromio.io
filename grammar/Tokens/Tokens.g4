@@ -22,6 +22,18 @@ RBRACE: '}';
 NEWLINE: [\r\n]+ -> skip;
 WS: [ \t]+ -> skip;
 
+// =========================================
+// GLOBAL numeric literal tokens
+// =========================================
+FLOAT
+    : DIGIT+ '.' DIGIT* EXPONENT?
+    | '.' DIGIT+ EXPONENT?
+    ;
+
+INTEGER
+    : DIGIT+
+    ;
+
 
 // -----------------------------------------
 // NORMAL STRING
@@ -68,7 +80,7 @@ RBRACE_IN_FSTRING
     : '}' -> popMode
     ;
 
-// operators mapped to global token names
+// operators mapped to global token types
 PLUS_IN_EXPR    : '+' -> type(PLUS);
 MINUS_IN_EXPR   : '-' -> type(MINUS);
 MUL_IN_EXPR     : '*' -> type(MUL);
@@ -77,11 +89,24 @@ DIV_IN_EXPR     : '/' -> type(DIV);
 LPAREN_IN_EXPR  : '(' -> type(LPAREN);
 RPAREN_IN_EXPR  : ')' -> type(RPAREN);
 
-// numeric literals mapped to real tokens
-FLOAT_IN_EXPR
-    : (DIGIT+ ('.' DIGIT*)? EXPONENT? | '.' DIGIT+ EXPONENT?) -> type(FLOAT)
+// literals (boolean, none)
+NONE_IN_EXPR
+    : 'none' -> type(NONE)
     ;
 
+BOOLEAN_IN_EXPR
+    : ('true' | 'false') -> type(BOOLEAN)
+    ;
+
+// ✔ FIXED: FLOAT_IN_EXPR (no ANTLR errors)
+FLOAT_IN_EXPR
+    : (
+        DIGIT+ '.' DIGIT* EXPONENT?
+      | '.' DIGIT+ EXPONENT?
+      ) -> type(FLOAT)
+    ;
+
+// integer inside f-string expression
 INTEGER_IN_EXPR
     : DIGIT+ -> type(INTEGER)
     ;
@@ -96,7 +121,7 @@ STRING_IN_EXPR
     : '"' (ESC_SEQ | ~["\\\r\n])* '"' -> type(STRING)
     ;
 
-// skip whitespace
+// skip whitespace inside expression
 EXPR_WS: [ \t\r\n]+ -> skip;
 
 
@@ -112,15 +137,4 @@ fragment ESC_SEQ
     | '\\u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
     ;
 
-// =========================================
-// GLOBAL numeric token definitions
-// (DEFAULT_MODE only)
-// =========================================
-FLOAT
-    : DIGIT+ ('.' DIGIT*)? EXPONENT?
-    | '.' DIGIT+ EXPONENT?
-    ;
 
-INTEGER
-    : DIGIT+
-    ;
