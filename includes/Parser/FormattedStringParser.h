@@ -36,6 +36,10 @@ public:
     std::any visitFormattedStringContent(Grammar::FormattedStringContentContext* ctx) override {
         // -------- CASE 1: { expression }
         if (ctx->formattedStringExpression()) {
+            const auto expression = visit(ctx->formattedStringExpression());
+            const auto node = std::any_cast<json>(expression);
+
+            std::cout << "exprNode: " << node.dump(2) << std::endl;
             return visit(ctx->formattedStringExpression());
         }
 
@@ -63,9 +67,7 @@ public:
 
 
     // Handles ONLY: { expression }
-    std::any visitFormattedStringExpression(
-        Grammar::FormattedStringExpressionContext* ctx
-        ) override {
+    std::any visitFormattedStringExpression(Grammar::FormattedStringExpressionContext* ctx) override {
         // -------- CASE: {}
         if (ctx->expression() == nullptr) {
             json node = Helpers::createNode(
@@ -78,9 +80,12 @@ public:
             return node;
         }
 
+
         // -------- CASE: { expression }
-        auto exprAny = visit(ctx->expression());
-        json exprNode = std::any_cast<json>(exprAny);
+        const auto exprAny = visit(ctx->expression());
+        const auto exprNode = std::any_cast<json>(exprAny);
+
+        std::cout << "expression: " << exprNode  << std::endl;
 
         // Wrap expression in a formatted param
         json paramNode = Helpers::createNode(
@@ -89,6 +94,7 @@ public:
             ctx->start,
             ctx->stop
             );
+
 
         // NOW THIS IS AN EXPRESSION (BinaryExpression, Literal, Identifier, etc.)
         paramNode["value"] = exprNode;

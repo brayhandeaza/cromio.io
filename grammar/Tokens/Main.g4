@@ -1,0 +1,25 @@
+lexer grammar Main;
+
+// ==============================
+// DEFAULT MODE (root)
+// ==============================
+
+NONE: 'none';
+BOOLEAN: 'true' | 'false';
+IDENTIFIER: [a-zA-Z_] [a-zA-Z_0-9]*;
+
+PLUS: '+';
+MINUS: '-';
+MUL: '*';
+DIV: '/';
+EQ: '=';
+
+LPAREN: '(';
+RPAREN: ')';
+LBRACE: '{';
+RBRACE: '}';
+
+NEWLINE: [\r\n]+ -> skip;
+WS: [ \t]+ -> skip;
+
+
