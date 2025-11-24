@@ -1,3 +1,4 @@
+// #include <Parser.h>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -5,9 +6,11 @@
 #include "antlr4-runtime.h"
 #include "Tokens.h"
 #include "Grammar.h"
-#include "Parser.h"
+#include "json.hpp"
+#include "./parser/Parser.h"
 
-int main(int argc, const char *argv[]) {
+
+int main(int argc, const char* argv[]) {
     if (argc < 2) {
         std::cerr << "Usage: " << argv[0] << " <input-file>" << std::endl;
         return 1;
@@ -31,12 +34,12 @@ int main(int argc, const char *argv[]) {
     antlr4::CommonTokenStream tokens(&lexer);
     Grammar parser(&tokens);
 
-    auto *tree = parser.program();
+    auto* tree = parser.program();
 
-    Parser visitor;
+    cromio::Parser visitor;
     auto ast = std::any_cast<json>(visitor.visit(tree));
 
-    std::cout << "ast: " << ast.dump(1)<< std::endl;
+    std::cout << "ast: " << ast.dump(1) << std::endl;
 
     return 0;
 }

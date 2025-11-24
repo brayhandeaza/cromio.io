@@ -1,6 +1,5 @@
 .PHONY: build run grammar clean
 
-
 build: clean grammar run
 
 run:

@@ -5,12 +5,12 @@
 #ifndef CROMIO_PARSER_H
 #define CROMIO_PARSER_H
 
-#include "GrammarVisitor.h"
 #include "ParserLiterals.h"
+#include "GrammarVisitor.h"
 #include "FormattedStringParser.h"
-#include "Helpers.h"
 
 
+namespace cromio {
 class Parser final : public ParserLiterals, public FormattedStringParser {
 public:
     std::any visitProgram(Grammar::ProgramContext* ctx) override {
@@ -52,5 +52,5 @@ public:
         return json::object();
     }
 };
-
+} // namespace cromio
 #endif //CROMIO_PARSER_H
