@@ -26,12 +26,16 @@ formattedString
 
 formattedStringContent
     : FORMATTED_STRING_TEXT
-    | formattedStringExpression
+    | LBRACE_IN_FSTRING expression RBRACE_IN_FSTRING
     ;
 
-formattedStringExpression
-    : LBRACE_IN_FSTRING expression RBRACE_IN_FSTRING
-    ;
+//formattedStringExpression: expression
+//      | LPAREN expression RPAREN
+//      | expression MUL expression
+//      | expression DIV expression
+//      | expression PLUS expression
+//      | expression MINUS expression
+//      ;
 
 integerLiteral: INTEGER;
 floatLiteral: FLOAT;

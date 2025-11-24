@@ -34,11 +34,13 @@ target_include_directories(${PROJECT_NAME} PUBLIC
         ${GENERATED_DIR}
         ${INCLUDES_DIR}
         ${LIBS_DIR}
+        ${GENERATED_SOURCES}
 )
 
 # Link ANTLR runtime
 target_link_directories(${PROJECT_NAME} PUBLIC
         ${ANTLR4_RUNTIME_LIB}
+        ${INCLUDES_DIR}
 )
 
 target_link_libraries(${PROJECT_NAME}

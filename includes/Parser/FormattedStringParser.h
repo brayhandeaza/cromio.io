@@ -21,13 +21,17 @@ public:
 
         json params = json::array();
 
-        for (auto child : ctx->children) {
+        for (const auto child : ctx->formattedStringContent()) {
             if (auto result = visit(child); result.has_value()) {
-                params.push_back(std::any_cast<json>(result));
+                auto expression = std::any_cast<json>(result);
+                // std::cout << "params: " << expression.dump(2) << std::endl;
+
+                params.push_back(expression);
             }
         }
 
         node["params"] = params;
+
         return node;
     }
 
@@ -35,71 +39,19 @@ public:
     // TEXT or { expression }
     std::any visitFormattedStringContent(Grammar::FormattedStringContentContext* ctx) override {
         // -------- CASE 1: { expression }
-        if (ctx->formattedStringExpression()) {
-            const auto expression = visit(ctx->formattedStringExpression());
-            const auto node = std::any_cast<json>(expression);
-
-            std::cout << "exprNode: " << node.dump(2) << std::endl;
-            return visit(ctx->formattedStringExpression());
+        if (ctx->expression()) {
+            const auto expression = visit(ctx->expression());
+            return std::any_cast<json>(expression);
         }
 
         // -------- CASE 2: TEXT inside formatted string
         if (ctx->FORMATTED_STRING_TEXT()) {
-            json node = Helpers::createNode(
-                ctx->getText(),
-                "StringFormattedText",
-                ctx->start,
-                ctx->stop
-                );
+            json node = Helpers::createNode(ctx->getText(), "StringFormattedText", ctx->start, ctx->stop);
             node["value"] = ctx->getText();
             return node;
         }
 
-        // Fallback
-        json unknown = Helpers::createNode(
-            ctx->getText(),
-            "UnknownFormattedContent",
-            ctx->start,
-            ctx->stop
-            );
-        return unknown;
-    }
-
-
-    // Handles ONLY: { expression }
-    std::any visitFormattedStringExpression(Grammar::FormattedStringExpressionContext* ctx) override {
-        // -------- CASE: {}
-        if (ctx->expression() == nullptr) {
-            json node = Helpers::createNode(
-                ctx->getText(),
-                "EmptyFormattedParam",
-                ctx->start,
-                ctx->stop
-                );
-            node["value"] = nullptr;
-            return node;
-        }
-
-
-        // -------- CASE: { expression }
-        const auto exprAny = visit(ctx->expression());
-        const auto exprNode = std::any_cast<json>(exprAny);
-
-        std::cout << "expression: " << exprNode  << std::endl;
-
-        // Wrap expression in a formatted param
-        json paramNode = Helpers::createNode(
-            ctx->getText(),
-            "FormattedParam",
-            ctx->start,
-            ctx->stop
-            );
-
-
-        // NOW THIS IS AN EXPRESSION (BinaryExpression, Literal, Identifier, etc.)
-        paramNode["value"] = exprNode;
-
-        return paramNode;
+        return json::object();
     }
 };
 
