@@ -7,7 +7,8 @@
 #include "Tokens.h"
 #include "Grammar.h"
 #include "json.hpp"
-#include "./parser/Parser.h"
+#include "./includes/parser/Parser.h"
+#include "Helpers.h"
 
 
 int main(int argc, const char* argv[]) {
@@ -36,10 +37,10 @@ int main(int argc, const char* argv[]) {
 
     auto* tree = parser.program();
 
-    cromio::Parser visitor;
+    Parser visitor;
     auto ast = std::any_cast<json>(visitor.visit(tree));
 
-    std::cout << "ast: " << ast.dump(1) << std::endl;
+    std::cout << "ast: " << ast.dump(4) << std::endl;
 
     return 0;
 }

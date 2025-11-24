@@ -7,8 +7,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # ---- Path to ANTLR-generated sources ----
 set(GENERATED_DIR "${CMAKE_SOURCE_DIR}/grammar/antlr")
-set(INCLUDES_DIR "${CMAKE_SOURCE_DIR}/includes")
 set(SOURCES_DIR "${CMAKE_SOURCE_DIR}/src")
+set(INCLUDES_DIR "${SOURCES_DIR}/includes")
 set(LIBS_DIR "${CMAKE_SOURCE_DIR}/libs")
 
 # ---- Collect all generated .cpp files ----

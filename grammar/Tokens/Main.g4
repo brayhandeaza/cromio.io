@@ -8,6 +8,8 @@ NONE: 'none';
 BOOLEAN: 'true' | 'false';
 IDENTIFIER: [a-zA-Z_] [a-zA-Z_0-9]*;
 
+OPERATOR: '*' | '/' | '+' | '-';
+
 PLUS: '+';
 MINUS: '-';
 MUL: '*';

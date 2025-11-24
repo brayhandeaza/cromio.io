@@ -5,3 +5,4 @@ grammar/*.tokens
 grammar/*.listener
 grammar/*.base
 grammar/antlr
+/grammar/Tokens/Main.tokens

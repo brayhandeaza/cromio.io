@@ -1,3 +1,4 @@
+// StringTokens.g4
 lexer grammar StringTokens;
 
 // -----------------------------------------
@@ -40,13 +41,9 @@ FORMATTED_STRING_END
 // =========================================
 mode EXPR_MODE;
 
+RBRACE_IN_FSTRING : '}' -> popMode;
 
-// finish the expression and return to f-string
-RBRACE_IN_FSTRING
-    : '}' -> popMode
-    ;
-
-// operators mapped to global token types
+// Operators FIRST
 PLUS_IN_EXPR    : '+' -> type(PLUS);
 MINUS_IN_EXPR   : '-' -> type(MINUS);
 MUL_IN_EXPR     : '*' -> type(MUL);
@@ -55,37 +52,18 @@ DIV_IN_EXPR     : '/' -> type(DIV);
 LPAREN_IN_EXPR  : '(' -> type(LPAREN);
 RPAREN_IN_EXPR  : ')' -> type(RPAREN);
 
-// literals (boolean, none)
-NONE_IN_EXPR
-    : 'none' -> type(NONE)
-    ;
+// Literals
+NONE_IN_EXPR        : 'none' -> type(NONE);
+BOOLEAN_IN_EXPR     : ('true' | 'false') -> type(BOOLEAN);
 
-BOOLEAN_IN_EXPR
-    : ('true' | 'false') -> type(BOOLEAN)
-    ;
+FLOAT_IN_EXPR       : (DIGIT+ '.' DIGIT* EXPONENT? | '.' DIGIT+ EXPONENT?) -> type(FLOAT);
+INTEGER_IN_EXPR     : DIGIT+ -> type(INTEGER);
 
-// ✔ FIXED: FLOAT_IN_EXPR (no ANTLR errors)
-FLOAT_IN_EXPR
-    : (
-        DIGIT+ '.' DIGIT* EXPONENT?
-      | '.' DIGIT+ EXPONENT?
-      ) -> type(FLOAT)
-    ;
+// Identifiers
+ID_IN_EXPR          : [a-zA-Z_] [a-zA-Z_0-9]* -> type(IDENTIFIER);
 
-// integer inside f-string expression
-INTEGER_IN_EXPR
-    : DIGIT+ -> type(INTEGER)
-    ;
+// Strings
+STRING_IN_EXPR      : '"' (ESC_SEQ | ~["\\\r\n])* '"' -> type(STRING);
 
-// identifiers inside expression
-ID_IN_EXPR
-    : [a-zA-Z_] [a-zA-Z_0-9]* -> type(IDENTIFIER)
-    ;
+EXPR_WS : [ \t\r\n]+ -> skip;
 
-// strings inside expression
-STRING_IN_EXPR
-    : '"' (ESC_SEQ | ~["\\\r\n])* '"' -> type(STRING)
-    ;
-
-// skip whitespace inside expression
-EXPR_WS: [ \t\r\n]+ -> skip;

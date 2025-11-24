@@ -17,8 +17,6 @@ public:
         for (const auto child : ctx->formattedStringContent()) {
             if (auto result = visit(child); result.has_value()) {
                 auto expression = std::any_cast<json>(result);
-                // std::cout << "params: " << expression.dump(2) << std::endl;
-
                 params.push_back(expression);
             }
         }
