@@ -5,7 +5,7 @@
 #include "antlr4-runtime.h"
 #include "Tokens.h"
 #include "Grammar.h"
-#include "../includes/Parser/Parser.h"
+#include "Parser.h"
 
 int main(int argc, const char *argv[]) {
     if (argc < 2) {

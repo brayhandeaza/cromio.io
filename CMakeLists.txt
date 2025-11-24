@@ -10,11 +10,13 @@ set(GENERATED_DIR "${CMAKE_SOURCE_DIR}/grammar/antlr")
 set(INCLUDES_DIR "${CMAKE_SOURCE_DIR}/includes")
 set(SOURCES_DIR "${CMAKE_SOURCE_DIR}/src")
 set(LIBS_DIR "${CMAKE_SOURCE_DIR}/libs")
+set(PARSER_DIR "${CMAKE_SOURCE_DIR}/parser")
 
 # ---- Collect all generated .cpp files ----
 file(GLOB GENERATED_SOURCES
         "${GENERATED_DIR}/*.cpp"
         "${SOURCES_DIR}/*.cpp"
+        "${PARSER_DIR}/*.cpp"
 )
 
 # ---- ANTLR4 runtime include and lib paths ----
@@ -34,6 +36,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
         ${GENERATED_DIR}
         ${INCLUDES_DIR}
         ${LIBS_DIR}
+        ${PARSER_DIR}
         ${GENERATED_SOURCES}
 )
 
@@ -41,6 +44,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 target_link_directories(${PROJECT_NAME} PUBLIC
         ${ANTLR4_RUNTIME_LIB}
         ${INCLUDES_DIR}
+        ${PARSER_DIR}
 )
 
 target_link_libraries(${PROJECT_NAME}
