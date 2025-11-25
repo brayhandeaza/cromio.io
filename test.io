@@ -1,6 +1,1 @@
-"string"
-1
-2.2
-false
-true
-none
+2.2 + 2

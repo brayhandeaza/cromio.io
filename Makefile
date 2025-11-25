@@ -9,10 +9,10 @@ run:
 
 
 grammar:
-	@cd ./grammar/Tokens && antlr -Dlanguage=Cpp Tokens.g4 -o ../antlr/ -visitor
-	@cd ./grammar && antlr -Dlanguage=Cpp Grammar.g4 -o antlr/ -visitor
+	@cd ./src/lexer/tokens && antlr -Dlanguage=Cpp Tokens.g4 -o ../antlr/ -visitor
+	@cd ./src/lexer/grammars && antlr -Dlanguage=Cpp Grammar.g4 -o ../antlr/ -visitor
 
 clean:
 	@rm -rf build gen .idea && mkdir "build"
-	@cd ./grammar && rm -rf antlr .antlr *.tokens *.tokens.txt
+	@cd ./src/lexer && rm -rf antlr .antlr *.tokens *.tokens.txt
 

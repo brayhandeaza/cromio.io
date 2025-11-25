@@ -1,4 +1,3 @@
-// #include <Parser.h>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -6,9 +5,8 @@
 #include "antlr4-runtime.h"
 #include "Tokens.h"
 #include "Grammar.h"
-#include "json.hpp"
-#include "./includes/parser/Parser.h"
-#include "Helpers.h"
+#include "parser/Parser.h"
+#include "helpers/Helpers.h"
 
 
 int main(int argc, const char* argv[]) {
