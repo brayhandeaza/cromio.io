@@ -6,7 +6,7 @@
 #define CROMIO_PARSER_LITERALS_H
 
 #include "GrammarVisitor.h"
-#include "helpers/Helpers.h"
+#include "utils/Helpers.h"
 
 
 class ParserLiterals : public virtual GrammarVisitor {

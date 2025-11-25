@@ -7,14 +7,14 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # ---- Path to ANTLR-generated sources ----
 set(GENERATED_DIR "${CMAKE_SOURCE_DIR}/src/lexer/antlr")
-set(LIBS_DIR "${CMAKE_SOURCE_DIR}/libs")
+set(LIBS_DIR "${CMAKE_SOURCE_DIR}/includes")
 set(SOURCES_DIR "${CMAKE_SOURCE_DIR}/src")
 
 # ---- Collect all generated .cpp files ----
 file(GLOB GENERATED_SOURCES
         "${GENERATED_DIR}/*.cpp"
         "${SOURCES_DIR}/*.cpp"
-        "${SOURCES_DIR}/helpers/*.cpp"
+        "${SOURCES_DIR}/utils/*.cpp"
 )
 
 # ---- ANTLR4 runtime include and lib paths ----

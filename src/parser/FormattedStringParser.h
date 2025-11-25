@@ -6,7 +6,7 @@
 #define CROMIO_FORMATTED_STRING_PARSER_H
 
 #include "GrammarVisitor.h"
-#include "helpers/Helpers.h"
+#include "utils/Helpers.h"
 
 class FormattedStringParser : public virtual GrammarVisitor {
 public:

@@ -8,7 +8,7 @@
 #include "ParserLiterals.h"
 #include "GrammarVisitor.h"
 #include "FormattedStringParser.h"
-#include "helpers/Helpers.h"
+#include "utils/Helpers.h"
 
 class Parser final : public ParserLiterals, public FormattedStringParser {
 public:

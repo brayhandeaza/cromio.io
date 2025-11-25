@@ -6,7 +6,7 @@
 #include "Tokens.h"
 #include "Grammar.h"
 #include "parser/Parser.h"
-#include "helpers/Helpers.h"
+#include "utils/Helpers.h"
 
 
 int main(int argc, const char* argv[]) {

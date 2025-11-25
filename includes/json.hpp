@@ -3567,7 +3567,7 @@ NLOHMANN_JSON_NAMESPACE_BEGIN
 @brief detail namespace with internal helper functions
 
 This namespace collects functions that should not be exposed,
-implementations of some @ref basic_json methods, and meta-programming helpers.
+implementations of some @ref basic_json methods, and meta-programming utils.
 
 @since version 2.1.0
 */
@@ -3575,7 +3575,7 @@ namespace detail
 {
 
 /////////////
-// helpers //
+// utils //
 /////////////
 
 // Note to maintainers:
@@ -3603,7 +3603,7 @@ struct is_basic_json_context :
 {};
 
 //////////////////////
-// json_ref helpers //
+// json_ref utils //
 //////////////////////
 
 template<typename>
