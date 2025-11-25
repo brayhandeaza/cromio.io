@@ -15,6 +15,7 @@ file(GLOB GENERATED_SOURCES
         "${GENERATED_DIR}/*.cpp"
         "${SOURCES_DIR}/*.cpp"
         "${SOURCES_DIR}/utils/*.cpp"
+        "${SOURCES_DIR}/optimizer/*.cpp"
 )
 
 # ---- ANTLR4 runtime include and lib paths ----

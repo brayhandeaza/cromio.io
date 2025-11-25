@@ -66,14 +66,14 @@ public:
     }
 
     std::any visitBooleanLiteral(Grammar::BooleanLiteralContext* ctx) override {
-        json node = Helpers::createNode(ctx->getText(), "BooleanLiteral", ctx->start, ctx->stop);
+        json node = Helpers::createNode(ctx->getText() == "true" ? "1" : "0", "BooleanLiteral", ctx->start, ctx->stop);
         node["value"] = ctx->getText() == "true";
 
         return node;
     }
 
     std::any visitNoneLiteral(Grammar::NoneLiteralContext* ctx) override {
-        json node = Helpers::createNode(ctx->getText(), "NoneLiteral", ctx->start, ctx->stop);
+        json node = Helpers::createNode("0", "NoneLiteral", ctx->start, ctx->stop);
         node["value"] = nullptr;
 
         return node;

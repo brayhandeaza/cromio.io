@@ -15,4 +15,3 @@ grammar:
 clean:
 	@rm -rf build gen .idea && mkdir "build"
 	@cd ./src/lexer && rm -rf antlr .antlr *.tokens *.tokens.txt
-
