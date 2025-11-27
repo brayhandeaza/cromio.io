@@ -1,8 +1,11 @@
 gen/
 .idea/
+.vscode
 build
 grammar/*.tokens
 grammar/*.listener
 grammar/*.base
 grammar/antlr
-/grammar/Tokens/Main.tokens
+
+/src/lexer/Tokens/Main.tokens
+/src/lexer/antlr

@@ -7,7 +7,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # ---- Path to ANTLR-generated sources ----
 set(GENERATED_DIR "${CMAKE_SOURCE_DIR}/src/lexer/antlr")
-set(LIBS_DIR "${CMAKE_SOURCE_DIR}/includes")
 set(SOURCES_DIR "${CMAKE_SOURCE_DIR}/src")
 
 # ---- Collect all generated .cpp files ----
@@ -34,7 +33,6 @@ target_include_directories(${PROJECT_NAME} PUBLIC
         ${ANTLR4_RUNTIME_INCLUDE}
         ${GENERATED_DIR}
         ${SOURCES_DIR}
-        ${LIBS_DIR}
 )
 
 # Link ANTLR runtime
