@@ -2,6 +2,7 @@
 #include <fstream>
 #include <sstream>
 
+#include <generator/llvm/ir.h>
 #include "antlr4-runtime.h"
 #include "Tokens.h"
 #include "Grammar.h"
@@ -36,6 +37,13 @@ int main(int argc, const char* argv[]) {
 
     Parser visitor;
     auto ast = std::any_cast<json>(visitor.visit(tree));
+
+    // Generate IR
+    IR ir("main_module");
+    // llvm::Module* mod = ir.generate(ast);
+
+    // Print IR
+    // mod->print(llvm::outs(), nullptr);
 
     std::cout << "ast: " << ast.dump(4) << std::endl;
 
