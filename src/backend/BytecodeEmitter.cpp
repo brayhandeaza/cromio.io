@@ -11,7 +11,7 @@
 #include <llvm/Bitcode/BitcodeWriter.h>
 
 
-std::vector<uint8_t> BytecodeEmitter::toMemory(const llvm::Module& module) {
+std::vector<uint8_t> cromio::backend::BytecodeEmitter::toMemory(const llvm::Module& module) {
     llvm::SmallVector<char, 0> buffer;
     llvm::raw_svector_ostream stream(buffer);
 
@@ -20,7 +20,7 @@ std::vector<uint8_t> BytecodeEmitter::toMemory(const llvm::Module& module) {
     return {buffer.begin(), buffer.end()};
 }
 
-void BytecodeEmitter::toFile(const llvm::Module& module, const std::string& filename) {
+void cromio::backend::BytecodeEmitter::toFile(const llvm::Module& module, const std::string& filename) {
     llvm::SmallVector<char, 0> buffer;
     llvm::raw_svector_ostream stream(buffer);
 

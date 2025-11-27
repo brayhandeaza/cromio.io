@@ -8,7 +8,7 @@
 #include "GrammarVisitor.h"
 #include "utils/Helpers.h"
 
-namespace cromio
+namespace cromio::parser
 {
     class ParserLiterals : public virtual GrammarVisitor
     {

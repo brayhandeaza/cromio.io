@@ -42,7 +42,7 @@ int main(int argc, const char* argv[]) {
 
     // Bytecode
     // BytecodeEmitter::toFile(*module, "output.bc");
-    std::vector<uint8_t> bc = BytecodeEmitter::toMemory(*module);
+    std::vector<uint8_t> bc = cromio::backend::BytecodeEmitter::toMemory(*module);
     std::cout << "bc size: " << bc.size() << std::endl;
 
     return 0;

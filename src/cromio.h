@@ -19,8 +19,7 @@
 // cromio headers
 #include "parser/parser.h"
 #include "lowering/lowering.h"
-#include "utils/Helpers.h"
-#include "backend/BytecodeEmitter.h"
+#include "backend/backend.h"
 
 
 #endif //CROMIO_CROMIO_H
