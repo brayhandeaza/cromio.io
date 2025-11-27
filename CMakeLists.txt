@@ -52,10 +52,13 @@ add_definitions(${LLVM_DEFINITIONS})
 file(GLOB ALL_SOURCES
         "${SOURCES_DIR}/main.cpp"
         "${GENERATED_DIR}/*.cpp"
+        "${ALL_SOURCES}"
         "${SOURCES_DIR}/*.cpp"
         "${SOURCES_DIR}/utils/*.cpp"
+        "${SOURCES_DIR}/parser/*.cpp"
         "${SOURCES_DIR}/optimizer/*.cpp"
-        "${SOURCES_DIR}/generator/llvm/*.cpp"
+        "${SOURCES_DIR}/backend/*.cpp"
+        "${SOURCES_DIR}/lowering/*.cpp"
 )
 
 # Add executable using the unified list of source files.

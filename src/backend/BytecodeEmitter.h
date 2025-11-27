@@ -2,14 +2,14 @@
 // Created by Brayhan De Aza on 11/27/25.
 //
 
-#ifndef CROMIO_BYTECODE_H
-#define CROMIO_BYTECODE_H
+#ifndef CROMIO_BYTECODE_EMITTER_H
+#define CROMIO_BYTECODE_EMITTER_H
 
 #include <string>
 #include <vector>
-#include "llvm/IR/Module.h"
+#include <llvm/IR/Module.h>
 
-class Bytecode {
+class BytecodeEmitter {
 public:
     // Generate LLVM bitcode into a vector of bytes (in memory)
     static std::vector<uint8_t> toMemory(const llvm::Module& module);
@@ -19,4 +19,4 @@ public:
 };
 
 
-#endif //CROMIO_BYTECODE_H
+#endif //CROMIO_BYTECODE_EMITTER_H

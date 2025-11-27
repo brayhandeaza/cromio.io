@@ -1,15 +1,19 @@
-#include <generator/llvm/bytecode.h>
+//
+// Created by Brayhan De Aza on 11/27/25.
+//
+
 
 #include <iostream>
 #include <fstream>
 #include <sstream>
 
-#include <generator/llvm/ir.h>
+#include <lowering/ir.h>
 #include "antlr4-runtime.h"
 #include "Tokens.h"
 #include "Grammar.h"
 #include "utils/Helpers.h"
 #include "parser/Parser.h"
+#include "backend/BytecodeEmitter.h"
 
 int main(int argc, const char* argv[]) {
     if (argc < 2) {
@@ -37,7 +41,7 @@ int main(int argc, const char* argv[]) {
     Grammar parser(&tokens);
     auto* tree = parser.program();
 
-    Parser visitor;
+    cromio::Parser visitor;
     auto ast = std::any_cast<json>(visitor.visit(tree));
 
     // std::cout << "ast: " << ast.dump(4) << std::endl;
@@ -47,8 +51,9 @@ int main(int argc, const char* argv[]) {
     llvm::Module* module = ir.generate(ast);
 
     // Bytecode
-    std::vector<uint8_t> bc = Bytecode::toMemory(*module);
-    Bytecode::toFile(*module, "output.bc");
+    // BytecodeEmitter::toFile(*module, "output.bc");
+    std::vector<uint8_t> bc = BytecodeEmitter::toMemory(*module);
+    std::cout << "bc size: " << bc.size() << std::endl;
 
     return 0;
 }

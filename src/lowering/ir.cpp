@@ -4,7 +4,7 @@
 
 #include <stdexcept>
 #include "llvm/IR/Verifier.h"
-#include "generator/llvm/ir.h"
+#include "ir.h"
 
 IR::IR(const std::string& moduleName) {
     context = std::make_unique<llvm::LLVMContext>();
