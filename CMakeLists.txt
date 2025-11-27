@@ -71,6 +71,7 @@ add_executable(${PROJECT_NAME} ${ALL_SOURCES})
 
 # Includes
 target_include_directories(${PROJECT_NAME} PUBLIC
+        ${CMAKE_SOURCE_DIR}
         ${SOURCES_DIR}
         ${ANTLR4_RUNTIME_INCLUDE}
         ${GENERATED_DIR}

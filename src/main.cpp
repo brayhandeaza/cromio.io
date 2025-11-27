@@ -2,18 +2,8 @@
 // Created by Brayhan De Aza on 11/27/25.
 //
 
+#include "cromio.h"
 
-#include <iostream>
-#include <fstream>
-#include <sstream>
-
-#include <lowering/ir.h>
-#include "antlr4-runtime.h"
-#include "Tokens.h"
-#include "Grammar.h"
-#include "utils/Helpers.h"
-#include "parser/Parser.h"
-#include "backend/BytecodeEmitter.h"
 
 int main(int argc, const char* argv[]) {
     if (argc < 2) {
@@ -38,16 +28,16 @@ int main(int argc, const char* argv[]) {
     Tokens lexer(&input);
     antlr4::CommonTokenStream tokens(&lexer);
 
-    Grammar parser(&tokens);
-    auto* tree = parser.program();
+    Grammar grammar(&tokens);
+    auto* tree = grammar.program();
 
-    cromio::Parser visitor;
+    cromio::parser::Parser visitor;
     auto ast = std::any_cast<json>(visitor.visit(tree));
 
     // std::cout << "ast: " << ast.dump(4) << std::endl;
 
     // Generate IR
-    IR ir("main_module");
+    cromio::lowering::IR ir("main_module");
     llvm::Module* module = ir.generate(ast);
 
     // Bytecode

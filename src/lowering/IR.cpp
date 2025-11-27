@@ -4,15 +4,15 @@
 
 #include <stdexcept>
 #include "llvm/IR/Verifier.h"
-#include "ir.h"
+#include "IR.h"
 
-IR::IR(const std::string& moduleName) {
+cromio::lowering::IR::IR(const std::string& moduleName) {
     context = std::make_unique<llvm::LLVMContext>();
     module = std::make_unique<llvm::Module>(moduleName, *context);
     builder = std::make_unique<llvm::IRBuilder<>>(*context);
 }
 
-llvm::Value* IR::promoteToDouble(llvm::Value* v) const {
+llvm::Value* cromio::lowering::IR::promoteToDouble(llvm::Value* v) const {
     if (v->getType()->isDoubleTy())
         return v;
 
@@ -22,7 +22,7 @@ llvm::Value* IR::promoteToDouble(llvm::Value* v) const {
     throw std::runtime_error("Cannot promote value to double");
 }
 
-llvm::Type* IR::inferType(const json& node) const {
+llvm::Type* cromio::lowering::IR::inferType(const json& node) const {
     const std::string kind = node.value("kind", "");
 
     // Literals
@@ -64,7 +64,7 @@ llvm::Type* IR::inferType(const json& node) const {
 // ---------------------------------------------
 // Public: main entry point
 // ---------------------------------------------
-llvm::Module* IR::generate(const json& ast) {
+llvm::Module* cromio::lowering::IR::generate(const json& ast) {
     codegenProgram(ast);
     return module.get();
 }
@@ -72,7 +72,7 @@ llvm::Module* IR::generate(const json& ast) {
 // ---------------------------------------------
 // Literals → LLVM double constants
 // ---------------------------------------------
-llvm::Constant* IR::codegenLiteral(const json& node) const {
+llvm::Constant* cromio::lowering::IR::codegenLiteral(const json& node) const {
     const std::string kind = node.value("kind", "");
 
     if (kind == "FloatLiteral") {
@@ -97,7 +97,7 @@ llvm::Constant* IR::codegenLiteral(const json& node) const {
 // ---------------------------------------------
 // Expression
 // ---------------------------------------------
-llvm::Value* IR::codegenExpression(const json& node) {
+llvm::Value* cromio::lowering::IR::codegenExpression(const json& node) {
     const std::string kind = node.value("kind", "");
 
     // Literals
@@ -149,7 +149,7 @@ llvm::Value* IR::codegenExpression(const json& node) {
 // ---------------------------------------------
 // Statement → Expression
 // ---------------------------------------------
-llvm::Value* IR::codegenStatement(const json& node) {
+llvm::Value* cromio::lowering::IR::codegenStatement(const json& node) {
     if (!node.contains("Expression"))
         throw std::runtime_error("Statement missing Expression");
 
@@ -160,7 +160,7 @@ llvm::Value* IR::codegenStatement(const json& node) {
 // Program (entry point)
 // Creates:   double @main()
 // ---------------------------------------------
-llvm::Value* IR::codegenProgram(const json& node) {
+llvm::Value* cromio::lowering::IR::codegenProgram(const json& node) {
     if (node.value("kind", "") != "Program")
         throw std::runtime_error("Top-level node must be Program");
 

@@ -2,17 +2,15 @@
 // Created by Brayhan De Aza on 11/27/25.
 //
 
-#include "Parser.h"
+#include "BaseParser.h"
 
 
-std::any cromio::Parser::visitProgram(Grammar::ProgramContext* ctx)  {
+std::any cromio::parser::Parser::visitProgram(Grammar::ProgramContext* ctx)  {
     json node = Helpers::createNode("", "Program", ctx->start, ctx->stop);
 
     json body;
     for (const auto child : ctx->children) {
-        const std::any statement = visit(child);
-
-        if (statement.has_value()) {
+        if (const std::any statement = visit(child); statement.has_value()) {
             body.push_back(std::any_cast<json>(statement));
         }
     }
@@ -21,7 +19,7 @@ std::any cromio::Parser::visitProgram(Grammar::ProgramContext* ctx)  {
     return node;
 }
 
-std::any cromio::Parser::visitStatement(Grammar::StatementContext* ctx)  {
+std::any cromio::parser::Parser::visitStatement(Grammar::StatementContext* ctx)  {
     json node = Helpers::createNode("", "Statement", ctx->start, ctx->stop);
     if (ctx->expression()) {
         const std::any expression = visit(ctx->expression());
@@ -33,7 +31,7 @@ std::any cromio::Parser::visitStatement(Grammar::StatementContext* ctx)  {
     return json::object();
 }
 
-std::any cromio::Parser::visitExpression(Grammar::ExpressionContext* ctx)  {
+std::any cromio::parser::Parser::visitExpression(Grammar::ExpressionContext* ctx)  {
     // 1) Literal -> just visit the literal and return it
     if (ctx->literal()) {
         return visit(ctx->literal());

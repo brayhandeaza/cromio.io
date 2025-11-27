@@ -28,6 +28,5 @@ namespace cromio
 
         std::any visitFormattedStringContent(Grammar::FormattedStringContentContext* ctx) override;
     };
-
-#endif //CROMIO_PARSER_LITERALS_H
 }
+#endif //CROMIO_PARSER_LITERALS_H

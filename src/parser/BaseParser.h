@@ -2,13 +2,13 @@
 // Created by Brayhan De Aza on 10/19/25.
 //
 
-#ifndef CROMIO_PARSER_H
-#define CROMIO_PARSER_H
+#ifndef CROMIO_BASE_PARSER_H
+#define CROMIO_BASE_PARSER_H
 
 #include "GrammarVisitor.h"
 #include "ParserLiterals.h"
 
-namespace cromio
+namespace cromio::parser
 {
     class Parser final : public ParserLiterals
     {
@@ -20,4 +20,4 @@ namespace cromio
 }
 
 
-#endif //CROMIO_PARSER_H
+#endif //CROMIO_BASE_PARSER_H
