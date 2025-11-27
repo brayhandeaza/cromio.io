@@ -1,3 +1,5 @@
+#include <generator/llvm/bytecode.h>
+
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -38,12 +40,15 @@ int main(int argc, const char* argv[]) {
     Parser visitor;
     auto ast = std::any_cast<json>(visitor.visit(tree));
 
-    std::cout << "ast: " << ast.dump(4) << std::endl;
+    // std::cout << "ast: " << ast.dump(4) << std::endl;
+
     // Generate IR
     IR ir("main_module");
     llvm::Module* module = ir.generate(ast);
-    module->print(llvm::outs(), nullptr);
 
+    // Bytecode
+    std::vector<uint8_t> bc = Bytecode::toMemory(*module);
+    Bytecode::toFile(*module, "output.bc");
 
     return 0;
 }
