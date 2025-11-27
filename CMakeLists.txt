@@ -102,7 +102,6 @@ target_link_libraries(${PROJECT_NAME}
 # ============================================================
 #                   Custom "make run"
 # ============================================================
-
 # Set the path for the input file relative to the project source directory.
 set(DEFAULT_FILE "${CMAKE_SOURCE_DIR}/test.io")
 
