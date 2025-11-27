@@ -10,3 +10,4 @@ antlr4
 
 /src/lexer/Tokens/Main.tokens
 /src/lexer/antlr
+/antlr4/
