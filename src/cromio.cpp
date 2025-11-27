@@ -18,6 +18,10 @@ int main(int argc, const char* argv[]) {
         return 1;
     }
 
+   // filename
+    std::string filenamePath = argv[1];
+    std::string fileName = filenamePath.substr(filenamePath.find_last_of('/') + 1);
+
     std::stringstream buffer;
     buffer << file.rdbuf();
     std::string content = buffer.str();
@@ -37,13 +41,13 @@ int main(int argc, const char* argv[]) {
     // std::cout << "ast: " << ast.dump(4) << std::endl;
 
     // Generate IR
-    cromio::lowering::IR ir("main_module");
+    cromio::lowering::IR ir(fileName);
     llvm::Module* module = ir.generate(ast);
 
-    // Bytecode
     // BytecodeEmitter::toFile(*module, "output.bc");
     std::vector<uint8_t> bc = cromio::backend::BytecodeEmitter::toMemory(*module);
     std::cout << "bc size: " << bc.size() << std::endl;
+    module->print(llvm::outs(), nullptr);
 
     return 0;
 }

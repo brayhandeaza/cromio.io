@@ -50,7 +50,7 @@ add_definitions(${LLVM_DEFINITIONS})
 # Collect all source files including those that use LLVM.
 # NOTE: file(GLOB) is generally discouraged but kept here as per your original file.
 file(GLOB ALL_SOURCES
-        "${SOURCES_DIR}/main.cpp"
+        "${SOURCES_DIR}/cromio.cpp"
         "${GENERATED_DIR}/*.cpp"
         "${ALL_SOURCES}"
         "${SOURCES_DIR}/*.cpp"
@@ -59,6 +59,7 @@ file(GLOB ALL_SOURCES
         "${SOURCES_DIR}/optimizer/*.cpp"
         "${SOURCES_DIR}/backend/*.cpp"
         "${SOURCES_DIR}/lowering/*.cpp"
+        "${SOURCES_DIR}/semantic/*.cpp"
 )
 
 # Add executable using the unified list of source files.

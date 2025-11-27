@@ -5,4 +5,13 @@
 #ifndef CROMIO_TYPECHECKER_H
 #define CROMIO_TYPECHECKER_H
 
+namespace cromio::semantic
+{
+    class TypeChecker
+    {
+    public:
+        TypeChecker();
+    };
+}
+
 #endif //CROMIO_TYPECHECKER_H

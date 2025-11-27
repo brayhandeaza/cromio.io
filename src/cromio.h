@@ -5,7 +5,6 @@
 #ifndef CROMIO_CROMIO_H
 #define CROMIO_CROMIO_H
 
-
 // standard headers
 #include <iostream>
 #include <fstream>
@@ -20,6 +19,8 @@
 #include "parser/parser.h"
 #include "lowering/lowering.h"
 #include "backend/backend.h"
+#include "runtime/runtime.h"
+#include "semantic/semantic.h"
 
 
 #endif //CROMIO_CROMIO_H
