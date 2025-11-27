@@ -5,9 +5,8 @@
 #include "antlr4-runtime.h"
 #include "Tokens.h"
 #include "Grammar.h"
-#include "parser/Parser.h"
 #include "utils/Helpers.h"
-
+#include "parser/Parser.h"
 
 int main(int argc, const char* argv[]) {
     if (argc < 2) {
@@ -31,8 +30,8 @@ int main(int argc, const char* argv[]) {
 
     Tokens lexer(&input);
     antlr4::CommonTokenStream tokens(&lexer);
-    Grammar parser(&tokens);
 
+    Grammar parser(&tokens);
     auto* tree = parser.program();
 
     Parser visitor;
