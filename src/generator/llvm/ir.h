@@ -26,11 +26,14 @@ private:
     std::unique_ptr<llvm::Module> module;
     std::unique_ptr<llvm::IRBuilder<>> builder;
 
+
     llvm::Value* codegenProgram(const json& node);
     llvm::Value* codegenStatement(const json& node);
     llvm::Value* codegenExpression(const json& node);
+    llvm::Constant* codegenLiteral(const json& node) const;
 
-    llvm::Constant* codegenLiteral(const json& node) const ;
+    llvm::Value* promoteToDouble(llvm::Value* v) const;
+    llvm::Type* inferType(const json& node) const;
 };
 
 

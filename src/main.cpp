@@ -38,12 +38,12 @@ int main(int argc, const char* argv[]) {
     Parser visitor;
     auto ast = std::any_cast<json>(visitor.visit(tree));
 
+    std::cout << "ast: " << ast.dump(4) << std::endl;
     // Generate IR
     IR ir("main_module");
     llvm::Module* module = ir.generate(ast);
     module->print(llvm::outs(), nullptr);
 
-    // std::cout << "ast: " << ast.dump(4) << std::endl;
 
     return 0;
 }

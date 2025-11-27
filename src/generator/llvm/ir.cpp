@@ -8,9 +8,58 @@
 
 IR::IR(const std::string& moduleName) {
     context = std::make_unique<llvm::LLVMContext>();
-    module  = std::make_unique<llvm::Module>(moduleName, *context);
+    module = std::make_unique<llvm::Module>(moduleName, *context);
     builder = std::make_unique<llvm::IRBuilder<>>(*context);
 }
+
+llvm::Value* IR::promoteToDouble(llvm::Value* v) const {
+    if (v->getType()->isDoubleTy())
+        return v;
+
+    if (v->getType()->isIntegerTy())
+        return builder->CreateSIToFP(v, builder->getDoubleTy(), "int_to_double");
+
+    throw std::runtime_error("Cannot promote value to double");
+}
+
+llvm::Type* IR::inferType(const json& node) const {
+    const std::string kind = node.value("kind", "");
+
+    // Literals
+    if (kind == "FloatLiteral")
+        return builder->getDoubleTy();
+    if (kind == "IntegerLiteral")
+        return builder->getInt64Ty();
+    if (kind == "BooleanLiteral")
+        return builder->getInt1Ty();
+
+    // Expression (binary)
+    if (kind == "Expression") {
+        // Infer left and right
+        const llvm::Type* L = inferType(node["left"]);
+        const llvm::Type* R = inferType(node["right"]);
+
+        // If either is double -> result is double (promote ints to double)
+        if (L->isDoubleTy() || R->isDoubleTy())
+            return builder->getDoubleTy();
+
+        // Otherwise, integer ops yield integer
+        if (L->isIntegerTy() && R->isIntegerTy())
+            return builder->getInt64Ty();
+
+        throw std::runtime_error("Unsupported operand types in expression for inferType");
+    }
+
+    // A Statement wrapper: extract inner Expression's type
+    if (kind == "Statement") {
+        if (!node.contains("Expression"))
+            throw std::runtime_error("Statement missing Expression in inferType");
+        return inferType(node["Expression"]);
+    }
+
+    throw std::runtime_error("Unknown node kind in inferType: " + kind);
+}
+
 
 // ---------------------------------------------
 // Public: main entry point
@@ -27,18 +76,23 @@ llvm::Constant* IR::codegenLiteral(const json& node) const {
     const std::string kind = node.value("kind", "");
 
     if (kind == "FloatLiteral") {
-        return llvm::ConstantFP::get(builder->getDoubleTy(), node.value("value", 0.0));
+        double v = node.value("value", 0.0);
+        return llvm::ConstantFP::get(builder->getDoubleTy(), v);
     }
+
     if (kind == "IntegerLiteral") {
-        return llvm::ConstantFP::get(builder->getDoubleTy(), (double)node.value("value", 0));
+        long long v = node.value("value", 0LL);
+        return llvm::ConstantInt::get(builder->getInt64Ty(), v, true);
     }
+
     if (kind == "BooleanLiteral") {
         bool b = node.value("value", false);
-        return llvm::ConstantFP::get(builder->getDoubleTy(), b ? 1.0 : 0.0);
+        return llvm::ConstantInt::get(builder->getInt1Ty(), b);
     }
 
     throw std::runtime_error("Unknown literal: " + kind);
 }
+
 
 // ---------------------------------------------
 // Expression
@@ -46,32 +100,51 @@ llvm::Constant* IR::codegenLiteral(const json& node) const {
 llvm::Value* IR::codegenExpression(const json& node) {
     const std::string kind = node.value("kind", "");
 
-    // Literal
+    // Literals
     if (kind == "FloatLiteral" || kind == "IntegerLiteral" || kind == "BooleanLiteral")
         return codegenLiteral(node);
 
-    // Binary Expression
+    // Binary expression
     if (kind == "Expression") {
         llvm::Value* L = codegenExpression(node["left"]);
         llvm::Value* R = codegenExpression(node["right"]);
         const std::string op = node.value("operator", "");
 
-        // Ensure both are double
-        if (!L->getType()->isDoubleTy())
-            L = builder->CreateFPCast(L, builder->getDoubleTy());
-        if (!R->getType()->isDoubleTy())
-            R = builder->CreateFPCast(R, builder->getDoubleTy());
+        bool isFloat =
+            L->getType()->isDoubleTy() ||
+            R->getType()->isDoubleTy();
 
-        if (op == "+") return builder->CreateFAdd(L, R, "addtmp");
-        if (op == "-") return builder->CreateFSub(L, R, "subtmp");
-        if (op == "*") return builder->CreateFMul(L, R, "multmp");
-        if (op == "/") return builder->CreateFDiv(L, R, "divtmp");
+        // Promote if needed
+        if (isFloat) {
+            L = promoteToDouble(L);
+            R = promoteToDouble(R);
+
+            if (op == "+")
+                return builder->CreateFAdd(L, R, "fadd");
+            if (op == "-")
+                return builder->CreateFSub(L, R, "fsub");
+            if (op == "*")
+                return builder->CreateFMul(L, R, "fmul");
+            if (op == "/")
+                return builder->CreateFDiv(L, R, "fdiv");
+        } else {
+            // Integer ops
+            if (op == "+")
+                return builder->CreateAdd(L, R, "add");
+            if (op == "-")
+                return builder->CreateSub(L, R, "sub");
+            if (op == "*")
+                return builder->CreateMul(L, R, "mul");
+            if (op == "/")
+                return builder->CreateSDiv(L, R, "sdiv");
+        }
 
         throw std::runtime_error("Unknown operator: " + op);
     }
 
     throw std::runtime_error("Invalid expression node: " + kind);
 }
+
 
 // ---------------------------------------------
 // Statement → Expression
@@ -85,7 +158,7 @@ llvm::Value* IR::codegenStatement(const json& node) {
 
 // ---------------------------------------------
 // Program (entry point)
-// Creates:   double @main_expr()
+// Creates:   double @main()
 // ---------------------------------------------
 llvm::Value* IR::codegenProgram(const json& node) {
     if (node.value("kind", "") != "Program")
@@ -95,30 +168,37 @@ llvm::Value* IR::codegenProgram(const json& node) {
     if (!body.is_array() || body.empty())
         throw std::runtime_error("Program Body missing or empty");
 
-    // Create function
-    auto* fnType = llvm::FunctionType::get(builder->getDoubleTy(), false);
-    auto* fn = llvm::Function::Create(
-        fnType,
-        llvm::Function::ExternalLinkage,
-        "main_expr",
-        module.get()
-    );
+    // Infer return type from AST WITHOUT emitting IR
+    llvm::Type* retType = inferType(body[0]);
 
+    // Create main function with inferred return type
+    auto* fnType = llvm::FunctionType::get(retType, false);
+    auto* fn = llvm::Function::Create(fnType, llvm::Function::ExternalLinkage, "main", module.get());
+
+    // Create entry block and set insertion point for IR emission
     auto* entry = llvm::BasicBlock::Create(*context, "entry", fn);
     builder->SetInsertPoint(entry);
 
+    // Now actually generate the statement (this emits IR)
     llvm::Value* retVal = codegenStatement(body[0]);
-    if (!retVal->getType()->isDoubleTy()) {
-        retVal = builder->CreateFPCast(retVal, builder->getDoubleTy());
+
+    // If the emitted value type differs from declared return type, attempt safe conversions
+    if (retVal->getType() != retType) {
+        if (retVal->getType()->isIntegerTy() && retType->isDoubleTy()) {
+            retVal = builder->CreateSIToFP(retVal, builder->getDoubleTy(), "ret_int_to_fp");
+        } else if (retVal->getType()->isDoubleTy() && retType->isIntegerTy()) {
+            // narrowing double -> int is lossy; better to error, but here's a truncation
+            retVal = builder->CreateFPToSI(retVal, retType, "ret_fp_to_int");
+        } else {
+            throw std::runtime_error("Cannot convert return value to function return type");
+        }
     }
 
     builder->CreateRet(retVal);
 
-    // Verify function
-    if (llvm::verifyFunction(*fn)) {
+    // Verify function and emit diagnostics if broken
+    if (llvm::verifyFunction(*fn, &llvm::errs()))
         throw std::runtime_error("IR verification failed");
-    }
 
     return fn;
 }
-
