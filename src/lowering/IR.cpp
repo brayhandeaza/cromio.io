@@ -32,6 +32,8 @@ llvm::Type* cromio::lowering::IR::inferType(const json& node) const {
         return builder->getInt64Ty();
     if (kind == "BooleanLiteral")
         return builder->getInt1Ty();
+    if (kind == "NoneLiteral")
+        return builder->getInt8Ty();
 
     // Expression (binary)
     if (kind == "Expression") {
@@ -76,18 +78,25 @@ llvm::Constant* cromio::lowering::IR::codegenLiteral(const json& node) const {
     const std::string kind = node.value("kind", "");
 
     if (kind == "FloatLiteral") {
-        double v = node.value("value", 0.0);
+        const double v = node.value("value", 0.0);
         return llvm::ConstantFP::get(builder->getDoubleTy(), v);
     }
 
     if (kind == "IntegerLiteral") {
-        long long v = node.value("value", 0LL);
+        const long long v = node.value("value", 0LL);
         return llvm::ConstantInt::get(builder->getInt64Ty(), v, true);
     }
 
+    if (kind == "NoneLiteral") {
+        return llvm::ConstantInt::get(builder->getInt8Ty(), 0);
+    }
+
     if (kind == "BooleanLiteral") {
-        bool b = node.value("value", false);
+        const bool b = node.value("value", false);
         return llvm::ConstantInt::get(builder->getInt1Ty(), b);
+    }
+    if (kind == "NoneLiteral") {
+        return llvm::ConstantInt::get(builder->getInt1Ty(), 0LL);
     }
 
     throw std::runtime_error("Unknown literal: " + kind);
@@ -101,7 +110,7 @@ llvm::Value* cromio::lowering::IR::codegenExpression(const json& node) {
     const std::string kind = node.value("kind", "");
 
     // Literals
-    if (kind == "FloatLiteral" || kind == "IntegerLiteral" || kind == "BooleanLiteral")
+    if (kind == "FloatLiteral" || kind == "IntegerLiteral" || kind == "BooleanLiteral" || kind == "NoneLiteral")
         return codegenLiteral(node);
 
     // Binary expression
@@ -110,12 +119,8 @@ llvm::Value* cromio::lowering::IR::codegenExpression(const json& node) {
         llvm::Value* R = codegenExpression(node["right"]);
         const std::string op = node.value("operator", "");
 
-        bool isFloat =
-            L->getType()->isDoubleTy() ||
-            R->getType()->isDoubleTy();
-
         // Promote if needed
-        if (isFloat) {
+        if (L->getType()->isDoubleTy() || R->getType()->isDoubleTy()) {
             L = promoteToDouble(L);
             R = promoteToDouble(R);
 
