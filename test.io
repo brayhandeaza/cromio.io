@@ -1,1 +1,1 @@
-f"my age is {30}"
+f"my age is {30 * 5}"

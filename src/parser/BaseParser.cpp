@@ -5,7 +5,7 @@
 #include "BaseParser.h"
 
 
-std::any cromio::parser::Parser::visitProgram(Grammar::ProgramContext* ctx)  {
+std::any cromio::parser::Parser::visitProgram(Grammar::ProgramContext* ctx) {
     json node = utils::Helpers::createNode("", "Program", ctx->start, ctx->stop);
 
     json body;
@@ -19,7 +19,7 @@ std::any cromio::parser::Parser::visitProgram(Grammar::ProgramContext* ctx)  {
     return node;
 }
 
-std::any cromio::parser::Parser::visitStatement(Grammar::StatementContext* ctx)  {
+std::any cromio::parser::Parser::visitStatement(Grammar::StatementContext* ctx) {
     json node = utils::Helpers::createNode("", "Statement", ctx->start, ctx->stop);
     if (ctx->expression()) {
         const std::any expression = visit(ctx->expression());
@@ -31,7 +31,7 @@ std::any cromio::parser::Parser::visitStatement(Grammar::StatementContext* ctx) 
     return json::object();
 }
 
-std::any cromio::parser::Parser::visitExpression(Grammar::ExpressionContext* ctx)  {
+std::any cromio::parser::Parser::visitExpression(Grammar::ExpressionContext* ctx) {
     // 1) Literal -> just visit the literal and return it
     if (ctx->literal()) {
         return visit(ctx->literal());
@@ -49,7 +49,7 @@ std::any cromio::parser::Parser::visitExpression(Grammar::ExpressionContext* ctx
 
     // 2) Parenthesized expression: usually represented as one child expression and no operator.
     //    Example: '(' expression ')'
-    if (ctx->expression().size() == 1 && !op.empty()) {
+    if (ctx->expression().size() == 1 && op.empty()) {
         return visit(ctx->expression(0));
     }
 
@@ -79,6 +79,58 @@ std::any cromio::parser::Parser::visitExpression(Grammar::ExpressionContext* ctx
         node["left"] = leftJson;
         node["operator"] = op;
         node["right"] = rightJson;
+
+        // Calculate the final value of the expression
+        double finalValue = 0.0;
+        bool hasValue = false;
+
+        if (leftJson.contains("value") && rightJson.contains("value")) {
+            try {
+                double leftValue = 0.0;
+                double rightValue = 0.0;
+
+                // Handle both string and numeric values
+                if (leftJson["value"].is_string()) {
+                    leftValue = std::stod(leftJson["value"].get<std::string>());
+                } else if (leftJson["value"].is_number()) {
+                    leftValue = leftJson["value"].get<double>();
+                }
+
+                if (rightJson["value"].is_string()) {
+                    rightValue = std::stod(rightJson["value"].get<std::string>());
+                } else if (rightJson["value"].is_number()) {
+                    rightValue = rightJson["value"].get<double>();
+                }
+
+                // Perform the operation
+                if (op == "+") {
+                    finalValue = leftValue + rightValue;
+                    hasValue = true;
+                } else if (op == "-") {
+                    finalValue = leftValue - rightValue;
+                    hasValue = true;
+                } else if (op == "*") {
+                    finalValue = leftValue * rightValue;
+                    hasValue = true;
+                } else if (op == "/") {
+                    if (rightValue != 0.0) {
+                        finalValue = leftValue / rightValue;
+                        hasValue = true;
+                    } else {
+                        // Handle division by zero
+                        node["error"] = "Division by zero";
+                    }
+                }
+            } catch (const std::exception& e) {
+                // Handle conversion errors
+                node["error"] = std::string("Value calculation error: ") + e.what();
+            }
+        }
+
+        // Store the calculated value
+        if (hasValue)
+            node["value"] = finalValue;
+
         return node;
     }
 

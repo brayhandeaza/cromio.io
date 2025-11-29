@@ -83,7 +83,12 @@ std::any cromio::parser::ParserLiterals::visitFormattedString(Grammar::Formatted
 
     std::string value;
     for (const auto& param : params) {
-        value += param["raw"];
+        if (param["kind"] == "Expression") {
+            value += std::to_string(static_cast<float>(param["value"]));
+        }
+        else {
+            value += param["value"];
+        }
     }
 
     node["value"] = value;
