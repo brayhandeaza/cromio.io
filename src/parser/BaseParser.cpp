@@ -20,19 +20,14 @@ std::any cromio::parser::Parser::visitProgram(Grammar::ProgramContext* ctx) {
 }
 
 std::any cromio::parser::Parser::visitStatement(Grammar::StatementContext* ctx) {
-    json node = utils::Helpers::createNode("", "Statement", ctx->start, ctx->stop);
     if (ctx->expression()) {
         const std::any expression = visit(ctx->expression());
-
-        node["Expression"] = std::any_cast<json>(expression);
-        return node;
+        return  std::any_cast<json>(expression);
     }
 
     if (ctx->variableDeclaration()) {
         const std::any variableDeclaration = visit(ctx->variableDeclaration());
-
-        node["VariableDeclaration"] = std::any_cast<json>(variableDeclaration);
-        return node;
+        return std::any_cast<json>(variableDeclaration);
     }
 
     return json::object();

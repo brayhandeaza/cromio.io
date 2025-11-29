@@ -19,13 +19,15 @@ namespace cromio::lowering {
         explicit IR(const std::string& moduleName = "module");
 
         llvm::Module* generate(const json& ast);
+        llvm::Type* mapDataType(const std::string& typeName) const;
+        llvm::Value* codegenVariableDeclaration(const json& node);
+
         [[nodiscard]] llvm::Module* getModule() const { return module.get(); }
 
     private:
         std::unique_ptr<llvm::LLVMContext> context;
         std::unique_ptr<llvm::Module> module;
         std::unique_ptr<llvm::IRBuilder<>> builder;
-
 
         llvm::Value* codegenProgram(const json& node);
         llvm::Value* codegenStatement(const json& node);

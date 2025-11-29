@@ -3,16 +3,41 @@
 //
 
 #include <stdexcept>
+#include <string>
 #include "llvm/IR/Verifier.h"
 #include "IR.h"
 
-cromio::lowering::IR::IR(const std::string& moduleName) {
+using namespace cromio::lowering;
+
+// ---------------------------------------------
+// Constructor
+// ---------------------------------------------
+IR::IR(const std::string& moduleName) {
     context = std::make_unique<llvm::LLVMContext>();
     module = std::make_unique<llvm::Module>(moduleName, *context);
     builder = std::make_unique<llvm::IRBuilder<>>(*context);
 }
 
-llvm::Value* cromio::lowering::IR::promoteToDouble(llvm::Value* v) const {
+// ---------------------------------------------
+// Map DataType string from AST to LLVM Type
+// ---------------------------------------------
+llvm::Type* IR::mapDataType(const std::string& t) const {
+    if (t == "int")
+        return builder->getInt64Ty();
+    if (t == "float")
+        return builder->getDoubleTy();
+    if (t == "bool")
+        return builder->getInt1Ty();
+    if (t == "none")
+        return builder->getInt8Ty();
+    // default: treat unknown as i64 to keep main sane
+    return builder->getInt64Ty();
+}
+
+// ---------------------------------------------
+// Type Promotion
+// ---------------------------------------------
+llvm::Value* IR::promoteToDouble(llvm::Value* v) const {
     if (v->getType()->isDoubleTy())
         return v;
 
@@ -22,10 +47,13 @@ llvm::Value* cromio::lowering::IR::promoteToDouble(llvm::Value* v) const {
     throw std::runtime_error("Cannot promote value to double");
 }
 
-llvm::Type* cromio::lowering::IR::inferType(const json& node) const {
+// ---------------------------------------------
+// Type Inference (WITH VARIABLEDECLARATION support)
+// ---------------------------------------------
+llvm::Type* IR::inferType(const json& node) const {
     const std::string kind = node.value("kind", "");
 
-    // Literals
+    // ─── Literals ─────────────────────────────────────────────
     if (kind == "FloatLiteral")
         return builder->getDoubleTy();
     if (kind == "IntegerLiteral")
@@ -37,97 +65,95 @@ llvm::Type* cromio::lowering::IR::inferType(const json& node) const {
     if (kind == "StringLiteral" || kind == "StringFormatted")
         return llvm::PointerType::get(*context, 0);
 
-    // Expression (binary)
-    if (kind == "Expression") {
-        // Infer left and right
-        const llvm::Type* L = inferType(node["left"]);
-        const llvm::Type* R = inferType(node["right"]);
-
-        // If either is double -> result is double (promote ints to double)
-        if (L->isDoubleTy() || R->isDoubleTy())
-            return builder->getDoubleTy();
-
-        // Otherwise, integer ops yield integer
-        if (L->isIntegerTy() && R->isIntegerTy())
-            return builder->getInt64Ty();
-
-        throw std::runtime_error("Unsupported operand types in expression for inferType");
+    // ─── VariableDeclaration ──────────────────────────────────
+    if (kind == "VariableDeclaration") {
+        // Expect DataType.value to be a string like "int", "float", etc.
+        if (!node.contains("DataType") || !node["DataType"].contains("value"))
+            throw std::runtime_error("VariableDeclaration missing DataType");
+        std::string dtype = node["DataType"].value("value", "int");
+        return mapDataType(dtype);
     }
 
-    // A Statement wrapper: extract inner Expression's type
-    if (kind == "Statement") {
-        if (!node.contains("Expression"))
-            throw std::runtime_error("Statement missing Expression in inferType");
-        return inferType(node["Expression"]);
+    // ─── Binary Expression ────────────────────────────────────
+    if (kind == "Expression") {
+        auto* LT = inferType(node["left"]);
+        auto* RT = inferType(node["right"]);
+
+        if (LT->isDoubleTy() || RT->isDoubleTy())
+            return builder->getDoubleTy();
+
+        if (LT->isIntegerTy() && RT->isIntegerTy())
+            return builder->getInt64Ty();
+
+        throw std::runtime_error("Unsupported operand types in Expression");
     }
 
     throw std::runtime_error("Unknown node kind in inferType: " + kind);
 }
 
-
 // ---------------------------------------------
-// Public: main entry point
+// Main entry
 // ---------------------------------------------
-llvm::Module* cromio::lowering::IR::generate(const json& ast) {
+llvm::Module* IR::generate(const json& ast) {
     codegenProgram(ast);
     return module.get();
 }
 
 // ---------------------------------------------
-// Literals → LLVM double constants
+// Literals → LLVM Constants
 // ---------------------------------------------
-llvm::Constant* cromio::lowering::IR::codegenLiteral(const json& node) const {
+llvm::Constant* IR::codegenLiteral(const json& node) const {
     const std::string kind = node.value("kind", "");
 
-    if (kind == "FloatLiteral") {
-        const double v = node.value("value", 0.0);
-        return llvm::ConstantFP::get(builder->getDoubleTy(), v);
-    }
+    if (kind == "FloatLiteral")
+        return llvm::ConstantFP::get(builder->getDoubleTy(),
+                                     node.value("value", 0.0));
 
-    if (kind == "IntegerLiteral") {
-        const long long v = node.value("value", 0LL);
-        return llvm::ConstantInt::get(builder->getInt64Ty(), v, true);
-    }
+    if (kind == "IntegerLiteral")
+        return llvm::ConstantInt::get(builder->getInt64Ty(),
+                                      (long long)node.value("value", 0LL),
+                                      true);
 
-    if (kind == "NoneLiteral") {
+    if (kind == "BooleanLiteral")
+        return llvm::ConstantInt::get(builder->getInt1Ty(),
+                                      node.value("value", false));
+
+    if (kind == "NoneLiteral")
         return llvm::ConstantInt::get(builder->getInt8Ty(), 0);
-    }
 
-    if (kind == "BooleanLiteral") {
-        const bool b = node.value("value", false);
-        return llvm::ConstantInt::get(builder->getInt1Ty(), b);
-    }
-    if (kind == "NoneLiteral") {
-        return llvm::ConstantInt::get(builder->getInt1Ty(), 0LL);
-    }
+    if (kind == "StringLiteral" || kind == "StringFormatted")
+        return builder->CreateGlobalString(node.value("value", ""), "str");
 
-    if (kind == "StringLiteral" || kind == "StringFormatted") {
-        const std::string v = node.value("value", "");
-        std::cout << "StringLiteral: " << v << std::endl;
-        return builder->CreateGlobalString(v, "str");
-    }
-
-    throw std::runtime_error("Unknown literal: " + kind);
+    throw std::runtime_error("Unknown literal type: " + kind);
 }
-
 
 // ---------------------------------------------
 // Expression
 // ---------------------------------------------
-llvm::Value* cromio::lowering::IR::codegenExpression(const json& node) {
+llvm::Value* IR::codegenExpression(const json& node) {
     const std::string kind = node.value("kind", "");
 
-    // Literals
-    if (kind == "FloatLiteral" || kind == "IntegerLiteral" || kind == "BooleanLiteral" || kind == "NoneLiteral" || kind == "StringLiteral" || kind == "StringFormatted")
+    // ─── Literals ────────────────────────────────
+    if (kind == "FloatLiteral" || kind == "IntegerLiteral"
+        || kind == "BooleanLiteral" || kind == "NoneLiteral"
+        || kind == "StringLiteral" || kind == "StringFormatted")
         return codegenLiteral(node);
 
-    // Binary expression
+    // If it's a VariableIdentifier (loading a variable) — not required by your current request,
+    // but handle gracefully by trying to create an error since we have no symbol table.
+    if (kind == "VariableIdentifier") {
+        // Without a symbol table we cannot load previously-allocated variables.
+        // To keep behaviour explicit: error out.
+        throw std::runtime_error("VariableIdentifier encountered but no symbol table exists to resolve it");
+    }
+
+    // ─── Binary Expression ───────────────────────
     if (kind == "Expression") {
         llvm::Value* L = codegenExpression(node["left"]);
         llvm::Value* R = codegenExpression(node["right"]);
         const std::string op = node.value("operator", "");
 
-        // Promote if needed
+        // Float promotion
         if (L->getType()->isDoubleTy() || R->getType()->isDoubleTy()) {
             L = promoteToDouble(L);
             R = promoteToDouble(R);
@@ -140,40 +166,87 @@ llvm::Value* cromio::lowering::IR::codegenExpression(const json& node) {
                 return builder->CreateFMul(L, R, "fmul");
             if (op == "/")
                 return builder->CreateFDiv(L, R, "fdiv");
-        } else {
-            // Integer ops
-            if (op == "+")
-                return builder->CreateAdd(L, R, "add");
-            if (op == "-")
-                return builder->CreateSub(L, R, "sub");
-            if (op == "*")
-                return builder->CreateMul(L, R, "mul");
-            if (op == "/")
-                return builder->CreateSDiv(L, R, "sdiv");
         }
+
+        // Integer ops
+        if (op == "+")
+            return builder->CreateAdd(L, R, "add");
+        if (op == "-")
+            return builder->CreateSub(L, R, "sub");
+        if (op == "*")
+            return builder->CreateMul(L, R, "mul");
+        if (op == "/")
+            return builder->CreateSDiv(L, R, "sdiv");
 
         throw std::runtime_error("Unknown operator: " + op);
     }
 
+    // If we encounter a VariableDeclaration here, it should be handled at program level,
+    // but in case it appears inside an expression, return nullptr/error.
+    if (kind == "VariableDeclaration")
+        throw std::runtime_error("VariableDeclaration cannot appear inside an expression");
+
     throw std::runtime_error("Invalid expression node: " + kind);
 }
 
-
 // ---------------------------------------------
-// Statement → Expression
+// Generate an alloca in the entry block and store initializer
+// (NO symbol table is created; we simply allocate+store so the module is valid)
 // ---------------------------------------------
-llvm::Value* cromio::lowering::IR::codegenStatement(const json& node) {
-    if (!node.contains("Expression"))
-        throw std::runtime_error("Statement missing Expression");
+llvm::Value* IR::codegenVariableDeclaration(const json& node) {
+    // node must contain DataType, Identifier, value
+    if (!node.contains("DataType") || !node.contains("Identifier") || !node.contains("value"))
+        throw std::runtime_error("Malformed VariableDeclaration node");
 
-    return codegenExpression(node["Expression"]);
+    std::string varName = node["Identifier"].value("value", "");
+    std::string dtype = node["DataType"].value("value", "int");
+
+    llvm::Type* varType = mapDataType(dtype);
+
+    // Ensure we are inside a function
+    llvm::Function* currentFn = builder->GetInsertBlock()->getParent();
+    if (!currentFn)
+        throw std::runtime_error("No current function to allocate variable in");
+
+    // Create an IRBuilder positioned at the entry block to emit alloca
+    llvm::IRBuilder<> tmpBuilder(&currentFn->getEntryBlock(),
+                                 currentFn->getEntryBlock().begin());
+
+    llvm::AllocaInst* allocaInst = tmpBuilder.CreateAlloca(varType, nullptr, varName);
+
+    // Evaluate initializer
+    llvm::Value* initVal = codegenExpression(node["value"]);
+    if (!initVal)
+        throw std::runtime_error("Variable initializer produced null");
+
+    // If initializer type doesn't match declared type, try safe conversion
+    if (initVal->getType() != varType) {
+        if (initVal->getType()->isIntegerTy() && varType->isDoubleTy()) {
+            initVal = builder->CreateSIToFP(initVal, varType, "init_int_to_fp");
+        } else if (initVal->getType()->isDoubleTy() && varType->isIntegerTy()) {
+            initVal = builder->CreateFPToSI(initVal, varType, "init_fp_to_int");
+        } else {
+            // If other mismatches exist, attempt bitcast if pointer-like OR error
+            if (initVal->getType()->isPointerTy() && varType->isPointerTy()) {
+                initVal = builder->CreateBitCast(initVal, varType, "init_bitcast");
+            } else {
+                throw std::runtime_error("Cannot convert initializer to variable type for: " + varName);
+            }
+        }
+    }
+
+    // Store into allocated slot
+    builder->CreateStore(initVal, allocaInst);
+
+    // Return the alloca (so caller can inspect if needed). We do NOT store it in any symbol table.
+    return allocaInst;
 }
 
 // ---------------------------------------------
-// Program (entry point)
-// Creates:   double @main()
+// Program (NO STATEMENT WRAPPER)
+// Emits i64 @main() and returns 0 by default.
 // ---------------------------------------------
-llvm::Value* cromio::lowering::IR::codegenProgram(const json& node) {
+llvm::Value* IR::codegenProgram(const json& node) {
     if (node.value("kind", "") != "Program")
         throw std::runtime_error("Top-level node must be Program");
 
@@ -181,35 +254,34 @@ llvm::Value* cromio::lowering::IR::codegenProgram(const json& node) {
     if (!body.is_array() || body.empty())
         throw std::runtime_error("Program Body missing or empty");
 
-    // Infer return type from AST WITHOUT emitting IR
-    llvm::Type* retType = inferType(body[0]);
+    // For now always emit main as i64 -> return 0.
+    llvm::Type* retType = builder->getInt64Ty();
 
-    // Create main function with inferred return type
+    // Create main()
     auto* fnType = llvm::FunctionType::get(retType, false);
-    auto* fn = llvm::Function::Create(fnType, llvm::Function::ExternalLinkage, "main", module.get());
+    auto* fn = llvm::Function::Create(fnType,
+                                      llvm::Function::ExternalLinkage,
+                                      "main",
+                                      module.get());
 
-    // Create entry block and set insertion point for IR emission
     auto* entry = llvm::BasicBlock::Create(*context, "entry", fn);
     builder->SetInsertPoint(entry);
 
-    // Now actually generate the statement (this emits IR)
-    llvm::Value* retVal = codegenStatement(body[0]);
-
-    // If the emitted value type differs from declared return type, attempt safe conversions
-    if (retVal->getType() != retType) {
-        if (retVal->getType()->isIntegerTy() && retType->isDoubleTy()) {
-            retVal = builder->CreateSIToFP(retVal, builder->getDoubleTy(), "ret_int_to_fp");
-        } else if (retVal->getType()->isDoubleTy() && retType->isIntegerTy()) {
-            // narrowing double -> int is lossy; better to error, but here's a truncation
-            retVal = builder->CreateFPToSI(retVal, retType, "ret_fp_to_int");
+    // Execute each body item. For VariableDeclaration we allocate+store.
+    for (const auto& stmt : body) {
+        const std::string kind = stmt.value("kind", "");
+        if (kind == "VariableDeclaration") {
+            codegenVariableDeclaration(stmt);
         } else {
-            throw std::runtime_error("Cannot convert return value to function return type");
+            // Evaluate expression for side-effects (if any)
+            // If expression returns a value, we ignore it here.
+            codegenExpression(stmt);
         }
     }
 
-    builder->CreateRet(retVal);
+    // Default return 0 (i64)
+    builder->CreateRet(llvm::ConstantInt::get(builder->getInt64Ty(), 0));
 
-    // Verify function and emit diagnostics if broken
     if (llvm::verifyFunction(*fn, &llvm::errs()))
         throw std::runtime_error("IR verification failed");
 
