@@ -1,1 +1,1 @@
-f"my age is {30 * 5}"
+int age = 30

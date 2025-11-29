@@ -1,4 +1,4 @@
-parser grammar Expressions;
+parser grammar ExpressionsGrammar;
 
 options {
     tokenVocab = Tokens;

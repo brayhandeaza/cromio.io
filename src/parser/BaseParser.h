@@ -7,10 +7,11 @@
 
 #include "GrammarVisitor.h"
 #include "ParserLiterals.h"
+#include "ParserVariables.h"
 
 namespace cromio::parser
 {
-    class Parser final : public ParserLiterals
+    class Parser final : public ParserLiterals, public ParserVariables
     {
     public:
         std::any visitProgram(Grammar::ProgramContext* ctx) override;

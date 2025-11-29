@@ -11,6 +11,7 @@ fragment EXPONENT   : [eE] [+-]? DIGIT+;
 fragment OCT_DIGIT  : [0-7];
 fragment BINARY_DIGIT : [01];
 fragment UNDERSCORE : '_';
+fragment EQUAL : '=';
 
 fragment ESC_SEQ
     : '\\' ['"\\/bfnrt]

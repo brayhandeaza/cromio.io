@@ -28,6 +28,13 @@ std::any cromio::parser::Parser::visitStatement(Grammar::StatementContext* ctx) 
         return node;
     }
 
+    if (ctx->variableDeclaration()) {
+        const std::any variableDeclaration = visit(ctx->variableDeclaration());
+
+        node["VariableDeclaration"] = std::any_cast<json>(variableDeclaration);
+        return node;
+    }
+
     return json::object();
 }
 

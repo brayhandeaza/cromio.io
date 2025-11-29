@@ -1,3 +1,3 @@
 lexer grammar Tokens;
 
-import MainTokens, NumberTokens, StringTokens, FragmentTokens;
+import FragmentTokens, MainTokens, NumberTokens, StringTokens;
