@@ -34,6 +34,8 @@ llvm::Type* cromio::lowering::IR::inferType(const json& node) const {
         return builder->getInt1Ty();
     if (kind == "NoneLiteral")
         return builder->getInt8Ty();
+    if (kind == "StringLiteral" || kind == "StringFormatted")
+        return llvm::PointerType::get(*context, 0);
 
     // Expression (binary)
     if (kind == "Expression") {
@@ -99,6 +101,12 @@ llvm::Constant* cromio::lowering::IR::codegenLiteral(const json& node) const {
         return llvm::ConstantInt::get(builder->getInt1Ty(), 0LL);
     }
 
+    if (kind == "StringLiteral" || kind == "StringFormatted") {
+        const std::string v = node.value("value", "");
+        std::cout << "StringLiteral: " << v << std::endl;
+        return builder->CreateGlobalString(v, "str");
+    }
+
     throw std::runtime_error("Unknown literal: " + kind);
 }
 
@@ -110,7 +118,7 @@ llvm::Value* cromio::lowering::IR::codegenExpression(const json& node) {
     const std::string kind = node.value("kind", "");
 
     // Literals
-    if (kind == "FloatLiteral" || kind == "IntegerLiteral" || kind == "BooleanLiteral" || kind == "NoneLiteral")
+    if (kind == "FloatLiteral" || kind == "IntegerLiteral" || kind == "BooleanLiteral" || kind == "NoneLiteral" || kind == "StringLiteral" || kind == "StringFormatted")
         return codegenLiteral(node);
 
     // Binary expression

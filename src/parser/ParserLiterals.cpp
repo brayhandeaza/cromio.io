@@ -7,11 +7,8 @@
 
 std::any cromio::parser::ParserLiterals::visitLiteral(Grammar::LiteralContext* ctx) {
     if (ctx->stringLiteral()) {
-        json node = utils::Helpers::createNode(ctx->getText(), "StringLiteral", ctx->start, ctx->stop);
         const std::any stringLiteral = visit(ctx->stringLiteral());
-
-        node["value"] = std::any_cast<json>(stringLiteral);
-        return node;
+        return std::any_cast<json>(stringLiteral);
     }
     if (ctx->integerLiteral()) {
         const std::any integerLiteral = visit(ctx->integerLiteral());
@@ -84,6 +81,12 @@ std::any cromio::parser::ParserLiterals::visitFormattedString(Grammar::Formatted
         }
     }
 
+    std::string value;
+    for (const auto& param : params) {
+        value += param["raw"];
+    }
+
+    node["value"] = value;
     node["params"] = params;
 
     return node;

@@ -5,6 +5,5 @@
 #ifndef CROMIO_SEMANTIC_H
 #define CROMIO_SEMANTIC_H
 
-#include "TypeChecker.h"
 
 #endif //CROMIO_SEMANTIC_H
