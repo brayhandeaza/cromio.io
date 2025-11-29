@@ -5,9 +5,6 @@
 #include "utils/Helpers.h"
 
 #include "antlr4-runtime.h"
-#include "Tokens.h"
-#include "Grammar.h"
-#include "parser/parser.h"
 
 double cromio::utils::Helpers::parseFloat(std::string raw) {
     bool isNegative = false;
@@ -32,12 +29,8 @@ std::string cromio::utils::Helpers::parseString(const std::string& rawInput) {
     std::string raw = rawInput;
 
     // Helper lambdas for starts_with and ends_with (C++11 compatible)
-    auto starts_with = [](const std::string& str, const std::string& prefix) {
-        return str.size() >= prefix.size() && str.compare(0, prefix.size(), prefix) == 0;
-    };
-    auto ends_with = [](const std::string& str, const std::string& suffix) {
-        return str.size() >= suffix.size() && str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0;
-    };
+    auto starts_with = [](const std::string& str, const std::string& prefix) { return str.size() >= prefix.size() && str.compare(0, prefix.size(), prefix) == 0; };
+    auto ends_with = [](const std::string& str, const std::string& suffix) { return str.size() >= suffix.size() && str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0; };
 
     // 1️⃣ Detect triple-quoted string ("""...""" or '''...''')
     bool triple = false;
@@ -59,8 +52,7 @@ std::string cromio::utils::Helpers::parseString(const std::string& rawInput) {
 
     for (size_t i = 0; i < raw.size(); ++i) {
         if (!triple && raw[i] == '\\' && i + 1 < raw.size()) {
-            char next = raw[++i];
-            switch (next) {
+            switch (char next = raw[++i]) {
                 case 'n':
                     result += '\n';
                     break;
@@ -171,17 +163,42 @@ json cromio::utils::Helpers::createNode(const std::string& raw, const std::strin
     return node;
 }
 
-json cromio::utils::Helpers::feedFileContentToANTLR(const std::string& content) {
-    antlr4::ANTLRInputStream input(content);
+static std::string trimLeadingZeros(const std::string& s) {
+    size_t i = 0;
+    while (i < s.size() && s[i] == '0')
+        i++;
+    return s.substr(i);
+}
 
-    Tokens lexer(&input);
-    antlr4::CommonTokenStream tokens(&lexer);
+bool cromio::utils::Helpers::exceedsInt64(const std::string& raw) {
+    // Handle optional leading + or -
+    bool negative = false;
+    std::string s = raw;
 
-    Grammar grammar(&tokens);
-    auto* tree = grammar.program();
+    if (s.size() > 0 && (s[0] == '-' || s[0] == '+')) {
+        negative = s[0] == '-';
+        s = s.substr(1);
+    }
 
-    parser::Parser visitor;
-    auto ast = std::any_cast<json>(visitor.visit(tree));
+    // Remove leading zeros
+    s = trimLeadingZeros(s);
+    if (s.empty())
+        return false;
 
-    return ast;
+    static const std::string MAX64 = "9223372036854775807";
+    static const std::string MIN64 = "9223372036854775808"; // absolute value
+
+    if (negative) {
+        if (s.size() > MIN64.size())
+            return true;
+        if (s.size() < MIN64.size())
+            return false;
+        return s > MIN64;
+    } else {
+        if (s.size() > MAX64.size())
+            return true;
+        if (s.size() < MAX64.size())
+            return false;
+        return s > MAX64;
+    }
 }

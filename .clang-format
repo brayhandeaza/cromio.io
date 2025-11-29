@@ -1,3 +1,5 @@
+---
+BasedOnStyle: LLVM
 AccessModifierOffset: -1
 AlignAfterOpenBracket: Align
 AlignConsecutiveMacros: false
@@ -23,7 +25,12 @@ AlwaysBreakTemplateDeclarations: Yes
 BinPackArguments: false
 BinPackParameters: false
 BreakBeforeBinaryOperators: None
+NamespaceIndentation: All
+
+
+# *** THIS is the important one ***
 BreakBeforeBraces: Attach
+
 BreakInheritanceList: BeforeColon
 BreakBeforeTernaryOperators: true
 BreakConstructorInitializers: BeforeColon
@@ -66,7 +73,6 @@ KeepEmptyLinesAtTheStartOfBlocks: false
 MacroBlockBegin: ''
 MacroBlockEnd: ''
 MaxEmptyLinesToKeep: 1
-NamespaceIndentation: None
 ObjCBinPackProtocolList: Auto
 ObjCBlockIndentWidth: 2
 ObjCBreakBeforeNestedBlockParam: true
@@ -107,3 +113,4 @@ Standard: Latest
 TabWidth: 8
 UseCRLF: false
 UseTab: Never
+...

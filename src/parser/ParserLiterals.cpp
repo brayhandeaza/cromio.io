@@ -3,7 +3,7 @@
 //
 
 #include "ParserLiterals.h"
-
+#include "utils/Error.h"
 
 std::any cromio::parser::ParserLiterals::visitLiteral(Grammar::LiteralContext* ctx) {
     if (ctx->stringLiteral()) {
@@ -37,8 +37,11 @@ std::any cromio::parser::ParserLiterals::visitLiteral(Grammar::LiteralContext* c
 
 std::any cromio::parser::ParserLiterals::visitIntegerLiteral(Grammar::IntegerLiteralContext* ctx) {
     json node = utils::Helpers::createNode(ctx->getText(), "IntegerLiteral", ctx->start, ctx->stop);
-    node["value"] = utils::Helpers::parseInteger(ctx->getText());
 
+    if (utils::Helpers::exceedsInt64(ctx->getText()))
+        utils::Error::throwRangeError("<int64> type exceeds 64-bit range", node, source);
+
+    node["value"] = utils::Helpers::parseInteger(ctx->getText());
     return node;
 }
 
@@ -85,8 +88,7 @@ std::any cromio::parser::ParserLiterals::visitFormattedString(Grammar::Formatted
     for (const auto& param : params) {
         if (param["kind"] == "Expression") {
             value += std::to_string(static_cast<float>(param["value"]));
-        }
-        else {
+        } else {
             value += param["value"];
         }
     }

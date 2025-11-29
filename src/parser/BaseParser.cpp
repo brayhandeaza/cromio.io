@@ -3,7 +3,7 @@
 //
 
 #include "BaseParser.h"
-
+#include "semantic/AST.h"
 
 std::any cromio::parser::Parser::visitProgram(Grammar::ProgramContext* ctx) {
     json node = utils::Helpers::createNode("", "Program", ctx->start, ctx->stop);
@@ -16,13 +16,15 @@ std::any cromio::parser::Parser::visitProgram(Grammar::ProgramContext* ctx) {
     }
 
     node["Body"] = body;
-    return node;
+
+    json ast = semantic::ASTAnalizy::analyze(node);
+    return ast;
 }
 
 std::any cromio::parser::Parser::visitStatement(Grammar::StatementContext* ctx) {
     if (ctx->expression()) {
         const std::any expression = visit(ctx->expression());
-        return  std::any_cast<json>(expression);
+        return std::any_cast<json>(expression);
     }
 
     if (ctx->variableDeclaration()) {
