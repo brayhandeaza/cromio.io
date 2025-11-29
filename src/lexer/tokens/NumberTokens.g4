@@ -4,15 +4,26 @@ lexer grammar NumberTokens;
 // NumberTokens
 // =======================================================================================================================================================
 
+// float
 FLOAT
-    : [+-]? DIGIT+ '.' DIGIT* EXPONENT?
+    : [+-]? DIGIT+ '.' DIGIT*
+    | [+-]? DIGIT+ '.' DIGIT* EXPONENT?
     | '.' DIGIT+ EXPONENT?
     ;
 
-INTEGER
-    : DIGIT+
-    | [+-]? '0x' HEX_DIGIT+
+FLOAT_UNDERSCORE_EXPONENT
+    : DIGIT+ (UNDERSCORE? DIGIT)* '.' DIGIT* (UNDERSCORE? DIGIT)* EXPONENT? -> type(FLOAT)
     ;
 
-fragment HEX_DIGIT : [0-9a-fA-F];
+
+// integer
+INTEGER
+    : DIGIT+ // Decimal
+    | [+-]? '0x' HEX_DIGIT+ // Hexadecimal
+    | [+-]? '0o' OCT_DIGIT+ // Octal
+    | [+-]? '0b' BINARY_DIGIT+ // Binary
+    | [+-]? DIGIT+  EXPONENT?
+    | DIGIT+ (UNDERSCORE? DIGIT)*
+    ;
+
 
