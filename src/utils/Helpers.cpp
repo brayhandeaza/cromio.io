@@ -122,6 +122,11 @@ long long cromio::utils::Helpers::parseInteger(std::string raw) {
         raw = raw.substr(1); // remove the '-'
     }
 
+    if (!raw.empty() && raw[0] == '+') {
+        isNegative = false;
+        raw = raw.substr(1); // remove the '+'
+    }
+
     int base = 10;
 
     // Detect prefix

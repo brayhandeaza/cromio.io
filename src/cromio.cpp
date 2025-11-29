@@ -28,7 +28,6 @@ int main(int argc, const char* argv[]) {
     buffer << file.rdbuf();
     std::string content = buffer.str();
 
-
     // ---------------------------------------------
     // Feed file content into  ANTLR
     // ---------------------------------------------
@@ -44,6 +43,7 @@ int main(int argc, const char* argv[]) {
     cromio::parser::Parser visitor;
     auto ast = std::any_cast<json>(visitor.visit(tree));
 
+    std::cout << ast.dump(2) << std::endl;
 
     // ---------------------------------------------
     // Emit LLVM IR from AST

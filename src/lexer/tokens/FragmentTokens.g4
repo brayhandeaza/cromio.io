@@ -13,4 +13,3 @@ fragment ESC_SEQ
     : '\\' ['"\\/bfnrt]
     | '\\u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
     ;
-

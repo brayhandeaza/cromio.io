@@ -14,6 +14,7 @@ namespace cromio::parser
     {
     public:
         std::any visitLiteral(Grammar::LiteralContext* ctx) override;
+
         std::any visitIntegerLiteral(Grammar::IntegerLiteralContext* ctx) override;
 
         std::any visitFloatLiteral(Grammar::FloatLiteralContext* ctx) override;

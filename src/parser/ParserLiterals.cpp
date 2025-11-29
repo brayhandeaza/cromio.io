@@ -39,6 +39,7 @@ std::any cromio::parser::ParserLiterals::visitLiteral(Grammar::LiteralContext* c
 }
 
 std::any cromio::parser::ParserLiterals::visitIntegerLiteral(Grammar::IntegerLiteralContext* ctx) {
+    std::cout << ctx->getText() << std::endl;
     json node = utils::Helpers::createNode(ctx->getText(), "IntegerLiteral", ctx->start, ctx->stop);
     node["value"] = utils::Helpers::parseInteger(ctx->getText());
 

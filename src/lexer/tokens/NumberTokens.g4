@@ -5,11 +5,14 @@ lexer grammar NumberTokens;
 // =======================================================================================================================================================
 
 FLOAT
-    : DIGIT+ '.' DIGIT* EXPONENT?
+    : [+-]? DIGIT+ '.' DIGIT* EXPONENT?
     | '.' DIGIT+ EXPONENT?
     ;
 
 INTEGER
     : DIGIT+
+    | [+-]? '0x' HEX_DIGIT+
     ;
+
+fragment HEX_DIGIT : [0-9a-fA-F];
 
