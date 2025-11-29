@@ -4,11 +4,16 @@
 
 #include "utils/Helpers.h"
 
-double Helpers::parseFloat(std::string raw) {
+#include "antlr4-runtime.h"
+#include "Tokens.h"
+#include "Grammar.h"
+#include "parser/parser.h"
+
+double cromio::utils::Helpers::parseFloat(std::string raw) {
     bool isNegative = false;
 
     // Detect negative sign
-    if(!raw.empty() && raw[0] == '-') {
+    if (!raw.empty() && raw[0] == '-') {
         isNegative = true;
         raw = raw.substr(1);
     }
@@ -18,19 +23,19 @@ double Helpers::parseFloat(std::string raw) {
     double value = 0.0;
     value = std::stod(raw);
 
-    if(isNegative) value = -value;
+    if (isNegative)
+        value = -value;
     return value;
 }
 
-
-std::string Helpers::parseString(const std::string &rawInput) {
+std::string cromio::utils::Helpers::parseString(const std::string& rawInput) {
     std::string raw = rawInput;
 
     // Helper lambdas for starts_with and ends_with (C++11 compatible)
-    auto starts_with = [](const std::string &str, const std::string &prefix) {
+    auto starts_with = [](const std::string& str, const std::string& prefix) {
         return str.size() >= prefix.size() && str.compare(0, prefix.size(), prefix) == 0;
     };
-    auto ends_with = [](const std::string &str, const std::string &suffix) {
+    auto ends_with = [](const std::string& str, const std::string& suffix) {
         return str.size() >= suffix.size() && str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0;
     };
 
@@ -56,21 +61,29 @@ std::string Helpers::parseString(const std::string &rawInput) {
         if (!triple && raw[i] == '\\' && i + 1 < raw.size()) {
             char next = raw[++i];
             switch (next) {
-                case 'n': result += '\n';
+                case 'n':
+                    result += '\n';
                     break;
-                case 'r': result += '\r';
+                case 'r':
+                    result += '\r';
                     break;
-                case 't': result += '\t';
+                case 't':
+                    result += '\t';
                     break;
-                case '\\': result += '\\';
+                case '\\':
+                    result += '\\';
                     break;
-                case '"': result += '"';
+                case '"':
+                    result += '"';
                     break;
-                case '\'': result += '\'';
+                case '\'':
+                    result += '\'';
                     break;
-                case 'b': result += '\b';
+                case 'b':
+                    result += '\b';
                     break;
-                case 'f': result += '\f';
+                case 'f':
+                    result += '\f';
                     break;
                 case 'u':
                     result += '?'; // placeholder for \uXXXX
@@ -90,7 +103,8 @@ std::string Helpers::parseString(const std::string &rawInput) {
         std::string normalized;
         normalized.reserve(result.size());
         for (size_t i = 0; i < result.size(); ++i) {
-            if (result[i] == '\r' && i + 1 < result.size() && result[i + 1] == '\n') continue;
+            if (result[i] == '\r' && i + 1 < result.size() && result[i + 1] == '\n')
+                continue;
             normalized += result[i];
         }
         return normalized;
@@ -99,7 +113,7 @@ std::string Helpers::parseString(const std::string &rawInput) {
     return result;
 }
 
-long long Helpers::parseInteger(std::string raw) {
+long long cromio::utils::Helpers::parseInteger(std::string raw) {
     bool isNegative = false;
 
     // Detect negative sign
@@ -127,25 +141,42 @@ long long Helpers::parseInteger(std::string raw) {
     std::erase(raw, '_');
 
     long long value = std::stoll(raw, nullptr, base);
-    if (isNegative) value = -value;
+    if (isNegative)
+        value = -value;
 
     return value;
 }
 
-json Helpers::getPosition(const antlr4::Token *token) {
+json cromio::utils::Helpers::getPosition(const antlr4::Token* token) {
     json pos;
     pos["line"] = token->getLine();
     pos["column"] = token->getCharPositionInLine();
     return pos;
 }
 
-json Helpers::createNode(const std::string &raw, const std::string &kind, const antlr4::Token *start, const antlr4::Token *stop) {
+json cromio::utils::Helpers::createNode(const std::string& raw, const std::string& kind, const antlr4::Token* start, const antlr4::Token* stop) {
     json node;
     node["kind"] = kind;
     node["start"] = getPosition(start);
     node["end"] = getPosition(stop ? stop : start);
 
-    if (raw.empty() != true) node["raw"] = raw;
+    if (raw.empty() != true)
+        node["raw"] = raw;
 
     return node;
+}
+
+json cromio::utils::Helpers::feedFileContentToANTLR(const std::string& content) {
+    antlr4::ANTLRInputStream input(content);
+
+    Tokens lexer(&input);
+    antlr4::CommonTokenStream tokens(&lexer);
+
+    Grammar grammar(&tokens);
+    auto* tree = grammar.program();
+
+    parser::Parser visitor;
+    auto ast = std::any_cast<json>(visitor.visit(tree));
+
+    return ast;
 }

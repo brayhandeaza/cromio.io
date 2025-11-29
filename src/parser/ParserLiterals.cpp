@@ -7,7 +7,7 @@
 
 std::any cromio::parser::ParserLiterals::visitLiteral(Grammar::LiteralContext* ctx) {
     if (ctx->stringLiteral()) {
-        json node = Helpers::createNode(ctx->getText(), "StringLiteral", ctx->start, ctx->stop);
+        json node = utils::Helpers::createNode(ctx->getText(), "StringLiteral", ctx->start, ctx->stop);
         const std::any stringLiteral = visit(ctx->stringLiteral());
 
         node["value"] = std::any_cast<json>(stringLiteral);
@@ -34,50 +34,47 @@ std::any cromio::parser::ParserLiterals::visitLiteral(Grammar::LiteralContext* c
         return std::any_cast<json>(formattedString);
     }
 
-    json node = Helpers::createNode("", "None", ctx->start, ctx->stop);
+    json node = utils::Helpers::createNode("", "None", ctx->start, ctx->stop);
     return node;
 }
 
 std::any cromio::parser::ParserLiterals::visitIntegerLiteral(Grammar::IntegerLiteralContext* ctx) {
-    json node = Helpers::createNode(ctx->getText(), "IntegerLiteral", ctx->start, ctx->stop);
-    node["value"] = Helpers::parseInteger(ctx->getText());
+    json node = utils::Helpers::createNode(ctx->getText(), "IntegerLiteral", ctx->start, ctx->stop);
+    node["value"] = utils::Helpers::parseInteger(ctx->getText());
 
     return node;
 }
 
 std::any cromio::parser::ParserLiterals::visitFloatLiteral(Grammar::FloatLiteralContext* ctx) {
-    json node = Helpers::createNode(ctx->getText(), "FloatLiteral", ctx->start, ctx->stop);
-    node["value"] = Helpers::parseFloat(ctx->getText());
+    json node = utils::Helpers::createNode(ctx->getText(), "FloatLiteral", ctx->start, ctx->stop);
+    node["value"] = utils::Helpers::parseFloat(ctx->getText());
 
     return node;
 }
 
 std::any cromio::parser::ParserLiterals::visitStringLiteral(Grammar::StringLiteralContext* ctx) {
-    json node = Helpers::createNode(ctx->getText(), "StringLiteral", ctx->start, ctx->stop);
-    node["value"] = Helpers::parseString(ctx->getText());
+    json node = utils::Helpers::createNode(ctx->getText(), "StringLiteral", ctx->start, ctx->stop);
+    node["value"] = utils::Helpers::parseString(ctx->getText());
 
     return node;
 }
 
 std::any cromio::parser::ParserLiterals::visitBooleanLiteral(Grammar::BooleanLiteralContext* ctx) {
-    json node = Helpers::createNode(ctx->getText() == "true" ? "1" : "0",
-                                    "BooleanLiteral",
-                                    ctx->start,
-                                    ctx->stop);
+    json node = utils::Helpers::createNode(ctx->getText() == "true" ? "1" : "0", "BooleanLiteral", ctx->start, ctx->stop);
     node["value"] = ctx->getText() == "true";
 
     return node;
 }
 
 std::any cromio::parser::ParserLiterals::visitNoneLiteral(Grammar::NoneLiteralContext* ctx) {
-    json node = Helpers::createNode("0", "NoneLiteral", ctx->start, ctx->stop);
+    json node = utils::Helpers::createNode("0", "NoneLiteral", ctx->start, ctx->stop);
     node["value"] = nullptr;
 
     return node;
 }
 
 std::any cromio::parser::ParserLiterals::visitFormattedString(Grammar::FormattedStringContext* ctx) {
-    json node = Helpers::createNode(ctx->getText(), "StringFormatted", ctx->start, ctx->stop);
+    json node = utils::Helpers::createNode(ctx->getText(), "StringFormatted", ctx->start, ctx->stop);
     json params = json::array();
 
     for (const auto child : ctx->formattedStringContent()) {
@@ -101,7 +98,7 @@ std::any cromio::parser::ParserLiterals::visitFormattedStringContent(Grammar::Fo
 
     // -------- CASE 2: TEXT inside formatted string
     if (ctx->FORMATTED_STRING_TEXT()) {
-        json node = Helpers::createNode(ctx->getText(), "StringFormattedText", ctx->start, ctx->stop);
+        json node = utils::Helpers::createNode(ctx->getText(), "StringFormattedText", ctx->start, ctx->stop);
         node["value"] = ctx->getText();
         return node;
     }

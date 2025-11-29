@@ -6,6 +6,9 @@
 
 
 int main(int argc, const char* argv[]) {
+    // ---------------------------------------------
+    // Load input file
+    // ---------------------------------------------
     if (argc < 2) {
         std::cerr << "Usage: " << argv[0] << " <input-file>" << std::endl;
         return 1;
@@ -18,7 +21,6 @@ int main(int argc, const char* argv[]) {
         return 1;
     }
 
-   // filename
     std::string filenamePath = argv[1];
     std::string fileName = filenamePath.substr(filenamePath.find_last_of('/') + 1);
 
@@ -26,7 +28,11 @@ int main(int argc, const char* argv[]) {
     buffer << file.rdbuf();
     std::string content = buffer.str();
 
-    // // Feed into ANTLR
+
+    // ---------------------------------------------
+    // Feed file content into  ANTLR
+    // ---------------------------------------------
+
     antlr4::ANTLRInputStream input(content);
 
     Tokens lexer(&input);
@@ -38,13 +44,16 @@ int main(int argc, const char* argv[]) {
     cromio::parser::Parser visitor;
     auto ast = std::any_cast<json>(visitor.visit(tree));
 
-    // std::cout << "ast: " << ast.dump(4) << std::endl;
 
-    // Generate IR
+    // ---------------------------------------------
+    // Emit LLVM IR from AST
+    // ---------------------------------------------
     cromio::lowering::IR ir(fileName);
     llvm::Module* module = ir.generate(ast);
 
-    // BytecodeEmitter::toFile(*module, "output.bc");
+    // ---------------------------------------------
+    // Emit LLVM Bytecode to memory or to file
+    // ---------------------------------------------
     std::vector<uint8_t> bc = cromio::backend::BytecodeEmitter::toMemory(*module);
     std::cout << "bc size: " << bc.size() << std::endl;
     module->print(llvm::outs(), nullptr);

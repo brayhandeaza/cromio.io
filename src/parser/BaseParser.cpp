@@ -6,7 +6,7 @@
 
 
 std::any cromio::parser::Parser::visitProgram(Grammar::ProgramContext* ctx)  {
-    json node = Helpers::createNode("", "Program", ctx->start, ctx->stop);
+    json node = utils::Helpers::createNode("", "Program", ctx->start, ctx->stop);
 
     json body;
     for (const auto child : ctx->children) {
@@ -20,7 +20,7 @@ std::any cromio::parser::Parser::visitProgram(Grammar::ProgramContext* ctx)  {
 }
 
 std::any cromio::parser::Parser::visitStatement(Grammar::StatementContext* ctx)  {
-    json node = Helpers::createNode("", "Statement", ctx->start, ctx->stop);
+    json node = utils::Helpers::createNode("", "Statement", ctx->start, ctx->stop);
     if (ctx->expression()) {
         const std::any expression = visit(ctx->expression());
 
@@ -75,7 +75,7 @@ std::any cromio::parser::Parser::visitExpression(Grammar::ExpressionContext* ctx
             // handle if needed
         }
 
-        json node = Helpers::createNode(ctx->getText(), "Expression", ctx->start, ctx->stop);
+        json node = utils::Helpers::createNode(ctx->getText(), "Expression", ctx->start, ctx->stop);
         node["left"] = leftJson;
         node["operator"] = op;
         node["right"] = rightJson;
