@@ -92,7 +92,7 @@ std::any cromio::parser::Parser::visitExpression(Grammar::ExpressionContext* ctx
             // Boolean → numeric
             if (k == "BooleanLiteral") {
                 const std::string v = j["value"].get<std::string>();
-                return (v == "true") ? 1.0 : 0.0;
+                return v == "true" ? 1.0 : 0.0;
             }
 
             // NoneLiteral → numeric 0
