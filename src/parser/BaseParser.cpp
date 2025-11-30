@@ -65,8 +65,8 @@ std::any cromio::parser::Parser::visitExpression(Grammar::ExpressionContext* ctx
     // (3) Binary expression
     // -------------------------------------------------------
     if (!op.empty() && ctx->expression().size() >= 2) {
-        json left = std::any_cast<json>(visit(ctx->expression(0)));
-        json right = std::any_cast<json>(visit(ctx->expression(1)));
+        const json left = std::any_cast<json>(visit(ctx->expression(0)));
+        const json right = std::any_cast<json>(visit(ctx->expression(1)));
 
         json node = utils::Helpers::createNode(ctx->getText(), "Expression", ctx->start, ctx->stop);
         node["left"] = left;
@@ -75,7 +75,7 @@ std::any cromio::parser::Parser::visitExpression(Grammar::ExpressionContext* ctx
 
         // Allowed numeric literal types
         auto isAllowed = [&](const json& j) {
-            std::string k = j["kind"].get<std::string>();
+            const std::string k = j["kind"].get<std::string>();
             return k == "IntegerLiteral" || k == "FloatLiteral" || k == "BooleanLiteral" || k == "NoneLiteral" || k == "Expression";
         };
 
@@ -87,11 +87,11 @@ std::any cromio::parser::Parser::visitExpression(Grammar::ExpressionContext* ctx
 
         // Convert JSON literal to double
         auto toDouble = [&](const json& j) -> double {
-            std::string k = j["kind"].get<std::string>();
+            const std::string k = j["kind"].get<std::string>();
 
             // Boolean → numeric
             if (k == "BooleanLiteral") {
-                std::string v = j["value"].get<std::string>();
+                const std::string v = j["value"].get<std::string>();
                 return (v == "true") ? 1.0 : 0.0;
             }
 
