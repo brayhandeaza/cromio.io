@@ -6,6 +6,27 @@
 
 #include "antlr4-runtime.h"
 
+long long cromio::utils::Helpers::parseNumberString(const std::string& raw) {
+    try {
+        // Binary: 0bxxxx
+        if (raw.rfind("0b", 0) == 0 || raw.rfind("0B", 0) == 0)
+            return std::stoll(raw.substr(2), nullptr, 2);
+
+        // Octal: 0oxxxx
+        if (raw.rfind("0o", 0) == 0 || raw.rfind("0O", 0) == 0)
+            return std::stoll(raw.substr(2), nullptr, 8);
+
+        // Hex: 0xXXXX
+        if (raw.rfind("0x", 0) == 0 || raw.rfind("0X", 0) == 0)
+            return std::stoll(raw.substr(2), nullptr, 16);
+
+        // Decimal (normal or with underscore separated)
+        return std::stoll(raw, nullptr, 10);
+    } catch (...) {
+        return 0; // fallback
+    }
+}
+
 double cromio::utils::Helpers::parseFloat(std::string raw) {
     bool isNegative = false;
 

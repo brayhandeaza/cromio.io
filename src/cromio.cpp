@@ -7,6 +7,8 @@
 #include <semantic/AST.h>
 
 int main(int argc, const char* argv[]) {
+
+
     // ---------------------------------------------
     // Load input file
     // ---------------------------------------------

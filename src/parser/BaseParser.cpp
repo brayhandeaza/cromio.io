@@ -36,11 +36,14 @@ std::any cromio::parser::Parser::visitStatement(Grammar::StatementContext* ctx) 
 }
 
 std::any cromio::parser::Parser::visitExpression(Grammar::ExpressionContext* ctx) {
-    // 1) Literal -> just visit the literal and return it
+    // -------------------------------------------------------
+    // (1) Literal → return literal node
+    // -------------------------------------------------------
     if (ctx->literal()) {
         return visit(ctx->literal());
     }
 
+    // Select operator
     std::string op;
     if (ctx->PLUS())
         op = "+";
@@ -51,99 +54,98 @@ std::any cromio::parser::Parser::visitExpression(Grammar::ExpressionContext* ctx
     else if (ctx->DIV())
         op = "/";
 
-    // 2) Parenthesized expression: usually represented as one child expression and no operator.
-    //    Example: '(' expression ')'
+    // -------------------------------------------------------
+    // (2) Parenthesized expression: (expr)
+    // -------------------------------------------------------
     if (ctx->expression().size() == 1 && op.empty()) {
         return visit(ctx->expression(0));
     }
 
-    // 3) Binary expression: operator present and at least two expression children
+    // -------------------------------------------------------
+    // (3) Binary expression
+    // -------------------------------------------------------
     if (!op.empty() && ctx->expression().size() >= 2) {
-        // visit children (they should each return json wrapped in std::any)
-        const auto leftAny = visit(ctx->expression(0));
-        const auto rightAny = visit(ctx->expression(1));
-
-        json leftJson = json::object();
-        json rightJson = json::object();
-
-        // be defensive about any_cast
-        try {
-            leftJson = std::any_cast<json>(leftAny);
-        } catch (const std::bad_any_cast&) {
-            // optionally try to handle other returned types or set an error marker
-        }
-
-        try {
-            rightJson = std::any_cast<json>(rightAny);
-        } catch (const std::bad_any_cast&) {
-            // handle if needed
-        }
+        json left = std::any_cast<json>(visit(ctx->expression(0)));
+        json right = std::any_cast<json>(visit(ctx->expression(1)));
 
         json node = utils::Helpers::createNode(ctx->getText(), "Expression", ctx->start, ctx->stop);
-        node["left"] = leftJson;
+        node["left"] = left;
+        node["right"] = right;
         node["operator"] = op;
-        node["right"] = rightJson;
 
-        // Calculate the final value of the expression
-        double finalValue = 0.0;
-        bool hasValue = false;
+        // Allowed numeric literal types
+        auto isAllowed = [&](const json& j) {
+            std::string k = j["kind"].get<std::string>();
+            return k == "IntegerLiteral" || k == "FloatLiteral" || k == "BooleanLiteral" || k == "NoneLiteral" || k == "Expression";
+        };
 
-        if (leftJson.contains("value") && rightJson.contains("value")) {
-            try {
-                double leftValue = 0.0;
-                double rightValue = 0.0;
-
-                // Handle both string and numeric values
-                if (leftJson["value"].is_string()) {
-                    leftValue = std::stod(leftJson["value"].get<std::string>());
-                } else if (leftJson["value"].is_number()) {
-                    leftValue = leftJson["value"].get<double>();
-                }
-
-                if (rightJson["value"].is_string()) {
-                    rightValue = std::stod(rightJson["value"].get<std::string>());
-                } else if (rightJson["value"].is_number()) {
-                    rightValue = rightJson["value"].get<double>();
-                }
-
-                // Perform the operation
-                if (op == "+") {
-                    finalValue = leftValue + rightValue;
-                    hasValue = true;
-                } else if (op == "-") {
-                    finalValue = leftValue - rightValue;
-                    hasValue = true;
-                } else if (op == "*") {
-                    finalValue = leftValue * rightValue;
-                    hasValue = true;
-                } else if (op == "/") {
-                    if (rightValue != 0.0) {
-                        finalValue = leftValue / rightValue;
-                        hasValue = true;
-                    } else {
-                        // Handle division by zero
-                        node["error"] = "Division by zero";
-                    }
-                }
-            } catch (const std::exception& e) {
-                // Handle conversion errors
-                node["error"] = std::string("Value calculation error: ") + e.what();
-            }
+        // Reject string or unsupported literal types
+        if (!isAllowed(left) || !isAllowed(right)) {
+            node["error"] = "Arithmetic only allowed on numeric literals (int, float, bool, none)";
+            return node;
         }
 
-        // Store the calculated value
-        if (hasValue)
-            node["value"] = finalValue;
+        // Convert JSON literal to double
+        auto toDouble = [&](const json& j) -> double {
+            std::string k = j["kind"].get<std::string>();
 
+            // Boolean → numeric
+            if (k == "BooleanLiteral") {
+                std::string v = j["value"].get<std::string>();
+                return (v == "true") ? 1.0 : 0.0;
+            }
+
+            // NoneLiteral → numeric 0
+            if (k == "NoneLiteral") {
+                return 0.0;
+            }
+
+            // Integer / Float literal: string or number
+            if (j["value"].is_number())
+                return j["value"].get<double>();
+
+            return std::stod(j["value"].get<std::string>());
+        };
+
+        double L = 0.0, R = 0.0;
+
+        try {
+            L = toDouble(left);
+            R = toDouble(right);
+        } catch (const std::exception& e) {
+            node["error"] = std::string("Invalid numeric literal: ") + e.what();
+            return node;
+        }
+
+        // ---------------------------------------------------
+        // Perform arithmetic — ALWAYS error if dividing by 0
+        // ---------------------------------------------------
+        double result = 0.0;
+
+        if (op == "+")
+            result = L + R;
+        else if (op == "-")
+            result = L - R;
+        else if (op == "*")
+            result = L * R;
+        else if (op == "/") {
+            if (R == 0.0) {
+                node["error"] = "Division by zero";
+                return node;
+            }
+            result = L / R;
+        }
+
+        node["value"] = result;
+        node["stringValue"] = std::to_string(result);
         return node;
     }
 
-    // 4) Fallback: if grammar has other expression shapes (unary, etc.), try visiting children
-    //    or return empty object (adjust to your needs)
-    if (!ctx->expression().empty()) {
-        // if there's a single child but operator was non-null (rare) or other shape, try to visit first child
+    // -------------------------------------------------------
+    // (4) Fallback
+    // -------------------------------------------------------
+    if (!ctx->expression().empty())
         return visit(ctx->expression(0));
-    }
 
     return json::object();
 }
