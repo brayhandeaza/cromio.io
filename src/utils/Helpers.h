@@ -19,7 +19,13 @@ namespace cromio::utils {
         static long long parseInteger(std::string raw);
         static std::string parseString(const std::string& rawInput);
         static double parseFloat(std::string raw);
-        static bool exceedsInt64(const std::string& raw);
+        static bool exceedsInt64(const std::string& raw, bool isUnsigned);
+        static bool exceedsUInt64(const std::string& raw);
+        static bool strGreater(const std::string& a, const std::string& b);
+        static std::string trimLeadingZeros(const std::string& s);
+        static bool isGreaterUnsigned(const std::string& num, const std::string& max);
+        static bool isGreaterSigned(const std::string& num, const std::string& maxPos, const std::string& maxNeg);
+        static bool isValidNumber(const std::string& str);
     };
 } // namespace cromio::utils
 

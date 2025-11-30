@@ -163,14 +163,39 @@ json cromio::utils::Helpers::createNode(const std::string& raw, const std::strin
     return node;
 }
 
-static std::string trimLeadingZeros(const std::string& s) {
+std::string cromio::utils::Helpers::trimLeadingZeros(const std::string& s) {
     size_t i = 0;
     while (i < s.size() && s[i] == '0')
         i++;
     return s.substr(i);
 }
 
-bool cromio::utils::Helpers::exceedsInt64(const std::string& raw) {
+bool cromio::utils::Helpers::strGreater(const std::string& a, const std::string& b) {
+    return a.compare(b) > 0;
+}
+
+bool cromio::utils::Helpers::exceedsUInt64(const std::string& raw) {
+    static const std::string U64_MAX = "18446744073709551615"; // 2^64 - 1
+    std::string s = raw;
+
+    // Unsigned values must not have sign
+    if (!s.empty() && (s[0] == '-' || s[0] == '+')) {
+        return true;
+    }
+
+    s = trimLeadingZeros(s);
+    if (s.empty())
+        return false; // "0" is fine
+
+    if (s.size() > U64_MAX.size())
+        return true;
+    if (s.size() < U64_MAX.size())
+        return false;
+
+    return strGreater(s, U64_MAX);
+}
+
+bool cromio::utils::Helpers::exceedsInt64(const std::string& raw, const bool isUnsigned) {
     // Handle optional leading + or -
     bool negative = false;
     std::string s = raw;
@@ -185,8 +210,8 @@ bool cromio::utils::Helpers::exceedsInt64(const std::string& raw) {
     if (s.empty())
         return false;
 
-    static const std::string MAX64 = "9223372036854775807";
-    static const std::string MIN64 = "9223372036854775808"; // absolute value
+    static const std::string MAX64 = isUnsigned ? "9223372036854775807" : "18446744073709551615";
+    static const std::string MIN64 = isUnsigned ? "9223372036854775808" : "18446744073709551616";
 
     if (negative) {
         if (s.size() > MIN64.size())
@@ -194,11 +219,73 @@ bool cromio::utils::Helpers::exceedsInt64(const std::string& raw) {
         if (s.size() < MIN64.size())
             return false;
         return s > MIN64;
-    } else {
-        if (s.size() > MAX64.size())
-            return true;
-        if (s.size() < MAX64.size())
-            return false;
-        return s > MAX64;
     }
+
+    if (s.size() > MAX64.size())
+        return true;
+    if (s.size() < MAX64.size())
+        return false;
+    return s > MAX64;
+}
+
+bool cromio::utils::Helpers::isGreaterUnsigned(const std::string& num, const std::string& max) {
+    // remove leading zeros
+    std::string a = num;
+    a.erase(0, a.find_first_not_of('0'));
+
+    if (a.size() != max.size())
+        return a.size() > max.size();
+
+    return a > max;
+}
+
+bool cromio::utils::Helpers::isGreaterSigned(const std::string& num, const std::string& maxPos, const std::string& maxNeg) {
+    if (num[0] == '-') {
+        // remove leading '-'
+        std::string absNum = num.substr(1);
+        absNum.erase(0, absNum.find_first_not_of('0'));
+        if (absNum.size() != maxNeg.size())
+            return absNum.size() > maxNeg.size();
+        return absNum > maxNeg;
+    } else {
+        std::string n = num;
+        n.erase(0, n.find_first_not_of('0'));
+        if (n.size() != maxPos.size())
+            return n.size() > maxPos.size();
+        return n > maxPos;
+    }
+}
+
+bool cromio::utils::Helpers::isValidNumber(const std::string& str) {
+    if (str.empty())
+        return false;
+
+    size_t i = 0;
+    bool hasDecimal = false;
+    bool hasDigit = false;
+
+    if (str[0] == '+' || str[0] == '-')
+        i = 1;
+    if (i == str.size())
+        return false;
+
+    for (; i < str.size(); ++i) {
+        char c = str[i];
+        if (std::isdigit(c)) {
+            hasDigit = true;
+        } else if (c == '.') {
+            if (hasDecimal)
+                return false;
+            hasDecimal = true;
+        } else if (c == 'e' || c == 'E') {
+            if (i + 1 >= str.size())
+                return false;
+            if (str[i + 1] == '+' || str[i + 1] == '-')
+                ++i;
+        } else {
+            return false;
+        }
+    }
+
+    return hasDigit;
 }

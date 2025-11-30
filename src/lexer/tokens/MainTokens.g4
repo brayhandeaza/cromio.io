@@ -25,12 +25,9 @@ UNSIGNED_INTEGER_TYPES
 
 FLOAT_TYPES
     : 'float'      // 32-bit
-    | 'double'     // 64-bit
+    | 'float32'    // 34-bit
+    | 'float64'    // 64-bit
     ;
-
-
-BOOLEAN_TYPES: 'bool';
-
 
 NONE: 'none';
 BOOLEAN: 'true' | 'false';

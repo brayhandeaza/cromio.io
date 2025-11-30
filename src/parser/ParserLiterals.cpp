@@ -37,17 +37,13 @@ std::any cromio::parser::ParserLiterals::visitLiteral(Grammar::LiteralContext* c
 
 std::any cromio::parser::ParserLiterals::visitIntegerLiteral(Grammar::IntegerLiteralContext* ctx) {
     json node = utils::Helpers::createNode(ctx->getText(), "IntegerLiteral", ctx->start, ctx->stop);
-
-    if (utils::Helpers::exceedsInt64(ctx->getText()))
-        utils::Error::throwRangeError("<int64> type exceeds 64-bit range", node, source);
-
-    node["value"] = utils::Helpers::parseInteger(ctx->getText());
+    node["value"] = ctx->getText();
     return node;
 }
 
 std::any cromio::parser::ParserLiterals::visitFloatLiteral(Grammar::FloatLiteralContext* ctx) {
     json node = utils::Helpers::createNode(ctx->getText(), "FloatLiteral", ctx->start, ctx->stop);
-    node["value"] = utils::Helpers::parseFloat(ctx->getText());
+    node["value"] = ctx->getText();
 
     return node;
 }
