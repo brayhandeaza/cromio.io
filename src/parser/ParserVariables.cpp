@@ -8,13 +8,17 @@
 void cromio::parser::ParserVariables::analyzeVariableDeclaration(const json& node) const {
     if (node["value"].contains("error")) {
         const std::string error = node["value"]["error"];
-        utils::Error::throwTypeError(error, node, source);
+        utils::Error::throwError("Error", error, node, source);
     }
 
     const std::string identifier = node["Identifier"]["value"];
     const std::string dataType = node["DataType"]["value"];
     const std::string rValue = node["value"]["stringValue"];
+    const std::string returnType = node["value"]["type"];
     const bool isNegative = !rValue.empty() && rValue[0] == '-';
+
+    if (!utils::Helpers::checkDataType(dataType, returnType))
+        utils::Error::throwTypeError(identifier, dataType, node, source);
 
     // Limits as strings
     const std::string INT64_MAX_STR = "9223372036854775807";
@@ -27,7 +31,7 @@ void cromio::parser::ParserVariables::analyzeVariableDeclaration(const json& nod
     if (dataType == "int64") {
         const bool isValidNumber = utils::Helpers::isValidNumber(rValue);
         if (!isValidNumber)
-            utils::Error::throwTypeError("\033[1;31mvariable <" + identifier + ">" + "expect a 64-bit range signed integer", node, source);
+            utils::Error::throwTypeError(identifier, dataType, node, source);
 
         if (utils::Helpers::isGreaterSigned(rValue, INT64_MAX_STR, INT64_MIN_STR) || !isValidNumber)
             utils::Error::throwRangeError("<int64> type exceeds 64-bit range", node, source);
@@ -38,7 +42,7 @@ void cromio::parser::ParserVariables::analyzeVariableDeclaration(const json& nod
     // ---------------------------------------------
     if (dataType == "uint64") {
         if (const bool isValidNumber = utils::Helpers::isValidNumber(rValue); !isValidNumber)
-            utils::Error::throwTypeError("\033[1;31mvariable <" + identifier + ">" + "expect a 64-bit range unsigned integer", node, source);
+            utils::Error::throwTypeError(identifier, dataType, node, source);
 
         if (isNegative)
             utils::Error::throwRangeError("<uint64> cannot be negative", node, source);
@@ -56,13 +60,13 @@ void cromio::parser::ParserVariables::analyzeVariableDeclaration(const json& nod
 
         // validate data type
         if (dataType == "uint8" && !isValidNumber)
-            utils::Error::throwTypeError("<" + identifier + "> expects a 8-bit unsigned integer", node, source);
+            utils::Error::throwTypeError(identifier, dataType, node, source);
 
         if (dataType == "uint16" && !isValidNumber)
-            utils::Error::throwTypeError("<" + identifier + "> expects a 16-bit unsigned integer", node, source);
+            utils::Error::throwTypeError(identifier, dataType, node, source);
 
         if ((dataType == "uint32" || dataType == "uint") && !isValidNumber)
-            utils::Error::throwTypeError("<" + identifier + "> expects a 32-bit unsigned integer", node, source);
+            utils::Error::throwTypeError(identifier, dataType, node, source);
 
         // validate variable value exceeds range
         if (dataType == "uint8" && (value < 0 || value > UINT8_MAX))
@@ -83,13 +87,13 @@ void cromio::parser::ParserVariables::analyzeVariableDeclaration(const json& nod
 
         // validate data type
         if (dataType == "int8" && !isValidNumber)
-            utils::Error::throwTypeError("<" + identifier + ">" + "expects a 8-bit range signed integer", node, source);
+            utils::Error::throwTypeError(identifier, dataType, node, source);
 
         if (dataType == "int16" && !isValidNumber)
-            utils::Error::throwTypeError("<" + identifier + ">" + "expects a 16-bit range signed integer", node, source);
+            utils::Error::throwTypeError(identifier, dataType, node, source);
 
         if ((dataType == "int32" || dataType == "int") && !isValidNumber)
-            utils::Error::throwTypeError("Variable <" + identifier + "> expects a 32-bit signed integer", node, source);
+            utils::Error::throwTypeError(identifier, dataType, node, source);
 
         // validate variable value exceeds range
         if (dataType == "int8" && (value < INT8_MIN || value > INT8_MAX))

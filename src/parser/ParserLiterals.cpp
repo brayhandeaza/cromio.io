@@ -54,6 +54,7 @@ std::any cromio::parser::ParserLiterals::visitFloatLiteral(Grammar::FloatLiteral
 std::any cromio::parser::ParserLiterals::visitStringLiteral(Grammar::StringLiteralContext* ctx) {
     json node = utils::Helpers::createNode(ctx->getText(), "StringLiteral", ctx->start, ctx->stop);
     node["value"] = utils::Helpers::parseString(ctx->getText());
+    node["type"] = "str";
     node["stringValue"] = ctx->getText();
 
     return node;
@@ -98,6 +99,7 @@ std::any cromio::parser::ParserLiterals::visitFormattedString(Grammar::Formatted
 
     node["value"] = value;
     node["stringValue"] = node["stringValue"];
+    node["type"] = "fstr";
     node["params"] = params;
 
     return node;

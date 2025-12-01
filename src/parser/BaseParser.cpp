@@ -43,8 +43,11 @@ std::any cromio::parser::Parser::visitExpression(Grammar::ExpressionContext* ctx
         return visit(ctx->literal());
     }
 
-    // Select operator
+    // -------------------------------------------------------
+    // (2) Detect operator
+    // -------------------------------------------------------
     std::string op;
+
     if (ctx->PLUS())
         op = "+";
     else if (ctx->MINUS())
@@ -53,16 +56,18 @@ std::any cromio::parser::Parser::visitExpression(Grammar::ExpressionContext* ctx
         op = "*";
     else if (ctx->DIV())
         op = "/";
+    else if (ctx->MOD())
+        op = "%";
 
     // -------------------------------------------------------
-    // (2) Parenthesized expression: (expr)
+    // (3) Parenthesized expression
     // -------------------------------------------------------
     if (ctx->expression().size() == 1 && op.empty()) {
         return visit(ctx->expression(0));
     }
 
     // -------------------------------------------------------
-    // (3) Binary expression
+    // (4) Binary expression
     // -------------------------------------------------------
     if (!op.empty() && ctx->expression().size() >= 2) {
         const json left = std::any_cast<json>(visit(ctx->expression(0)));
@@ -73,34 +78,27 @@ std::any cromio::parser::Parser::visitExpression(Grammar::ExpressionContext* ctx
         node["right"] = right;
         node["operator"] = op;
 
-        // Allowed numeric literal types
+        // Types allowed in arithmetic
         auto isAllowed = [&](const json& j) {
-            const std::string k = j["kind"].get<std::string>();
+            std::string k = j["kind"].get<std::string>();
             return k == "IntegerLiteral" || k == "FloatLiteral" || k == "BooleanLiteral" || k == "NoneLiteral" || k == "Expression";
         };
 
-        // Reject string or unsupported literal types
         if (!isAllowed(left) || !isAllowed(right)) {
             node["error"] = "Arithmetic only allowed on numeric literals (int, float, bool, none)";
             return node;
         }
 
-        // Convert JSON literal to double
+        // Convert JSON → double
         auto toDouble = [&](const json& j) -> double {
-            const std::string k = j["kind"].get<std::string>();
+            std::string k = j["kind"];
 
-            // Boolean → numeric
-            if (k == "BooleanLiteral") {
-                const std::string v = j["value"].get<std::string>();
-                return v == "true" ? 1.0 : 0.0;
-            }
+            if (k == "BooleanLiteral")
+                return j["value"] == "true" ? 1.0 : 0.0;
 
-            // NoneLiteral → numeric 0
-            if (k == "NoneLiteral") {
+            if (k == "NoneLiteral")
                 return 0.0;
-            }
 
-            // Integer / Float literal: string or number
             if (j["value"].is_number())
                 return j["value"].get<double>();
 
@@ -112,14 +110,14 @@ std::any cromio::parser::Parser::visitExpression(Grammar::ExpressionContext* ctx
         try {
             L = toDouble(left);
             R = toDouble(right);
-        } catch (const std::exception& e) {
-            node["error"] = std::string("Invalid numeric literal: ") + e.what();
+        } catch (...) {
+            node["error"] = "Invalid numeric literal";
             return node;
         }
 
-        // ---------------------------------------------------
-        // Perform arithmetic — ALWAYS error if dividing by 0
-        // ---------------------------------------------------
+        // -------------------------------------------------------
+        // (5) Perform arithmetic
+        // -------------------------------------------------------
         double result = 0.0;
 
         if (op == "+")
@@ -128,6 +126,7 @@ std::any cromio::parser::Parser::visitExpression(Grammar::ExpressionContext* ctx
             result = L - R;
         else if (op == "*")
             result = L * R;
+
         else if (op == "/") {
             if (R == 0.0) {
                 node["error"] = "Division by zero";
@@ -136,13 +135,61 @@ std::any cromio::parser::Parser::visitExpression(Grammar::ExpressionContext* ctx
             result = L / R;
         }
 
+        else if (op == "%") {
+            if (R == 0.0) {
+                node["error"] = "Modulo by zero";
+                return node;
+            }
+
+            // int % int
+            if (L == (int)L && R == (int)R) {
+                result = (int)L % (int)R;
+            }
+            // float modulo → fmod
+            else {
+                result = std::fmod(L, R);
+            }
+        }
+
+        // -------------------------------------------------------
+        // (6) Determine final data type
+        // -------------------------------------------------------
+        auto determineType = [&](double L, double R, const std::string& op, const json& left, const json& right) -> std::string {
+            bool leftFloat = left["kind"] == "FloatLiteral";
+            bool rightFloat = right["kind"] == "FloatLiteral";
+
+            if (leftFloat || rightFloat)
+                return "float";
+
+            if (left["kind"] == "BooleanLiteral" || right["kind"] == "BooleanLiteral")
+                return "int";
+
+            if (left["kind"] == "NoneLiteral" || right["kind"] == "NoneLiteral")
+                return "int";
+
+            if (op == "%")
+                return "int";
+
+            if (op == "/")
+                return "float";
+
+            return "int";
+        };
+
+        std::string finalType = determineType(L, R, op, left, right);
+
+        // -------------------------------------------------------
+        // (7) Store results
+        // -------------------------------------------------------
         node["value"] = result;
         node["stringValue"] = std::to_string(result);
+        node["type"] = finalType;
+
         return node;
     }
 
     // -------------------------------------------------------
-    // (4) Fallback
+    // (8) Fallback
     // -------------------------------------------------------
     if (!ctx->expression().empty())
         return visit(ctx->expression(0));

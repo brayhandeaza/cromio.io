@@ -6,6 +6,7 @@ options {
 
 expression: literal
           | LPAREN expression RPAREN
+          | expression MOD expression
           | expression PLUS expression
           | expression MINUS expression
           | expression MUL expression

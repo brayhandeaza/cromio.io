@@ -38,6 +38,7 @@ PLUS: '+';
 MINUS: '-';
 MUL: '*';
 DIV: '/';
+MOD: '%';
 EQ: '=';
 
 LPAREN: '(';
