@@ -1,1 +1,1 @@
-int j = "7 % 3 + 10"
+str j = "none"

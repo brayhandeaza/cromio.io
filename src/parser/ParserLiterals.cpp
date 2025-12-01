@@ -38,6 +38,7 @@ std::any cromio::parser::ParserLiterals::visitLiteral(Grammar::LiteralContext* c
 std::any cromio::parser::ParserLiterals::visitIntegerLiteral(Grammar::IntegerLiteralContext* ctx) {
     json node = utils::Helpers::createNode(ctx->getText(), "IntegerLiteral", ctx->start, ctx->stop);
     node["value"] = utils::Helpers::parseNumberString(ctx->getText());
+    node["type"] = "int";
     node["stringValue"] = ctx->getText();
 
     return node;
@@ -46,6 +47,7 @@ std::any cromio::parser::ParserLiterals::visitIntegerLiteral(Grammar::IntegerLit
 std::any cromio::parser::ParserLiterals::visitFloatLiteral(Grammar::FloatLiteralContext* ctx) {
     json node = utils::Helpers::createNode(ctx->getText(), "FloatLiteral", ctx->start, ctx->stop);
     node["value"] = utils::Helpers::parseFloat(ctx->getText());
+    node["type"] = "float";
     node["stringValue"] = ctx->getText();
 
     return node;
@@ -63,6 +65,7 @@ std::any cromio::parser::ParserLiterals::visitStringLiteral(Grammar::StringLiter
 std::any cromio::parser::ParserLiterals::visitBooleanLiteral(Grammar::BooleanLiteralContext* ctx) {
     json node = utils::Helpers::createNode(ctx->getText() == "true" ? "1" : "0", "BooleanLiteral", ctx->start, ctx->stop);
     node["value"] = ctx->getText();
+    node["type"]=  "bool";
     node["stringValue"] = ctx->getText();
 
     return node;
@@ -71,6 +74,7 @@ std::any cromio::parser::ParserLiterals::visitBooleanLiteral(Grammar::BooleanLit
 std::any cromio::parser::ParserLiterals::visitNoneLiteral(Grammar::NoneLiteralContext* ctx) {
     json node = utils::Helpers::createNode("0", "NoneLiteral", ctx->start, ctx->stop);
     node["value"] = ctx->getText();
+    node["type"] = "none";
     node["stringValue"] = "none";
 
     return node;

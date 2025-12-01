@@ -333,5 +333,19 @@ bool cromio::utils::Helpers::checkDataType(const std::string& dataType, const st
         return false;
     }
 
+    if (dataType == "bool") {
+        if (returnType == "bool")
+            return true;
+
+        return false;
+    }
+
+    if (dataType == "str") {
+        if (returnType == "str")
+            return true;
+
+        return false;
+    }
+
     return false;
 }

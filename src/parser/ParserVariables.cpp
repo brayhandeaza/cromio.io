@@ -125,6 +125,22 @@ void cromio::parser::ParserVariables::analyzeVariableDeclaration(const json& nod
                 utils::Error::throwRangeError("<float64> type exceeds 64-bit float range", node, source);
         }
     }
+
+    // ---------------------------------------------
+    // BOOLEAN
+    // ---------------------------------------------
+    else if (dataType == "bool") {
+        if (rValue != "true" && rValue != "false")
+            utils::Error::throwTypeError(identifier, dataType, node, source);
+    }
+
+    // ---------------------------------------------
+    // STRING
+    // ---------------------------------------------
+    else if (dataType == "str") {
+        if (rValue != "true" && rValue != "false")
+            utils::Error::throwTypeError(identifier, dataType, node, source);
+    }
 }
 
 std::any cromio::parser::ParserVariables::visitVariableDeclaration(Grammar::VariableDeclarationContext* ctx) {

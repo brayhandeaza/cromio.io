@@ -4,6 +4,14 @@ lexer grammar MainTokens;
 // MainTokens
 // =======================================================================================================================================================
 
+// Boolean types
+BOOLEAN_TYPES
+    : 'bool'
+    ;
+
+STRING_TYPES
+    : 'str'
+    ;
 
 // Integer types
 INTEGER_TYPES

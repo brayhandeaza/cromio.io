@@ -5,10 +5,9 @@
 #include "cromio.h"
 
 #include <semantic/AST.h>
+#include <utils/AntlrErrorListener.h>
 
 int main(int argc, const char* argv[]) {
-
-
     // ---------------------------------------------
     // Load input file
     // ---------------------------------------------
@@ -40,9 +39,16 @@ int main(int argc, const char* argv[]) {
     antlr4::CommonTokenStream tokens(&lexer);
 
     Grammar grammar(&tokens);
-    auto* tree = grammar.program();
 
-    // throw std::runtime_error("Something went wrong");
+    auto* errorListener = new cromio::utils::AntlrErrorListener(content);
+
+    lexer.removeErrorListeners();
+    grammar.removeErrorListeners();
+
+    lexer.addErrorListener(errorListener);
+    grammar.addErrorListener(errorListener);
+
+    auto* tree = grammar.program();
 
     cromio::parser::Parser visitor(content);
     auto ast = std::any_cast<json>(visitor.visit(tree));
