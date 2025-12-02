@@ -5,16 +5,16 @@
 #include "ParserVariables.h"
 #include "utils/Error.h"
 
-void cromio::parser::ParserVariables::analyzeVariableDeclaration(const json& node) const {
+json cromio::parser::ParserVariables::analyzeVariableDeclaration(const json& node) const {
     if (node["value"].contains("error")) {
         const std::string error = node["value"]["error"];
         utils::Error::throwError("Error", error, node, source);
     }
-
     const std::string identifier = node["Identifier"]["value"];
     const std::string dataType = node["DataType"]["value"];
-    const std::string rValue = node["value"]["stringValue"];
+    const std::string rValue = node["value"]["numberValue"];
     const std::string returnType = node["value"]["type"];
+
     const bool isNegative = !rValue.empty() && rValue[0] == '-';
 
     if (!utils::Helpers::checkDataType(dataType, returnType))
@@ -137,28 +137,30 @@ void cromio::parser::ParserVariables::analyzeVariableDeclaration(const json& nod
     // ---------------------------------------------
     // STRING
     // ---------------------------------------------
-    else if (dataType == "str") {
-        if (rValue != "true" && rValue != "false")
-            utils::Error::throwTypeError(identifier, dataType, node, source);
+    else if (dataType == "str" && returnType != "str") {
+        utils::Error::throwTypeError(identifier, dataType, node, source);
     }
+
+    return node;
 }
 
 std::any cromio::parser::ParserVariables::visitVariableDeclaration(Grammar::VariableDeclarationContext* ctx) {
     json node = utils::Helpers::createNode("", "VariableDeclaration", ctx->start, ctx->stop);
 
     const auto visitDataType = visit(ctx->variableDataType());
+    const auto jDataType = std::any_cast<json>(visitDataType);
+
     const auto expression = visit(ctx->expression());
+    const auto jExpression = std::any_cast<json>(expression);
 
     json identifier = utils::Helpers::createNode("", "VariableIdentifier", ctx->IDENTIFIER()->getSymbol(), ctx->IDENTIFIER()->getSymbol());
     identifier["value"] = ctx->IDENTIFIER()->getText();
 
-    node["DataType"] = std::any_cast<json>(visitDataType);
+    node["DataType"] = jDataType;
     node["Identifier"] = identifier;
-    node["value"] = std::any_cast<json>(expression);
+    node["value"] = jExpression;
 
-    analyzeVariableDeclaration(node);
-
-    return node;
+    return analyzeVariableDeclaration(node);
 }
 
 std::any cromio::parser::ParserVariables::visitVariableDataType(Grammar::VariableDataTypeContext* ctx) {
@@ -167,3 +169,4 @@ std::any cromio::parser::ParserVariables::visitVariableDataType(Grammar::Variabl
 
     return node;
 }
+

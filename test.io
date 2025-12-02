@@ -1,1 +1,1 @@
-str j = "none"
+int age = none + 90.5

@@ -16,7 +16,7 @@ namespace cromio::parser {
         std::any visitVariableDataType(Grammar::VariableDataTypeContext* ctx) override;
 
        private:
-        void analyzeVariableDeclaration(const json& node) const;
+        json analyzeVariableDeclaration(const json& node) const;
         std::string& source;
     };
 } // namespace cromio::parser

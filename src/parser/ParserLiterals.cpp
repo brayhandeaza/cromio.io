@@ -40,6 +40,7 @@ std::any cromio::parser::ParserLiterals::visitIntegerLiteral(Grammar::IntegerLit
     node["value"] = utils::Helpers::parseNumberString(ctx->getText());
     node["type"] = "int";
     node["stringValue"] = ctx->getText();
+    node["numberValue"] = ctx->getText();
 
     return node;
 }
@@ -49,6 +50,7 @@ std::any cromio::parser::ParserLiterals::visitFloatLiteral(Grammar::FloatLiteral
     node["value"] = utils::Helpers::parseFloat(ctx->getText());
     node["type"] = "float";
     node["stringValue"] = ctx->getText();
+    node["numberValue"] = ctx->getText();
 
     return node;
 }
@@ -58,6 +60,7 @@ std::any cromio::parser::ParserLiterals::visitStringLiteral(Grammar::StringLiter
     node["value"] = utils::Helpers::parseString(ctx->getText());
     node["type"] = "str";
     node["stringValue"] = ctx->getText();
+    node["numberValue"] = ctx->getText();
 
     return node;
 }
@@ -67,6 +70,7 @@ std::any cromio::parser::ParserLiterals::visitBooleanLiteral(Grammar::BooleanLit
     node["value"] = ctx->getText();
     node["type"]=  "bool";
     node["stringValue"] = ctx->getText();
+    node["numberValue"] = ctx->getText() == "true" ? "1" : "0";
 
     return node;
 }
@@ -76,6 +80,7 @@ std::any cromio::parser::ParserLiterals::visitNoneLiteral(Grammar::NoneLiteralCo
     node["value"] = ctx->getText();
     node["type"] = "none";
     node["stringValue"] = "none";
+    node["numberValue"] = "0";
 
     return node;
 }
@@ -103,6 +108,7 @@ std::any cromio::parser::ParserLiterals::visitFormattedString(Grammar::Formatted
 
     node["value"] = value;
     node["stringValue"] = node["stringValue"];
+    node["numberValue"] = value;
     node["type"] = "fstr";
     node["params"] = params;
 

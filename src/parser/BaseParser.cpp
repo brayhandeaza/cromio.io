@@ -80,7 +80,7 @@ std::any cromio::parser::Parser::visitExpression(Grammar::ExpressionContext* ctx
 
         // Types allowed in arithmetic
         auto isAllowed = [&](const json& j) {
-            std::string k = j["kind"].get<std::string>();
+            const std::string k = j["kind"].get<std::string>();
             return k == "IntegerLiteral" || k == "FloatLiteral" || k == "BooleanLiteral" || k == "NoneLiteral" || k == "Expression";
         };
 
@@ -142,8 +142,8 @@ std::any cromio::parser::Parser::visitExpression(Grammar::ExpressionContext* ctx
             }
 
             // int % int
-            if (L == (int)L && R == (int)R) {
-                result = (int)L % (int)R;
+            if (L == static_cast<int>(L) && R == static_cast<int>(R)) {
+                result = static_cast<int>(L) % static_cast<int>(R);
             }
             // float modulo → fmod
             else {
@@ -154,35 +154,36 @@ std::any cromio::parser::Parser::visitExpression(Grammar::ExpressionContext* ctx
         // -------------------------------------------------------
         // (6) Determine final data type
         // -------------------------------------------------------
-        auto determineType = [&](double L, double R, const std::string& op, const json& left, const json& right) -> std::string {
-            bool leftFloat = left["kind"] == "FloatLiteral";
-            bool rightFloat = right["kind"] == "FloatLiteral";
+        auto determineType = [&](const std::string& mOp, const json& mLeft, const json& mRight) -> std::string {
+            const bool leftFloat = mLeft["kind"] == "FloatLiteral";
+            const bool rightFloat = mRight["kind"] == "FloatLiteral";
 
             if (leftFloat || rightFloat)
                 return "float";
 
-            if (left["kind"] == "BooleanLiteral" || right["kind"] == "BooleanLiteral")
+            if (mLeft["kind"] == "BooleanLiteral" || mRight["kind"] == "BooleanLiteral")
                 return "int";
 
-            if (left["kind"] == "NoneLiteral" || right["kind"] == "NoneLiteral")
+            if (mLeft["kind"] == "NoneLiteral" || mRight["kind"] == "NoneLiteral")
                 return "int";
 
-            if (op == "%")
+            if (mOp == "%")
                 return "int";
 
-            if (op == "/")
+            if (mOp == "/")
                 return "float";
 
             return "int";
         };
 
-        std::string finalType = determineType(L, R, op, left, right);
+        std::string finalType = determineType(op, left, right);
 
         // -------------------------------------------------------
         // (7) Store results
         // -------------------------------------------------------
         node["value"] = result;
         node["stringValue"] = std::to_string(result);
+        node["numberValue"] = std::to_string(result);
         node["type"] = finalType;
 
         return node;

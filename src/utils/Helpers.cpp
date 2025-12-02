@@ -27,22 +27,42 @@ long long cromio::utils::Helpers::parseNumberString(const std::string& raw) {
     }
 }
 
-double cromio::utils::Helpers::parseFloat(std::string raw) {
+long long cromio::utils::Helpers::parseInteger(std::string raw) {
     bool isNegative = false;
 
     // Detect negative sign
     if (!raw.empty() && raw[0] == '-') {
         isNegative = true;
-        raw = raw.substr(1);
+        raw = raw.substr(1); // remove the '-'
+    }
+
+    if (!raw.empty() && raw[0] == '+') {
+        isNegative = false;
+        raw = raw.substr(1); // remove the '+'
+    }
+
+    int base = 10;
+
+    // Detect prefix
+    if (raw.rfind("0x", 0) == 0 || raw.rfind("0X", 0) == 0) {
+        base = 16;
+        raw = raw.substr(2);
+    } else if (raw.rfind("0b", 0) == 0 || raw.rfind("0B", 0) == 0) {
+        base = 2;
+        raw = raw.substr(2);
+    } else if (raw.rfind("0o", 0) == 0 || raw.rfind("0O", 0) == 0) {
+        base = 8;
+        raw = raw.substr(2);
+    } else if (raw.size() > 1 && raw[0] == '0' && std::isdigit(raw[1])) {
+        base = 8; // old-style octal like 0755
     }
 
     std::erase(raw, '_');
 
-    double value = 0.0;
-    value = std::stod(raw);
-
+    long long value = std::stoll(raw, nullptr, base);
     if (isNegative)
         value = -value;
+
     return value;
 }
 
@@ -126,45 +146,6 @@ std::string cromio::utils::Helpers::parseString(const std::string& rawInput) {
     return result;
 }
 
-long long cromio::utils::Helpers::parseInteger(std::string raw) {
-    bool isNegative = false;
-
-    // Detect negative sign
-    if (!raw.empty() && raw[0] == '-') {
-        isNegative = true;
-        raw = raw.substr(1); // remove the '-'
-    }
-
-    if (!raw.empty() && raw[0] == '+') {
-        isNegative = false;
-        raw = raw.substr(1); // remove the '+'
-    }
-
-    int base = 10;
-
-    // Detect prefix
-    if (raw.rfind("0x", 0) == 0 || raw.rfind("0X", 0) == 0) {
-        base = 16;
-        raw = raw.substr(2);
-    } else if (raw.rfind("0b", 0) == 0 || raw.rfind("0B", 0) == 0) {
-        base = 2;
-        raw = raw.substr(2);
-    } else if (raw.rfind("0o", 0) == 0 || raw.rfind("0O", 0) == 0) {
-        base = 8;
-        raw = raw.substr(2);
-    } else if (raw.size() > 1 && raw[0] == '0' && std::isdigit(raw[1])) {
-        base = 8; // old-style octal like 0755
-    }
-
-    std::erase(raw, '_');
-
-    long long value = std::stoll(raw, nullptr, base);
-    if (isNegative)
-        value = -value;
-
-    return value;
-}
-
 json cromio::utils::Helpers::getPosition(const antlr4::Token* token) {
     json pos;
     pos["line"] = token->getLine();
@@ -221,7 +202,7 @@ bool cromio::utils::Helpers::exceedsInt64(const std::string& raw, const bool isU
     bool negative = false;
     std::string s = raw;
 
-    if (s.size() > 0 && (s[0] == '-' || s[0] == '+')) {
+    if (!s.empty() && (s[0] == '-' || s[0] == '+')) {
         negative = s[0] == '-';
         s = s.substr(1);
     }
@@ -312,6 +293,9 @@ bool cromio::utils::Helpers::isValidNumber(const std::string& str) {
 }
 
 bool cromio::utils::Helpers::checkDataType(const std::string& dataType, const std::string& returnType) {
+    if (returnType == "none")
+        return true;
+
     if (dataType == "int" || dataType == "int8" || dataType == "uint16" || dataType == "int32") {
         if (returnType == "int" || returnType == "float")
             return true;
@@ -348,4 +332,23 @@ bool cromio::utils::Helpers::checkDataType(const std::string& dataType, const st
     }
 
     return false;
+}
+
+double cromio::utils::Helpers::parseFloat(std::string raw) {
+    bool isNegative = false;
+
+    // Detect negative sign
+    if (!raw.empty() && raw[0] == '-') {
+        isNegative = true;
+        raw = raw.substr(1);
+    }
+
+    std::erase(raw, '_');
+
+    double value = 0.0;
+    value = std::stod(raw);
+
+    if (isNegative)
+        value = -value;
+    return value;
 }
