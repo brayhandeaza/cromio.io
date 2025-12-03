@@ -29,7 +29,6 @@ namespace cromio::utils {
         static bool isGreaterUnsigned(const std::string& num, const std::string& max);
         static bool isGreaterSigned(const std::string& num, const std::string& maxPos, const std::string& maxNeg);
         static bool isValidNumber(const std::string& str);
-        static bool checkDataType(const std::string& dataType, const std::string& returnType);
     };
 } // namespace cromio::utils
 

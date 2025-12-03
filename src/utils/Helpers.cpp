@@ -292,48 +292,6 @@ bool cromio::utils::Helpers::isValidNumber(const std::string& str) {
     return hasDigit;
 }
 
-bool cromio::utils::Helpers::checkDataType(const std::string& dataType, const std::string& returnType) {
-    if (returnType == "none")
-        return true;
-
-    if (dataType == "int" || dataType == "int8" || dataType == "uint16" || dataType == "int32") {
-        if (returnType == "int" || returnType == "float")
-            return true;
-
-        return false;
-    }
-
-    if (dataType == "uint" || dataType == "uint8" || dataType == "uint16" || dataType == "uint32") {
-        if (returnType == "int" || returnType == "float")
-            return true;
-
-        return false;
-    }
-
-    if (dataType == "float" || dataType == "float32" || dataType == "float64") {
-        if (returnType == "float")
-            return true;
-
-        return false;
-    }
-
-    if (dataType == "bool") {
-        if (returnType == "bool")
-            return true;
-
-        return false;
-    }
-
-    if (dataType == "str") {
-        if (returnType == "str")
-            return true;
-
-        return false;
-    }
-
-    return false;
-}
-
 double cromio::utils::Helpers::parseFloat(std::string raw) {
     bool isNegative = false;
 

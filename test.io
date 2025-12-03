@@ -1,1 +1,1 @@
-int age = 30
+int64 age = 23456

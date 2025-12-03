@@ -158,9 +158,8 @@ std::any cromio::parser::Parser::visitExpression(Grammar::ExpressionContext* ctx
         // -------------------------------------------------------
         auto determineType = [&](const std::string& mOp, const json& mLeft, const json& mRight) -> std::string {
             const bool leftFloat = mLeft["kind"] == "FloatLiteral";
-            const bool rightFloat = mRight["kind"] == "FloatLiteral";
 
-            if (leftFloat || rightFloat)
+            if (const bool rightFloat = mRight["kind"] == "FloatLiteral"; leftFloat || rightFloat)
                 return "float";
 
             if (mLeft["kind"] == "BooleanLiteral" || mRight["kind"] == "BooleanLiteral")
