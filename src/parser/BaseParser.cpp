@@ -32,6 +32,11 @@ std::any cromio::parser::Parser::visitStatement(Grammar::StatementContext* ctx) 
         return std::any_cast<json>(variableDeclaration);
     }
 
+    if (ctx->variableAssignment()) {
+        const std::any variableAssignment = visit(ctx->variableAssignment());
+        return std::any_cast<json>(variableAssignment);
+    }
+
     return json::object();
 }
 

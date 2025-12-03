@@ -14,9 +14,10 @@ namespace cromio::parser {
         explicit ParserVariables(std::string& source) : source(source) {}
         std::any visitVariableDeclaration(Grammar::VariableDeclarationContext* ctx) override;
         std::any visitVariableDataType(Grammar::VariableDataTypeContext* ctx) override;
+        std::any visitVariableAssignment(Grammar::VariableAssignmentContext* ctx) override;
 
        private:
-        json analyzeVariableDeclaration(const json& node) const;
+        [[nodiscard]] json analyzeVariableDeclaration(const json& node) const;
         std::string& source;
     };
 } // namespace cromio::parser

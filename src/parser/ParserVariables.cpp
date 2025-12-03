@@ -150,17 +150,29 @@ std::any cromio::parser::ParserVariables::visitVariableDeclaration(Grammar::Vari
     const auto visitDataType = visit(ctx->variableDataType());
     const auto jDataType = std::any_cast<json>(visitDataType);
 
+    const auto variableAssignment = visit(ctx->variableAssignment());
+    const auto jVariableAssignment = std::any_cast<json>(variableAssignment);
+
+    node["DataType"] = jDataType;
+    node["Identifier"] = jVariableAssignment["Identifier"];
+    node["value"] = jVariableAssignment["value"];
+
+    return analyzeVariableDeclaration(node);
+}
+
+std::any cromio::parser::ParserVariables::visitVariableAssignment(Grammar::VariableAssignmentContext* ctx) {
+    json node = utils::Helpers::createNode("", "VariableAssignment", ctx->start, ctx->stop);
+
     const auto expression = visit(ctx->expression());
     const auto jExpression = std::any_cast<json>(expression);
 
     json identifier = utils::Helpers::createNode("", "VariableIdentifier", ctx->IDENTIFIER()->getSymbol(), ctx->IDENTIFIER()->getSymbol());
     identifier["value"] = ctx->IDENTIFIER()->getText();
 
-    node["DataType"] = jDataType;
     node["Identifier"] = identifier;
     node["value"] = jExpression;
 
-    return analyzeVariableDeclaration(node);
+    return node;
 }
 
 std::any cromio::parser::ParserVariables::visitVariableDataType(Grammar::VariableDataTypeContext* ctx) {

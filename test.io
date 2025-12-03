@@ -1,1 +1,1 @@
-int age = none + 90.5
+int age = 30
