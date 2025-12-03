@@ -23,4 +23,7 @@
 #include "semantic/semantic.h"
 
 
+// utils headers
+#include <utils/AntlrErrorListener.h>
+
 #endif //CROMIO_CROMIO_H

@@ -4,9 +4,6 @@
 
 #include "cromio.h"
 
-#include <semantic/AST.h>
-#include <utils/AntlrErrorListener.h>
-
 int main(int argc, const char* argv[]) {
     // ---------------------------------------------
     // Load input file
@@ -67,5 +64,9 @@ int main(int argc, const char* argv[]) {
     // // std::cout << "bc size: " << bc.size() << std::endl;
     // module->print(llvm::outs(), nullptr);
 
+    // ---------------------------------------------
+    // Free memory
+    // ---------------------------------------------
+    free(errorListener);
     return 0;
 }

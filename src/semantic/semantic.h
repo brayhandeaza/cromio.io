@@ -5,5 +5,7 @@
 #ifndef CROMIO_SEMANTIC_H
 #define CROMIO_SEMANTIC_H
 
+#include "Scope.h"
+#include "VariablesSemanticAnalyze.h"
 
 #endif //CROMIO_SEMANTIC_H

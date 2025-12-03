@@ -6,10 +6,10 @@
 #define CROMIO_PARSER_VARIABLES_H
 
 #include "GrammarVisitor.h"
-#include "utils/utils.h"
+#include "semantic/semantic.h"
 
 namespace cromio::parser {
-    class ParserVariables : public virtual GrammarVisitor {
+    class ParserVariables : public virtual GrammarVisitor, semantic::VariablesSemanticAnalyze {
        public:
         explicit ParserVariables(std::string& source) : source(source) {}
         std::any visitVariableDeclaration(Grammar::VariableDeclarationContext* ctx) override;
@@ -17,7 +17,6 @@ namespace cromio::parser {
         std::any visitVariableAssignment(Grammar::VariableAssignmentContext* ctx) override;
 
        private:
-        [[nodiscard]] json analyzeVariableDeclaration(const json& node) const;
         std::string& source;
     };
 } // namespace cromio::parser
