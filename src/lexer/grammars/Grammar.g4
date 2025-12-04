@@ -6,11 +6,9 @@ options {
 
 import VariableGrammar, ExpressionsGrammar;
 
-program: NEWLINE* (statement NEWLINE*)* EOF;
+program: NEWLINE* (statements NEWLINE*)* EOF;
 
-statement
-    : variableDeclaration
-    | variableAssignment
-    | variableDeclarationWithoutAssignment
+statements
+    : variables
     | expression
     ;

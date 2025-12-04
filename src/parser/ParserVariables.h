@@ -16,6 +16,7 @@ namespace cromio::parser {
         std::any visitVariableDataType(Grammar::VariableDataTypeContext* ctx) override;
         std::any visitVariableAssignment(Grammar::VariableAssignmentContext* ctx) override;
         std::any visitVariableDeclarationWithoutAssignment(Grammar::VariableDeclarationWithoutAssignmentContext* ctx) override;
+        std::any visitVariables(Grammar::VariablesContext* ctx) override;
 
        private:
         std::string& source;
