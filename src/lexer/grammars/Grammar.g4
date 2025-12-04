@@ -11,5 +11,6 @@ program: NEWLINE* (statement NEWLINE*)* EOF;
 statement
     : variableDeclaration
     | variableAssignment
+    | variableDeclarationWithoutAssignment
     | expression
     ;

@@ -9,6 +9,10 @@ import ExpressionsGrammar;
 
 variableDeclaration: variableDataType variableAssignment;
 
+variableDeclarationWithoutAssignment
+    : variableDataType IDENTIFIER
+    ;
+
 variableAssignment: IDENTIFIER EQ expression;
 
 

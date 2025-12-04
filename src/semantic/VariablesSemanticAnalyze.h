@@ -10,7 +10,8 @@
 namespace cromio::semantic {
     class VariablesSemanticAnalyze {
        public:
-        static json analyzeVariableDeclaration(const json& node, const std::string& source);
+        static json analyzeVariableDeclaration(json& node, const std::string& source);
+        static json analyzeVariableWithoutAssignment(json& node, const antlr4::Token* start, const antlr4::Token* stop);
 
        private:
         static const std::string INT64_MAX_STR;

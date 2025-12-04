@@ -5,6 +5,18 @@
 #include "ParserVariables.h"
 #include "semantic/semantic.h"
 
+std::any cromio::parser::ParserVariables::visitVariableDeclarationWithoutAssignment(Grammar::VariableDeclarationWithoutAssignmentContext* ctx) {
+    json node = utils::Helpers::createNode("", "VariableDeclaration", ctx->start, ctx->stop);
+
+    const auto visitDataType = visit(ctx->variableDataType());
+    const auto jDataType = std::any_cast<json>(visitDataType);
+
+    node["DataType"] = jDataType;
+    node["Identifier"] = ctx->IDENTIFIER()->getText();
+
+    return analyzeVariableWithoutAssignment(node, ctx->start, ctx->stop);;
+}
+
 std::any cromio::parser::ParserVariables::visitVariableDeclaration(Grammar::VariableDeclarationContext* ctx) {
     json node = utils::Helpers::createNode("", "VariableDeclaration", ctx->start, ctx->stop);
 
@@ -17,6 +29,7 @@ std::any cromio::parser::ParserVariables::visitVariableDeclaration(Grammar::Vari
     node["DataType"] = jDataType;
     node["Identifier"] = jVariableAssignment["Identifier"];
     node["value"] = jVariableAssignment["value"];
+
 
     return analyzeVariableDeclaration(node, source);
 }

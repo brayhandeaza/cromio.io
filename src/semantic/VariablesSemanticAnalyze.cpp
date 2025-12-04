@@ -13,6 +13,51 @@ const std::string cromio::semantic::VariablesSemanticAnalyze::FLOAT32_MIN_STR = 
 const std::string cromio::semantic::VariablesSemanticAnalyze::FLOAT64_MAX_STR = "1.7976931348623157e308";
 const std::string cromio::semantic::VariablesSemanticAnalyze::FLOAT64_MIN_STR = "-1.7976931348623157e308";
 
+json cromio::semantic::VariablesSemanticAnalyze::analyzeVariableWithoutAssignment(json& node, const antlr4::Token* start, const antlr4::Token* stop) {
+    const std::string type = node["DataType"]["value"];
+
+    if (type.contains("int")) {
+        std::cout << node["DataType"]["value"] << std::endl;
+        json value = utils::Helpers::createNode("", "IntegerLiteral", start, stop);
+        value["value"] = 0;
+        value["type"] = "int";
+        value["stringValue"] = "0";
+        value["numberValue"] = "0";
+        node["value"] = value;
+        return node;
+    }
+    if (type.contains("float")) {
+        json value = utils::Helpers::createNode("", "FloatLiteral", start, stop);
+        value["value"] = 0.0;
+        value["type"] = "float";
+        value["stringValue"] = "0.0";
+        value["numberValue"] = "0.0";
+        node["value"] = value;
+        return node;
+    }
+    if (type.contains("str")) {
+        json value = utils::Helpers::createNode("", "StringLiteral", start, stop);
+        value["value"] = "";
+        value["type"] = "str";
+        value["stringValue"] = "";
+        value["numberValue"] = "";
+        node["value"] = value;
+        return node;
+    }
+    if (type.contains("bool")) {
+        json value = utils::Helpers::createNode("", "BooleanLiteral", start, stop);
+        value["value"] = false;
+        value["type"] = "bool";
+        value["stringValue"] = "false";
+        value["numberValue"] = "0";
+        node["value"] = value;
+        return node;
+    }
+
+    node["value"] = nullptr;
+    return node;
+}
+
 void cromio::semantic::VariablesSemanticAnalyze::analyzeSignedInteger(const std::string& rValue, const std::string& dataType, const std::string& identifier, const std::string& source, const json& node) {
     const auto value = utils::Helpers::parseInteger(rValue);
     const bool isValidNumber = utils::Helpers::isValidNumber(std::to_string(value));
@@ -105,7 +150,7 @@ void cromio::semantic::VariablesSemanticAnalyze::analyze64BitInteger(const std::
     }
 }
 
-json cromio::semantic::VariablesSemanticAnalyze::analyzeVariableDeclaration(const json& node, const std::string& source) {
+json cromio::semantic::VariablesSemanticAnalyze::analyzeVariableDeclaration(json& node, const std::string& source) {
     if (node["value"].contains("error")) {
         const std::string error = node["value"]["error"];
         utils::Error::throwError("Error", error, node, source);
@@ -113,11 +158,11 @@ json cromio::semantic::VariablesSemanticAnalyze::analyzeVariableDeclaration(cons
     const std::string identifier = node["Identifier"]["value"];
     const std::string dataType = node["DataType"]["value"];
     const std::string rValue = node["value"]["numberValue"];
+    const std::string stringValue = node["value"]["stringValue"];
     const std::string returnType = node["value"]["type"];
 
     if (!checkDataType(dataType, returnType))
         utils::Error::throwTypeError(identifier, dataType, node, source);
-
     analyze64BitInteger(rValue, dataType, identifier, source, node);
 
     if (dataType.contains("uint"))
@@ -133,16 +178,28 @@ json cromio::semantic::VariablesSemanticAnalyze::analyzeVariableDeclaration(cons
         utils::Error::throwTypeError(identifier, dataType, node, source);
 
     else if (dataType == "bool")
-        if (rValue != "true" && rValue != "false")
+        if (stringValue != "true" && stringValue != "false")
             utils::Error::throwTypeError(identifier, dataType, node, source);
 
+    if (dataType.contains("uint") || dataType.contains("int")) {
+        node["value"]["raw"] = std::to_string(std::stoll(rValue));
+        node["value"]["value"] = std::stoll(rValue);
+        node["value"]["type"] = "int";
+        node["value"]["stringValue"] = std::to_string(std::stoll(rValue));
+        node["value"]["numberValue"] = std::to_string(std::stoll(rValue));
+    }
+
+    if (dataType.contains("float")) {
+        node["value"]["raw"] = std::to_string(std::stof(rValue));
+        node["value"]["value"] = std::stof(rValue);
+        node["value"]["type"] = "float";
+        node["value"]["stringValue"] = std::to_string(std::stof(rValue));
+        node["value"]["numberValue"] = std::to_string(std::stof(rValue));
+    }
     return node;
 }
 
 bool cromio::semantic::VariablesSemanticAnalyze::checkDataType(const std::string& dataType, const std::string& returnType) {
-    if (returnType == "none")
-        return true;
-
     if (dataType == "int" || dataType == "int8" || dataType == "int16" || dataType == "int32" || dataType == "int64") {
         if (returnType == "int" || returnType == "float")
             return true;
@@ -158,7 +215,7 @@ bool cromio::semantic::VariablesSemanticAnalyze::checkDataType(const std::string
     }
 
     if (dataType == "float" || dataType == "float32" || dataType == "float64") {
-        if (returnType == "float")
+        if (returnType == "float" || returnType == "int")
             return true;
 
         return false;

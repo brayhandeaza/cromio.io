@@ -34,16 +34,14 @@ int main(int argc, const char* argv[]) {
 
     Tokens lexer(&input);
     antlr4::CommonTokenStream tokens(&lexer);
-
     Grammar grammar(&tokens);
-
-    auto* errorListener = new cromio::utils::AntlrErrorListener(content);
 
     lexer.removeErrorListeners();
     grammar.removeErrorListeners();
 
-    lexer.addErrorListener(errorListener);
-    grammar.addErrorListener(errorListener);
+    cromio::utils::AntlrErrorListener errorListener(content);
+    lexer.addErrorListener(&errorListener);
+    grammar.addErrorListener(&errorListener);
 
     auto* tree = grammar.program();
 
@@ -63,10 +61,5 @@ int main(int argc, const char* argv[]) {
     // std::vector<uint8_t> bc = cromio::backend::BytecodeEmitter::toMemory(*module);
     // // std::cout << "bc size: " << bc.size() << std::endl;
     // module->print(llvm::outs(), nullptr);
-
-    // ---------------------------------------------
-    // Free memory
-    // ---------------------------------------------
-    free(errorListener);
     return 0;
 }
