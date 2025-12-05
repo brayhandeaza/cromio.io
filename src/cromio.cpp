@@ -47,19 +47,19 @@ int main(int argc, const char* argv[]) {
 
     cromio::parser::Parser visitor(content);
     auto ast = std::any_cast<json>(visitor.visit(tree));
-    std::cout << ast.dump(2) << std::endl;
+    std::cout << ast.dump(1) << std::endl;
 
     // ---------------------------------------------
     // Emit LLVM IR from AST
     // ---------------------------------------------
-    // cromio::lowering::IR ir(fileName);
-    // llvm::Module* module = ir.generate(ast);
-    //
-    // // ---------------------------------------------
-    // // Emit LLVM Bytecode to memory or to file
-    // // ---------------------------------------------
-    // std::vector<uint8_t> bc = cromio::backend::BytecodeEmitter::toMemory(*module);
-    // // std::cout << "bc size: " << bc.size() << std::endl;
-    // module->print(llvm::outs(), nullptr);
+    cromio::lowering::IR ir(fileName);
+    llvm::Module* module = ir.generate(ast);
+
+    // ---------------------------------------------
+    // Emit LLVM Bytecode to memory or to file
+    // ---------------------------------------------
+    std::vector<uint8_t> bc = cromio::backend::BytecodeEmitter::toMemory(*module);
+    // std::cout << "bc size: " << bc.size() << std::endl;
+    module->print(llvm::outs(), nullptr);
     return 0;
 }

@@ -18,6 +18,12 @@ std::any cromio::parser::ParserVariables::visitVariables(Grammar::VariablesConte
         return jVariableDeclarationWithoutAssignment;
     }
 
+    if (ctx->variableAssignment()) {
+        const auto visitVariableAssignment = visit(ctx->variableAssignment());
+        const auto jVariableAssignment = std::any_cast<json>(visitVariableAssignment);
+        return jVariableAssignment;
+    }
+
     return json::object();
 }
 
@@ -27,11 +33,13 @@ std::any cromio::parser::ParserVariables::visitVariableDeclarationWithoutAssignm
     const auto visitDataType = visit(ctx->variableDataType());
     const auto jDataType = std::any_cast<json>(visitDataType);
 
+    json identifier = utils::Helpers::createNode("", "VariableIdentifier", ctx->IDENTIFIER()->getSymbol(), ctx->IDENTIFIER()->getSymbol());
+    identifier["value"] = ctx->IDENTIFIER()->getText();
+
     node["DataType"] = jDataType;
-    node["Identifier"] = ctx->IDENTIFIER()->getText();
+    node["Identifier"] = identifier;
 
     return analyzeVariableWithoutAssignment(node, ctx->start, ctx->stop);
-    ;
 }
 
 std::any cromio::parser::ParserVariables::visitVariableDeclaration(Grammar::VariableDeclarationContext* ctx) {
