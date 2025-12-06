@@ -2,19 +2,18 @@
 // Created by Brayhan De Aza on 12/2/25.
 //
 
-#include "VariablesSemanticAnalyze.h"
-#include "utils/utils.h"
+#include "Variables.h"
+// #include "utils/utils.h"
 
-const std::string cromio::semantic::VariablesSemanticAnalyze::INT64_MAX_STR = "9223372036854775807";
-const std::string cromio::semantic::VariablesSemanticAnalyze::INT64_MIN_STR = "9223372036854775808"; // abs value
-const std::string cromio::semantic::VariablesSemanticAnalyze::UINT64_MAX_STR = "18446744073709551615";
-const std::string cromio::semantic::VariablesSemanticAnalyze::FLOAT32_MAX_STR = "3.4028235e38";
-const std::string cromio::semantic::VariablesSemanticAnalyze::FLOAT32_MIN_STR = "-3.4028235e38";
-const std::string cromio::semantic::VariablesSemanticAnalyze::FLOAT64_MAX_STR = "1.7976931348623157e308";
-const std::string cromio::semantic::VariablesSemanticAnalyze::FLOAT64_MIN_STR = "-1.7976931348623157e308";
+const std::string cromio::semantic::Variables::INT64_MAX_STR = "9223372036854775807";
+const std::string cromio::semantic::Variables::INT64_MIN_STR = "9223372036854775808"; // abs value
+const std::string cromio::semantic::Variables::UINT64_MAX_STR = "18446744073709551615";
+const std::string cromio::semantic::Variables::FLOAT32_MAX_STR = "3.4028235e38";
+const std::string cromio::semantic::Variables::FLOAT32_MIN_STR = "-3.4028235e38";
+const std::string cromio::semantic::Variables::FLOAT64_MAX_STR = "1.7976931348623157e308";
+const std::string cromio::semantic::Variables::FLOAT64_MIN_STR = "-1.7976931348623157e308";
 
-
-json cromio::semantic::VariablesSemanticAnalyze::analyzeVariableWithoutAssignment(json& node, const antlr4::Token* start, const antlr4::Token* stop) {
+json cromio::semantic::Variables::analyzeVariableWithoutAssignment(json& node, const antlr4::Token* start, const antlr4::Token* stop) {
     const std::string type = node["DataType"]["value"];
 
     if (type.contains("int")) {
@@ -64,7 +63,7 @@ json cromio::semantic::VariablesSemanticAnalyze::analyzeVariableWithoutAssignmen
     return node;
 }
 
-void cromio::semantic::VariablesSemanticAnalyze::analyzeSignedInteger(const std::string& rValue, const std::string& dataType, const std::string& identifier, const std::string& source, const json& node) {
+void cromio::semantic::Variables::analyzeSignedInteger(const std::string& rValue, const std::string& dataType, const std::string& identifier, const std::string& source, const json& node) {
     const auto value = utils::Helpers::parseInteger(rValue);
     const bool isValidNumber = utils::Helpers::isValidNumber(std::to_string(value));
 
@@ -89,7 +88,7 @@ void cromio::semantic::VariablesSemanticAnalyze::analyzeSignedInteger(const std:
         utils::Error::throwRangeError("Value exceeds 32-bit signed integer range", node, source);
 }
 
-void cromio::semantic::VariablesSemanticAnalyze::analyzeUnsignedInteger(const std::string& rValue, const std::string& dataType, const std::string& identifier, const std::string& source, const json& node) {
+void cromio::semantic::Variables::analyzeUnsignedInteger(const std::string& rValue, const std::string& dataType, const std::string& identifier, const std::string& source, const json& node) {
     const bool isValidNumber = utils::Helpers::isValidNumber(rValue);
     const auto value = utils::Helpers::parseFloat(rValue);
 
@@ -114,7 +113,7 @@ void cromio::semantic::VariablesSemanticAnalyze::analyzeUnsignedInteger(const st
         utils::Error::throwRangeError("Value exceeds 32-bit unsigned integer range", node, source);
 }
 
-void cromio::semantic::VariablesSemanticAnalyze::analyzeFloat(const std::string& rValue, const std::string& dataType, const std::string& source, const json& node) {
+void cromio::semantic::Variables::analyzeFloat(const std::string& rValue, const std::string& dataType, const std::string& source, const json& node) {
     if (dataType == "float" || dataType == "float32") {
         if (utils::Helpers::isGreaterSigned(rValue, FLOAT32_MAX_STR, FLOAT32_MIN_STR))
             utils::Error::throwRangeError("<float32> type exceeds 32-bit float range", node, source);
@@ -126,7 +125,7 @@ void cromio::semantic::VariablesSemanticAnalyze::analyzeFloat(const std::string&
     }
 }
 
-void cromio::semantic::VariablesSemanticAnalyze::analyze64BitInteger(const std::string& rValue, const std::string& dataType, const std::string& identifier, const std::string& source, const json& node) {
+void cromio::semantic::Variables::analyze64BitInteger(const std::string& rValue, const std::string& dataType, const std::string& identifier, const std::string& source, const json& node) {
     const bool isNegative = !rValue.empty() && rValue[0] == '-';
 
     // ---------------------------------------------
@@ -156,7 +155,7 @@ void cromio::semantic::VariablesSemanticAnalyze::analyze64BitInteger(const std::
     }
 }
 
-json cromio::semantic::VariablesSemanticAnalyze::analyzeVariableDeclaration(json& node, const std::string& source) {
+json cromio::semantic::Variables::analyzeVariableDeclaration(json& node, const std::string& source) {
     if (node["value"].contains("error")) {
         const std::string error = node["value"]["error"];
         utils::Error::throwError("Error", error, node, source);
@@ -205,7 +204,7 @@ json cromio::semantic::VariablesSemanticAnalyze::analyzeVariableDeclaration(json
     return node;
 }
 
-bool cromio::semantic::VariablesSemanticAnalyze::checkDataType(const std::string& dataType, const std::string& returnType) {
+bool cromio::semantic::Variables::checkDataType(const std::string& dataType, const std::string& returnType) {
     if (dataType == "int" || dataType == "int8" || dataType == "int16" || dataType == "int32" || dataType == "int64") {
         if (returnType == "int" || returnType == "float")
             return true;

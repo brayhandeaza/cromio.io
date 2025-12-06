@@ -8,7 +8,7 @@
 #include "utils/utils.h"
 
 namespace cromio::semantic {
-    class VariablesSemanticAnalyze {
+    class Variables {
        public:
         static json analyzeVariableDeclaration(json& node, const std::string& source);
         static json analyzeVariableWithoutAssignment(json& node, const antlr4::Token* start, const antlr4::Token* stop);

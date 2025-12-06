@@ -7,7 +7,6 @@ run:
 	@cd ./build && make -j
 	@cd ./build && ./cromio ../test.io
 
-
 grammar:
 	@cd ./src/lexer/tokens && antlr -Dlanguage=Cpp Tokens.g4 -o ../antlr/ -visitor
 	@cd ./src/lexer/grammars && antlr -Dlanguage=Cpp Grammar.g4 -o ../antlr/ -visitor

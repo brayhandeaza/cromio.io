@@ -10,7 +10,7 @@
 
 namespace cromio::visitor {
 
-    class BaseVisitor : public GrammarVisitor, public utils::Error, public utils::Helpers, public semantic::VariablesSemanticAnalyze {
+    class BaseVisitor : public GrammarVisitor, public utils::Error, public utils::Helpers, public semantic::Variables {
        protected:
         std::string& source;
         std::unique_ptr<semantic::Scope> rootScope;

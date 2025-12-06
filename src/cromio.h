@@ -6,17 +6,16 @@
 #define CROMIO_CROMIO_H
 
 // standard headers
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <sstream>
 
 // antlr headers
-#include "antlr4-runtime.h"
-#include "Tokens.h"
 #include "Grammar.h"
+#include "Tokens.h"
+#include "antlr4-runtime.h"
 
 // cromio headers
-#include "backend/backend.h"
 #include "lowering/lowering.h"
 #include "runtime/runtime.h"
 #include "semantic/semantic.h"
@@ -25,4 +24,4 @@
 // utils headers
 #include <utils/AntlrErrorListener.h>
 
-#endif //CROMIO_CROMIO_H
+#endif // CROMIO_CROMIO_H

@@ -6,5 +6,6 @@
 #define CROMIO_LOWERING_H
 
 #include "IR.h"
+#include "CodeEmitter.h"
 
 #endif //CROMIO_LOWERING_H
