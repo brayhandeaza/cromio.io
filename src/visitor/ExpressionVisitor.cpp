@@ -3,7 +3,6 @@
 //
 
 #include "ExpressionVisitor.h"
-
 std::any cromio::visitor::ExpressionVisitor::visitExpression(Grammar::ExpressionContext* ctx) {
     // -------------------------------------------------------
     // (1) Literal → return literal node
@@ -39,21 +38,36 @@ std::any cromio::visitor::ExpressionVisitor::visitExpression(Grammar::Expression
     // (4) Binary expression
     // -------------------------------------------------------
     if (!op.empty() && ctx->expression().size() >= 2) {
-        const json left = std::any_cast<json>(visit(ctx->expression(0)));
-        const json right = std::any_cast<json>(visit(ctx->expression(1)));
+        json leftNode = std::any_cast<json>(visit(ctx->expression(0)));
+        json rightNode = std::any_cast<json>(visit(ctx->expression(1)));
+
+        // Resolve IdentifierLiteral values if they point to variables
+        auto resolveIdentifier = [&](json& node) {
+            if (node["kind"] == "IdentifierLiteral") {
+                // Replace the value with the underlying literal
+                if (node.contains("value")) {
+                    node = node["value"];
+                } else {
+                    node["error"] = "Undefined identifier";
+                }
+            }
+        };
+
+        resolveIdentifier(leftNode);
+        resolveIdentifier(rightNode);
 
         json node = createNode(ctx->getText(), "Expression", ctx->start, ctx->stop);
-        node["left"] = left;
-        node["right"] = right;
+        node["left"] = leftNode;
+        node["right"] = rightNode;
         node["operator"] = op;
 
         // Types allowed in arithmetic
         auto isAllowed = [&](const json& j) {
             const std::string k = j["kind"].get<std::string>();
-            return k == "IntegerLiteral" || k == "FloatLiteral" || k == "BooleanLiteral" || k == "NoneLiteral" || k == "Expression";
+            return k == "IntegerLiteral" || k == "IdentifierLiteral" || k == "FloatLiteral" || k == "BooleanLiteral" || k == "NoneLiteral" || k == "Expression";
         };
 
-        if (!isAllowed(left) || !isAllowed(right)) {
+        if (!isAllowed(leftNode) || !isAllowed(rightNode)) {
             node["error"] = "Arithmetic only allowed on numeric literals (int, float, bool, none)";
             return node;
         }
@@ -77,8 +91,8 @@ std::any cromio::visitor::ExpressionVisitor::visitExpression(Grammar::Expression
         double L = 0.0, R = 0.0;
 
         try {
-            L = toDouble(left);
-            R = toDouble(right);
+            L = toDouble(leftNode);
+            R = toDouble(rightNode);
         } catch (...) {
             node["error"] = "Invalid numeric literal";
             return node;
@@ -95,29 +109,21 @@ std::any cromio::visitor::ExpressionVisitor::visitExpression(Grammar::Expression
             result = L - R;
         else if (op == "*")
             result = L * R;
-
         else if (op == "/") {
             if (R == 0.0) {
                 node["error"] = "Division by zero";
                 return node;
             }
             result = L / R;
-        }
-
-        else if (op == "%") {
+        } else if (op == "%") {
             if (R == 0.0) {
                 node["error"] = "Modulo by zero";
                 return node;
             }
-
-            // int % int
-            if (L == static_cast<int>(L) && R == static_cast<int>(R)) {
+            if (L == static_cast<int>(L) && R == static_cast<int>(R))
                 result = static_cast<int>(L) % static_cast<int>(R);
-            }
-            // float modulo → fmod
-            else {
+            else
                 result = std::fmod(L, R);
-            }
         }
 
         // -------------------------------------------------------
@@ -125,26 +131,22 @@ std::any cromio::visitor::ExpressionVisitor::visitExpression(Grammar::Expression
         // -------------------------------------------------------
         auto determineType = [&](const std::string& mOp, const json& mLeft, const json& mRight) -> std::string {
             const bool leftFloat = mLeft["kind"] == "FloatLiteral";
+            const bool rightFloat = mRight["kind"] == "FloatLiteral";
 
-            if (const bool rightFloat = mRight["kind"] == "FloatLiteral"; leftFloat || rightFloat)
+            if (leftFloat || rightFloat)
                 return "float";
-
             if (mLeft["kind"] == "BooleanLiteral" || mRight["kind"] == "BooleanLiteral")
                 return "int";
-
             if (mLeft["kind"] == "NoneLiteral" || mRight["kind"] == "NoneLiteral")
                 return "int";
-
             if (mOp == "%")
                 return "int";
-
             if (mOp == "/")
                 return "float";
-
             return "int";
         };
 
-        std::string finalType = determineType(op, left, right);
+        std::string finalType = determineType(op, leftNode, rightNode);
 
         // -------------------------------------------------------
         // (7) Store results

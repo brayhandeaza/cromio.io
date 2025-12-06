@@ -8,4 +8,4 @@
 #include "Scope.h"
 #include "VariablesSemanticAnalyze.h"
 
-#endif //CROMIO_SEMANTIC_H
+#endif // CROMIO_SEMANTIC_H

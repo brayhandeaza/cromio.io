@@ -1,2 +1,2 @@
-str a = "Monday"
-str b = "December"
+int b = 10
+a = b + 10

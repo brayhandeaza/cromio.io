@@ -35,14 +35,21 @@ std::any cromio::visitor::VariablesVisitor::visitVariableDeclarationWithoutAssig
     const auto visitDataType = visit(ctx->variableDataType());
     const auto jDataType = std::any_cast<json>(visitDataType);
 
+    const std::string rIdentifier = ctx->IDENTIFIER()->getText();
+    if (scope->existsInCurrent(rIdentifier)) {
+        throwScopeError("variable '" + rIdentifier + "' " + "is already declared", jDataType, source);
+    }
+
     json identifier = createNode("", "VariableIdentifier", ctx->IDENTIFIER()->getSymbol(), ctx->IDENTIFIER()->getSymbol());
-    identifier["value"] = ctx->IDENTIFIER()->getText();
+    identifier["value"] = rIdentifier;
 
     node["DataType"] = jDataType;
     node["Identifier"] = identifier;
 
-    // return analyzeVariableWithoutAssignment(node, ctx->start, ctx->stop);
-    return node;
+    json variable = analyzeVariableWithoutAssignment(node, ctx->start, ctx->stop);
+    scope->declareVariable(rIdentifier, variable["value"]);
+
+    return variable;
 }
 
 std::any cromio::visitor::VariablesVisitor::visitVariableDeclaration(Grammar::VariableDeclarationContext* ctx) {
@@ -56,7 +63,7 @@ std::any cromio::visitor::VariablesVisitor::visitVariableDeclaration(Grammar::Va
 
     const std::string identifier = jVariableAssignment["Identifier"]["value"];
     if (scope->existsInCurrent(identifier)) {
-        throwScopeError( "variable '" + identifier + "' " + "is already declared", jDataType, source);
+        throwScopeError("variable '" + identifier + "' " + "is already declared", jDataType, source);
     }
 
     scope->declareVariable(identifier, jVariableAssignment["value"]);
@@ -65,13 +72,7 @@ std::any cromio::visitor::VariablesVisitor::visitVariableDeclaration(Grammar::Va
     node["Identifier"] = jVariableAssignment["Identifier"];
     node["value"] = jVariableAssignment["value"];
 
-    // json variable = analyzeVariableDeclaration(node, source);
-
-    // json scopeInfo = createNode("", "VariableInfo", ctx->start, ctx->stop);
-    // scopeInfo["value"] = variable["value"]["value"];
-    // scopeInfo["type"] = variable["DataType"]["value"];
-
-    return node;
+    return analyzeVariableDeclaration(node, source);
 }
 
 std::any cromio::visitor::VariablesVisitor::visitVariableAssignment(Grammar::VariableAssignmentContext* ctx) {

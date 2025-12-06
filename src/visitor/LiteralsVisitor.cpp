@@ -30,6 +30,11 @@ std::any cromio::visitor::LiteralsVisitor::visitLiteral(Grammar::LiteralContext*
         return std::any_cast<json>(formattedString);
     }
 
+    if (ctx->identifierLiteral()) {
+        const std::any identifierLiteral = visit(ctx->identifierLiteral());
+        return std::any_cast<json>(identifierLiteral);
+    }
+
     json node = createNode("", "None", ctx->start, ctx->stop);
     return node;
 }
@@ -130,4 +135,25 @@ std::any cromio::visitor::LiteralsVisitor::visitFormattedStringContent(Grammar::
     }
 
     return json::object();
+}
+
+std::any cromio::visitor::LiteralsVisitor::visitIdentifierLiteral(Grammar::IdentifierLiteralContext* ctx) {
+    const std::string identifier = ctx->getText();
+    json node = createNode(identifier, "IdentifierLiteral", ctx->start, ctx->stop);
+    node["type"] = "identifier";
+
+    const auto variable = scope->lookup(identifier);
+    if (!scope->existsInCurrent(identifier) || !variable.has_value()) {
+        throwScopeError("identifier '" + identifier + "' " + "not found in scope", node, source);
+    }
+
+    if (variable.has_value()) {
+        const json value = variable.value();
+
+        node["value"] = value;
+        node["stringValue"] = value["stringValue"];
+        node["numberValue"] = value["numberValue"];
+    }
+
+    return node;
 }

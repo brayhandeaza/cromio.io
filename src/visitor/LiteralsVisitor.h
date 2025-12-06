@@ -21,6 +21,8 @@ namespace cromio::visitor {
         std::any visitFormattedString(Grammar::FormattedStringContext* ctx) override;
         std::any visitFormattedStringContent(Grammar::FormattedStringContentContext* ctx) override;
 
+        std::any visitIdentifierLiteral(Grammar::IdentifierLiteralContext* ctx) override;
+
        private:
         std::string& source;
     };

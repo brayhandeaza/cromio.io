@@ -4,7 +4,7 @@ options {
     tokenVocab = Tokens;
 }
 
-import VariableGrammar, ExpressionsGrammar;
+import VariableGrammar, LiteralsGrammar, ExpressionsGrammar;
 
 program: NEWLINE* (statements NEWLINE*)* EOF;
 
