@@ -14,7 +14,7 @@ import ExpressionsGrammar;
 variables
     :   variableDeclaration
     |   variableDeclarationWithoutAssignment
-    |   variableAssignment
+    |   variableReAssignment
     |   variableAccessToMember
     ;
 
@@ -35,11 +35,11 @@ variables
 // --------------------------------------------------------------------
 // VariableDeclaration
 // --------------------------------------------------------------------
-variableDeclaration: variableDataType variableAssignment;
+variableDeclaration: variableDataType IDENTIFIER EQ expression;
 
 variableDeclarationWithoutAssignment: variableDataType IDENTIFIER;
 
-variableAssignment: IDENTIFIER EQ expression;
+variableReAssignment: IDENTIFIER EQ expression;
 
 variableAccessToMember
     : {inVarMode = true;} IDENTIFIER DOT IDENTIFIER {inVarMode = false;};

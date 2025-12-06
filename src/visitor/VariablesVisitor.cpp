@@ -16,8 +16,8 @@ std::any cromio::visitor::VariablesVisitor::visitVariables(Grammar::VariablesCon
         return std::any_cast<json>(visitVariableDeclarationWithoutAssignment);
     }
 
-    if (ctx->variableAssignment()) {
-        const auto visitVariableAssignment = visit(ctx->variableAssignment());
+    if (ctx->variableReAssignment()) {
+        const auto visitVariableAssignment = visit(ctx->variableReAssignment());
         return std::any_cast<json>(visitVariableAssignment);
     }
 
@@ -56,33 +56,41 @@ std::any cromio::visitor::VariablesVisitor::visitVariableDeclaration(Grammar::Va
     json node = createNode("", "VariableDeclaration", ctx->start, ctx->stop);
 
     const auto visitDataType = visit(ctx->variableDataType());
-    const auto jDataType = std::any_cast<json>(visitDataType);
+    const auto dataType = std::any_cast<json>(visitDataType);
 
-    const auto variableAssignment = visit(ctx->variableAssignment());
-    const auto jVariableAssignment = std::any_cast<json>(variableAssignment);
-
-    const std::string identifier = jVariableAssignment["Identifier"]["value"];
+    std::string identifier = ctx->IDENTIFIER()->getText();
     if (scope->existsInCurrent(identifier)) {
-        throwScopeError("variable '" + identifier + "' " + "is already declared", jDataType, source);
+        throwScopeError("variable '" + identifier + "' " + "is already declared", dataType, source);
     }
 
-    scope->declareVariable(identifier, jVariableAssignment["value"]);
+    json identifierNode = createNode("", "VariableIdentifier", ctx->IDENTIFIER()->getSymbol(), ctx->IDENTIFIER()->getSymbol());
+    identifierNode["value"] = identifier;
 
-    node["DataType"] = jDataType;
-    node["Identifier"] = jVariableAssignment["Identifier"];
-    node["value"] = jVariableAssignment["value"];
+    const auto expression = visit(ctx->expression());
+    const auto value = std::any_cast<json>(expression);
+
+    scope->declareVariable(identifier, value);
+
+    node["DataType"] = dataType;
+    node["Identifier"] = identifierNode;
+    node["value"] = value;
 
     return analyzeVariableDeclaration(node, source);
 }
 
-std::any cromio::visitor::VariablesVisitor::visitVariableAssignment(Grammar::VariableAssignmentContext* ctx) {
+std::any cromio::visitor::VariablesVisitor::visitVariableReAssignment(Grammar::VariableReAssignmentContext* ctx) {
     json node = createNode("", "VariableAssignment", ctx->start, ctx->stop);
 
     const auto expression = visit(ctx->expression());
     const auto jExpression = std::any_cast<json>(expression);
 
-    json identifier = createNode("", "VariableIdentifier", ctx->IDENTIFIER()->getSymbol(), ctx->IDENTIFIER()->getSymbol());
-    identifier["value"] = ctx->IDENTIFIER()->getText();
+    std::string identifier = ctx->IDENTIFIER()->getText();
+    json identifierNode = createNode("", "VariableIdentifier", ctx->IDENTIFIER()->getSymbol(), ctx->IDENTIFIER()->getSymbol());
+    identifierNode["value"] = identifier;
+
+    if (!scope->existsInCurrent(identifier)) {
+        throwScopeError("variable '" + identifier + "' " + "is not declared", identifierNode, source);
+    }
 
     node["Identifier"] = identifier;
     node["value"] = jExpression;

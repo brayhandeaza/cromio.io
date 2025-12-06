@@ -16,7 +16,7 @@ namespace cromio::visitor {
         explicit VariablesVisitor(std::string& source) : BaseVisitor(source) {}
         std::any visitVariableDeclaration(Grammar::VariableDeclarationContext* ctx) override;
         std::any visitVariableDataType(Grammar::VariableDataTypeContext* ctx) override;
-        std::any visitVariableAssignment(Grammar::VariableAssignmentContext* ctx) override;
+        std::any visitVariableReAssignment(Grammar::VariableReAssignmentContext* ctx) override;
         std::any visitVariableDeclarationWithoutAssignment(Grammar::VariableDeclarationWithoutAssignmentContext* ctx) override;
         std::any visitVariables(Grammar::VariablesContext* ctx) override;
         std::any visitVariableAccessToMember(Grammar::VariableAccessToMemberContext* ctx) override;
