@@ -33,13 +33,17 @@ find_package(LLVM REQUIRED CONFIG)
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 
-# Map core LLVM components (core, support, native) to library names.
+# Map all LLVM components your project uses
 llvm_map_components_to_libnames(llvm_libs
         core
         support
         native
         irreader
+        linker        # <--- needed for llvm::Linker
+        bitreader     # <--- needed for llvm::parseBitcodeFile
+        bitwriter     # <--- needed if you plan to write bitcode
 )
+
 add_definitions(${LLVM_DEFINITIONS})
 
 
@@ -60,6 +64,7 @@ file(GLOB ALL_SOURCES
         "${SOURCES_DIR}/backend/*.cpp"
         "${SOURCES_DIR}/lowering/*.cpp"
         "${SOURCES_DIR}/semantic/*.cpp"
+        "${SOURCES_DIR}/modules/*.cpp"
 )
 
 # Add executable using the unified list of source files.
@@ -69,7 +74,6 @@ add_executable(${PROJECT_NAME} ${ALL_SOURCES})
 # ============================================================
 #                     Target Setup
 # ============================================================
-
 # Includes
 target_include_directories(${PROJECT_NAME} PUBLIC
         ${CMAKE_SOURCE_DIR}
@@ -97,7 +101,6 @@ target_link_libraries(${PROJECT_NAME}
         "${ANTLR4_RUNTIME_LIB}/libantlr4-runtime.4.13.2.dylib"
         ${llvm_libs}
 )
-
 
 # ============================================================
 #                   Custom "make run"

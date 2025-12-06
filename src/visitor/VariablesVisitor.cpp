@@ -79,20 +79,20 @@ std::any cromio::visitor::VariablesVisitor::visitVariableDeclaration(Grammar::Va
 }
 
 std::any cromio::visitor::VariablesVisitor::visitVariableReAssignment(Grammar::VariableReAssignmentContext* ctx) {
-    json node = createNode("", "VariableAssignment", ctx->start, ctx->stop);
+    json node = createNode("", "VariableReAssignment", ctx->start, ctx->stop);
 
     const auto expression = visit(ctx->expression());
     const auto jExpression = std::any_cast<json>(expression);
 
     std::string identifier = ctx->IDENTIFIER()->getText();
-    json identifierNode = createNode("", "VariableIdentifier", ctx->IDENTIFIER()->getSymbol(), ctx->IDENTIFIER()->getSymbol());
-    identifierNode["value"] = identifier;
+    json jIdentifiere = createNode("", "VariableIdentifier", ctx->IDENTIFIER()->getSymbol(), ctx->IDENTIFIER()->getSymbol());
+    jIdentifiere["value"] = identifier;
 
     if (!scope->existsInCurrent(identifier)) {
-        throwScopeError("variable '" + identifier + "' " + "is not declared", identifierNode, source);
+        throwScopeError("variable '" + identifier + "' " + "is not declared", jIdentifiere, source);
     }
 
-    node["Identifier"] = identifier;
+    node["Identifier"] = jIdentifiere;
     node["value"] = jExpression;
 
     return node;

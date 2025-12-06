@@ -36,12 +36,16 @@ namespace cromio::lowering {
 
         // codegen units
         static llvm::AllocaInst* createEntryBlockAlloca(llvm::Function* function, llvm::Type* type, const std::string& name);
+        static std::unique_ptr<llvm::Module> loadBitcode(const std::string& path, llvm::LLVMContext& context);
 
         llvm::Value* literal(const json& node) const;
         llvm::Value* expression(const json& node);
         llvm::Value* variableDeclaration(const json& node);
         llvm::Value* variableAssignment(const json& node);
         llvm::Value* program(const json& node);
+
+        void loadAndLinkModulesFromFolder() const;
+        bool linkModule(std::unique_ptr<llvm::Module> other) const;
     };
 } // namespace cromio::lowering
 

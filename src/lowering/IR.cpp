@@ -2,25 +2,38 @@
 //
 
 #include "IR.h"
+#include <llvm/Bitcode/BitcodeReader.h>
+#include <llvm/Support/ErrorOr.h>
+#include <llvm/Support/MemoryBuffer.h>
+#include <filesystem>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include "llvm/IR/Verifier.h"
 
+#include "llvm/IR/IRBuilder.h"
+#include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/Module.h"
+#include "llvm/Linker/Linker.h"
+
 using namespace cromio::lowering;
 
-// ---------------------------------------------
-// Constructor
-// ---------------------------------------------
 IR::IR(const std::string& moduleName) {
     context = std::make_unique<llvm::LLVMContext>();
     module = std::make_unique<llvm::Module>(moduleName, *context);
     builder = std::make_unique<llvm::IRBuilder<>>(*context);
 }
 
-// ---------------------------------------------
-// Map DataType string from AST to LLVM Type
-// ---------------------------------------------
+bool IR::linkModule(std::unique_ptr<llvm::Module> other) const {
+    llvm::Linker linker(*module);
+
+    // Link into *this->module
+    if (constexpr llvm::Linker::Flags flags = llvm::Linker::Flags::None; linker.linkInModule(std::move(other), flags))
+        return false; // error
+
+    return true; // success
+}
+
 llvm::Type* IR::mapDataType(const std::string& typeName) const {
     // Integer
     if (typeName == "int")
@@ -54,9 +67,6 @@ llvm::Type* IR::mapDataType(const std::string& typeName) const {
     return builder->getInt64Ty();
 }
 
-// ---------------------------------------------
-// Type Promotion
-// ---------------------------------------------
 llvm::Value* IR::promoteToDouble(llvm::Value* v) const {
     if (v->getType()->isDoubleTy())
         return v;
@@ -67,9 +77,6 @@ llvm::Value* IR::promoteToDouble(llvm::Value* v) const {
     throw std::runtime_error("Cannot promote value to double");
 }
 
-// ---------------------------------------------
-// Type Inference (improved)
-// ---------------------------------------------
 llvm::Type* IR::inferType(const json& node) const {
     const std::string kind = node.value("kind", "");
 
@@ -132,18 +139,6 @@ llvm::Type* IR::inferType(const json& node) const {
     throw std::runtime_error("Unknown node kind in inferType: " + kind);
 }
 
-// ---------------------------------------------
-// Entry: generate module
-// ---------------------------------------------
-llvm::Module* IR::generate(const json& ast) {
-    program(ast);
-    return module.get();
-}
-
-// ---------------------------------------------
-// Literals → LLVM Constants / Values
-// Returns llvm::Value* because strings are values (i8*)
-// ---------------------------------------------
 llvm::Value* IR::literal(const json& node) const {
     const std::string kind = node.value("kind", "");
 
@@ -187,9 +182,6 @@ llvm::Value* IR::literal(const json& node) const {
     throw std::runtime_error("Unknown literal type: " + kind);
 }
 
-// ---------------------------------------------
-// Expression (includes VariableIdentifier loads)
-// ---------------------------------------------
 llvm::Value* IR::expression(const json& node) {
     const std::string kind = node.value("kind", "");
 
@@ -285,19 +277,11 @@ llvm::Value* IR::expression(const json& node) {
     throw std::runtime_error("Invalid expression node: " + kind);
 }
 
-// ---------------------------------------------
-// Create alloca at entry and return it
-// ---------------------------------------------
 llvm::AllocaInst* IR::createEntryBlockAlloca(llvm::Function* function, llvm::Type* type, const std::string& name) {
     llvm::IRBuilder tmpBuilder(&function->getEntryBlock(), function->getEntryBlock().begin());
     return tmpBuilder.CreateAlloca(type, nullptr, name);
 }
 
-// ---------------------------------------------
-// variableAssignment: assign to existing variable
-// Node expected shape:
-// { "kind":"VariableAssignment", "Identifier":{ "value":"x" }, "value": <expr> }
-// ---------------------------------------------
 llvm::Value* IR::variableAssignment(const json& node) {
     if (!node.contains("Identifier") || !node.contains("value"))
         throw std::runtime_error("Malformed VariableAssignment node");
@@ -342,9 +326,6 @@ llvm::Value* IR::variableAssignment(const json& node) {
     return rhs;
 }
 
-// ---------------------------------------------
-// variableDeclaration
-// ---------------------------------------------
 llvm::Value* IR::variableDeclaration(const json& node) {
     if (!node.contains("DataType") || !node.contains("Identifier") || !node.contains("value"))
         throw std::runtime_error("Malformed VariableDeclaration node");
@@ -392,9 +373,59 @@ llvm::Value* IR::variableDeclaration(const json& node) {
     return allocaInst;
 }
 
-// ---------------------------------------------
-// Program entry: emits i64 @main() and returns 0 by default.
-// ---------------------------------------------
+std::unique_ptr<llvm::Module> IR::loadBitcode(const std::string& path, llvm::LLVMContext& context) {
+    llvm::ErrorOr<std::unique_ptr<llvm::MemoryBuffer>> mb = llvm::MemoryBuffer::getFile(path);
+    if (!mb)
+        return nullptr; // silently ignore if file can't be opened
+
+    llvm::Expected<std::unique_ptr<llvm::Module>> modOrErr = llvm::parseBitcodeFile(mb.get()->getMemBufferRef(), context);
+
+    if (!modOrErr)
+        return nullptr; // silently ignore parse errors
+
+    return std::move(*modOrErr);
+}
+
+void IR::loadAndLinkModulesFromFolder() const {
+    const std::string folderPath = "../modules"; // adjust as needed
+
+    if (!std::filesystem::exists(folderPath))
+        return; // folder doesn't exist, silently ignore
+
+    for (const auto& entry : std::filesystem::directory_iterator(folderPath)) {
+        if (!entry.is_regular_file())
+            continue;
+
+        const std::string path = entry.path().string();
+
+        // Only process .bc files
+        if (entry.path().extension() != ".bc")
+            continue;
+
+        try {
+            if (auto extMod = loadBitcode(path, *context); !linkModule(std::move(extMod))) {
+                llvm::errs() << "Warning: Failed to link module: " << path << "\n";
+                continue; // skip this module
+            }
+
+            llvm::errs() << "Linked module: " << path << "\n";
+
+        } catch (...) {
+            llvm::errs() << "Warning: Skipping module (load/link failed): " << path << "\n";
+            // continue silently
+        }
+    }
+}
+
+llvm::Module* IR::generate(const json& ast) {
+    // Load & link external modules automatically
+    loadAndLinkModulesFromFolder();
+
+    // Then generate the AST normally
+    program(ast);
+    return module.get();
+}
+
 llvm::Value* IR::program(const json& node) {
     if (node.value("kind", "") != "Program")
         throw std::runtime_error("Top-level node must be Program");
@@ -404,7 +435,7 @@ llvm::Value* IR::program(const json& node) {
         throw std::runtime_error("Program Body missing");
 
     // For now always emit main as i64 -> return 0.
-    llvm::Type* retType = builder->getInt64Ty();
+    llvm::Type* retType = builder->getInt32Ty();
 
     auto* fnType = llvm::FunctionType::get(retType, false);
     auto* fn = llvm::Function::Create(fnType, llvm::Function::ExternalLinkage, "main", module.get());
@@ -416,7 +447,7 @@ llvm::Value* IR::program(const json& node) {
     for (const auto& stmt : body) {
         if (const std::string kind = stmt.value("kind", ""); kind == "VariableDeclaration") {
             variableDeclaration(stmt);
-        } else if (kind == "VariableAssignment") {
+        } else if (kind == "VariableReAssignment") {
             variableAssignment(stmt);
         } else {
             // Will throw on invalid nodes
@@ -425,7 +456,7 @@ llvm::Value* IR::program(const json& node) {
     }
 
     // Default return 0 (i64)
-    builder->CreateRet(llvm::ConstantInt::get(builder->getInt64Ty(), 0));
+    builder->CreateRet(llvm::ConstantInt::get(builder->getInt32Ty(), 0));
 
     if (llvm::verifyFunction(*fn, &llvm::errs()))
         throw std::runtime_error("IR verification failed");
