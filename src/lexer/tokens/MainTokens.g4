@@ -62,6 +62,7 @@ LPAREN: '(';
 RPAREN: ')';
 LBRACE: '{';
 RBRACE: '}';
+DOT: '.';
 
 // --------------------------------------------------------------------
 // NEWLINE normal → skip
@@ -75,6 +76,8 @@ NEWLINE
 NEWLINE_VISIBLE
     : [\r\n]+
     ;
+
+WS_VISIBLE: [ \t]+ { if (inVarMode && *inVarMode) emit(); else skip(); };
 
 
 WS: [ \t]+ -> skip;

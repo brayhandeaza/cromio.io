@@ -2,9 +2,9 @@
 // Created by Brayhan De Aza on 12/4/25.
 //
 
-#include "ExpressionStatements.h"
+#include "ExpressionVisitor.h"
 
-std::any cromio::parser::ExpressionStatements::visitExpression(Grammar::ExpressionContext* ctx) {
+std::any cromio::visitor::ExpressionVisitor::visitExpression(Grammar::ExpressionContext* ctx) {
     // -------------------------------------------------------
     // (1) Literal → return literal node
     // -------------------------------------------------------

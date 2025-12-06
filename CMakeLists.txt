@@ -55,7 +55,7 @@ file(GLOB ALL_SOURCES
         "${ALL_SOURCES}"
         "${SOURCES_DIR}/*.cpp"
         "${SOURCES_DIR}/utils/*.cpp"
-        "${SOURCES_DIR}/parser/*.cpp"
+        "${SOURCES_DIR}/visitor/*.cpp"
         "${SOURCES_DIR}/optimizer/*.cpp"
         "${SOURCES_DIR}/backend/*.cpp"
         "${SOURCES_DIR}/lowering/*.cpp"

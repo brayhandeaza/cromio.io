@@ -8,6 +8,10 @@ void cromio::utils::Error::throwRangeError(const std::string& message, const jso
     throwError("RangeError", message, node, source);
 }
 
+void cromio::utils::Error::throwScopeError(const std::string& message, const json& node, const std::string& source) {
+    throwError("ScopeError", message, node, source);
+}
+
 void cromio::utils::Error::throwTypeError(const std::string& identifier, const std::string& dataType, const json& node, const std::string& source) {
     std::string type = "";
 

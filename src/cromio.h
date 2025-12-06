@@ -16,12 +16,11 @@
 #include "Grammar.h"
 
 // cromio headers
-#include "parser/parser.h"
-#include "lowering/lowering.h"
 #include "backend/backend.h"
+#include "lowering/lowering.h"
 #include "runtime/runtime.h"
 #include "semantic/semantic.h"
-
+#include "visitor/visitor.h"
 
 // utils headers
 #include <utils/AntlrErrorListener.h>

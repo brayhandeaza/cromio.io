@@ -2,16 +2,15 @@
 // Created by Brayhan De Aza on 10/19/25.
 //
 
-#ifndef CROMIO_PARSER_LITERALS_H
-#define CROMIO_PARSER_LITERALS_H
+#ifndef CROMIO_LITERALS_VISITOR_H
+#define CROMIO_LITERALS_VISITOR_H
 
 #include "GrammarVisitor.h"
-#include "utils/utils.h"
 
-namespace cromio::parser {
-    class ParserLiterals : public virtual GrammarVisitor {
+namespace cromio::visitor {
+    class LiteralsVisitor : public virtual GrammarVisitor {
        public:
-        explicit ParserLiterals(std::string& source) : source(source) {}
+        explicit LiteralsVisitor(std::string& source) : source(source) {}
         std::any visitLiteral(Grammar::LiteralContext* ctx) override;
         std::any visitIntegerLiteral(Grammar::IntegerLiteralContext* ctx) override;
         std::any visitFloatLiteral(Grammar::FloatLiteralContext* ctx) override;
@@ -24,5 +23,6 @@ namespace cromio::parser {
        private:
         std::string& source;
     };
-} // namespace cromio::parser
-#endif // CROMIO_PARSER_LITERALS_H
+} // namespace cromio::visitor
+
+#endif // CROMIO_LITERALS_VISITOR_H

@@ -12,6 +12,7 @@ namespace cromio::utils {
     class Error {
        public:
         static void throwRangeError(const std::string& message, const json& node, const std::string& source);
+        static void throwScopeError(const std::string& message, const json& node, const std::string& source);
         static void throwTypeError(const std::string& identifier, const std::string& dataType, const json& node, const std::string& source);
         static void throwError(const std::string& errorType, const std::string& message, const json& node, const std::string& source);
     };
