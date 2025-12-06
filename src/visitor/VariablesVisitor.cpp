@@ -30,22 +30,23 @@ std::any cromio::visitor::VariablesVisitor::visitVariables(Grammar::VariablesCon
 }
 
 std::any cromio::visitor::VariablesVisitor::visitVariableDeclarationWithoutAssignment(Grammar::VariableDeclarationWithoutAssignmentContext* ctx) {
-    json node = utils::Helpers::createNode("", "VariableDeclaration", ctx->start, ctx->stop);
+    json node = createNode("", "VariableDeclaration", ctx->start, ctx->stop);
 
     const auto visitDataType = visit(ctx->variableDataType());
     const auto jDataType = std::any_cast<json>(visitDataType);
 
-    json identifier = utils::Helpers::createNode("", "VariableIdentifier", ctx->IDENTIFIER()->getSymbol(), ctx->IDENTIFIER()->getSymbol());
+    json identifier = createNode("", "VariableIdentifier", ctx->IDENTIFIER()->getSymbol(), ctx->IDENTIFIER()->getSymbol());
     identifier["value"] = ctx->IDENTIFIER()->getText();
 
     node["DataType"] = jDataType;
     node["Identifier"] = identifier;
 
-    return analyzeVariableWithoutAssignment(node, ctx->start, ctx->stop);
+    // return analyzeVariableWithoutAssignment(node, ctx->start, ctx->stop);
+    return node;
 }
 
 std::any cromio::visitor::VariablesVisitor::visitVariableDeclaration(Grammar::VariableDeclarationContext* ctx) {
-    json node = utils::Helpers::createNode("", "VariableDeclaration", ctx->start, ctx->stop);
+    json node = createNode("", "VariableDeclaration", ctx->start, ctx->stop);
 
     const auto visitDataType = visit(ctx->variableDataType());
     const auto jDataType = std::any_cast<json>(visitDataType);
@@ -53,26 +54,33 @@ std::any cromio::visitor::VariablesVisitor::visitVariableDeclaration(Grammar::Va
     const auto variableAssignment = visit(ctx->variableAssignment());
     const auto jVariableAssignment = std::any_cast<json>(variableAssignment);
 
+    const std::string identifier = jVariableAssignment["Identifier"]["value"];
+    if (scope->existsInCurrent(identifier)) {
+        throwScopeError( "variable '" + identifier + "' " + "is already declared", jDataType, source);
+    }
+
+    scope->declareVariable(identifier, jVariableAssignment["value"]);
+
     node["DataType"] = jDataType;
     node["Identifier"] = jVariableAssignment["Identifier"];
     node["value"] = jVariableAssignment["value"];
 
-    json variable = analyzeVariableDeclaration(node, source);
+    // json variable = analyzeVariableDeclaration(node, source);
 
-    json scopeInfo = utils::Helpers::createNode("", "VariableInfo", ctx->start, ctx->stop);
-    scopeInfo["value"] = variable["value"]["value"];
-    scopeInfo["type"] = variable["DataType"]["value"];
+    // json scopeInfo = createNode("", "VariableInfo", ctx->start, ctx->stop);
+    // scopeInfo["value"] = variable["value"]["value"];
+    // scopeInfo["type"] = variable["DataType"]["value"];
 
-    return variable;
+    return node;
 }
 
 std::any cromio::visitor::VariablesVisitor::visitVariableAssignment(Grammar::VariableAssignmentContext* ctx) {
-    json node = utils::Helpers::createNode("", "VariableAssignment", ctx->start, ctx->stop);
+    json node = createNode("", "VariableAssignment", ctx->start, ctx->stop);
 
     const auto expression = visit(ctx->expression());
     const auto jExpression = std::any_cast<json>(expression);
 
-    json identifier = utils::Helpers::createNode("", "VariableIdentifier", ctx->IDENTIFIER()->getSymbol(), ctx->IDENTIFIER()->getSymbol());
+    json identifier = createNode("", "VariableIdentifier", ctx->IDENTIFIER()->getSymbol(), ctx->IDENTIFIER()->getSymbol());
     identifier["value"] = ctx->IDENTIFIER()->getText();
 
     node["Identifier"] = identifier;
@@ -82,21 +90,21 @@ std::any cromio::visitor::VariablesVisitor::visitVariableAssignment(Grammar::Var
 }
 
 std::any cromio::visitor::VariablesVisitor::visitVariableDataType(Grammar::VariableDataTypeContext* ctx) {
-    json node = utils::Helpers::createNode("", "DataType", ctx->start, ctx->stop);
+    json node = createNode("", "DataType", ctx->start, ctx->stop);
     node["value"] = ctx->getText();
 
     return node;
 }
 
 std::any cromio::visitor::VariablesVisitor::visitVariableAccessToMember(Grammar::VariableAccessToMemberContext* ctx) {
-    json node = utils::Helpers::createNode("", "VariableMember", ctx->start, ctx->stop);
+    json node = createNode("", "VariableMember", ctx->start, ctx->stop);
 
     const auto identifier = ctx->IDENTIFIER()[0];
-    json jIdentifier = utils::Helpers::createNode("", "VariableIdentifier", identifier->getSymbol(), identifier->getSymbol());
+    json jIdentifier = createNode("", "VariableIdentifier", identifier->getSymbol(), identifier->getSymbol());
     jIdentifier["value"] = identifier->getText();
 
     const auto member = ctx->IDENTIFIER()[1];
-    const json jMember = utils::Helpers::createNode("", "Member", member->getSymbol(), member->getSymbol());
+    const json jMember = createNode("", "Member", member->getSymbol(), member->getSymbol());
 
     node["Identifier"] = jIdentifier;
     node["Member"] = jMember;

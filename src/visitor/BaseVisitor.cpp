@@ -3,58 +3,18 @@
 //
 
 #include "BaseVisitor.h"
-#include <utils/utils.h>
 
-void processScope(cromio::semantic::Scope& scope, const json& body, const std::string& source) {
-    for (const auto& node : body) {
-        if (node["kind"] == "VariableDeclaration") {
-            std::string name = node["Identifier"]["value"];
-            scope.declareVariable(name, node);
-        }
+void cromio::visitor::BaseVisitor::enterScope() {
+    const auto child = new semantic::Scope(scope);
+    scope = child;
+}
 
-        if (node["kind"] == "VariableAssignment") {
-            const std::string name = node["Identifier"]["value"];
-
-            if (auto lookup = scope.lookup(name); !lookup.has_value()) {
-                cromio::utils::Error::throwScopeError("Variable '" + name + "' not found", node, source);
-            }
-        }
-
-        // In the future you will add:
-        // - Block statements
-        // - Functions (push new scope)
-        // - Classes
-        // - Loops
+void cromio::visitor::BaseVisitor::exitScope() {
+    if (scope->getParent() != nullptr) {
+        scope = scope->getParent();
     }
 }
 
-std::any cromio::visitor::Visitor::visitProgram(Grammar::ProgramContext* ctx) {
-    json node = utils::Helpers::createNode("", "Program", ctx->start, ctx->stop);
-
-    json body;
-    for (const auto child : ctx->children) {
-        if (const std::any statement = visit(child); statement.has_value()) {
-            body.push_back(std::any_cast<json>(statement));
-        }
-    }
-
-    semantic::Scope globalScope(nullptr);
-    processScope(globalScope, body, source);
-
-    node["Body"] = body;
-    return node;
-}
-
-std::any cromio::visitor::Visitor::visitStatements(Grammar::StatementsContext* ctx) {
-    if (ctx->expression()) {
-        const std::any expression = visit(ctx->expression());
-        return std::any_cast<json>(expression);
-    }
-
-    if (ctx->variables()) {
-        const std::any variableStatement = visit(ctx->variables());
-        return std::any_cast<json>(variableStatement);
-    }
-
-    return json::object();
+cromio::semantic::Scope* cromio::visitor::BaseVisitor::getCurrentScope() const {
+    return scope;
 }

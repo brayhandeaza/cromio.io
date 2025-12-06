@@ -16,15 +16,18 @@ lexer grammar MainTokens;
 // Boolean types
 BOOLEAN_TYPES
     : 'bool'
+    | 'bool*'
     ;
 
 STRING_TYPES
     : 'str'
+    | 'str*'
     ;
 
 // Integer types
 INTEGER_TYPES
     : 'int'
+    | 'int*'
     | 'int8'
     | 'int16'
     | 'int32'
@@ -42,6 +45,7 @@ UNSIGNED_INTEGER_TYPES
 
 FLOAT_TYPES
     : 'float'      // 32-bit
+    | 'float*'
     | 'float32'    // 34-bit
     | 'float64'    // 64-bit
     ;

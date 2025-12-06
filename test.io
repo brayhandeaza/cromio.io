@@ -1,2 +1,2 @@
 str a = "Monday"
-a = "December"
+str b = "December"

@@ -11,7 +11,6 @@
 #include <unordered_map>
 
 namespace cromio::semantic {
-
     class Scope {
        public:
         explicit Scope(Scope* parent = nullptr) : parent(parent) {}
@@ -20,6 +19,15 @@ namespace cromio::semantic {
         bool existsInCurrent(const std::string& name) const;
 
         std::optional<json> lookup(const std::string& name);
+
+        // NEW
+        Scope* createChild() {
+            return new Scope(this);
+        }
+
+        Scope* getParent() const {
+            return parent;
+        }
 
        private:
         Scope* parent;

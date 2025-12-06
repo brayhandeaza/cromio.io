@@ -5,22 +5,26 @@
 #ifndef CROMIO_BASE_VISITOR_H
 #define CROMIO_BASE_VISITOR_H
 
-#include "ExpressionVisitor.h"
 #include "GrammarVisitor.h"
-#include "LiteralsVisitor.h"
-#include "VariablesVisitor.h"
+#include "semantic/semantic.h"
 
 namespace cromio::visitor {
-    class Visitor final : public LiteralsVisitor, public VariablesVisitor, public ExpressionVisitor {
-       public:
-        explicit Visitor(std::string& source) : LiteralsVisitor(source), VariablesVisitor(source), ExpressionVisitor(source), source(source) {}
 
-        std::any visitProgram(Grammar::ProgramContext* ctx) override;
-        std::any visitStatements(Grammar::StatementsContext* ctx) override;
-
-       private:
+    class BaseVisitor : public GrammarVisitor, public utils::Error, public utils::Helpers {
+       protected:
         std::string& source;
+        std::unique_ptr<semantic::Scope> rootScope;
+        semantic::Scope* scope;
+
+       public:
+        explicit BaseVisitor(std::string& source) : source(source), rootScope(std::make_unique<semantic::Scope>(nullptr)), scope(rootScope.get()) {}
+
+        void enterScope();
+        void exitScope();
+
+        semantic::Scope* getCurrentScope() const;
     };
+
 } // namespace cromio::visitor
 
 #endif // CROMIO_BASE_VISITOR_H

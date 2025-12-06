@@ -4,6 +4,9 @@
 
 #include "cromio.h"
 
+#include <visitor/ProgramVisitor.h>
+#include <visitor/visitor.h>
+
 int main(int argc, const char* argv[]) {
     // ---------------------------------------------
     // Load input file
@@ -47,7 +50,7 @@ int main(int argc, const char* argv[]) {
 
     cromio::visitor::Visitor visitor(content);
     auto ast = std::any_cast<json>(visitor.visit(tree));
-    // std::cout << ast.dump(1) << std::endl;
+    std::cout << ast.dump(1) << std::endl;
 
     // ---------------------------------------------
     // Emit LLVM IR from AST
@@ -59,7 +62,6 @@ int main(int argc, const char* argv[]) {
     // Emit LLVM Bytecode to memory or to file
     // ---------------------------------------------
     std::vector<uint8_t> bc = cromio::backend::BytecodeEmitter::toMemory(*module);
-    // std::cout << "bc size: " << bc.size() << std::endl;
     module->print(llvm::outs(), nullptr);
     return 0;
 }

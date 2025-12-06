@@ -9,7 +9,7 @@
 #include "VariablesVisitor.h"
 
 namespace cromio::visitor {
-    class ExpressionVisitor : public virtual GrammarVisitor {
+    class ExpressionVisitor : public virtual BaseVisitor {
        public:
         explicit ExpressionVisitor(std::string& source) : source(source) {}
         std::any visitExpression(Grammar::ExpressionContext* ctx) override;
