@@ -3,7 +3,6 @@
 //
 
 #include "LiteralsVisitor.h"
-#include "utils/Error.h"
 
 std::any cromio::visitor::LiteralsVisitor::visitLiteral(Grammar::LiteralContext* ctx) {
     if (ctx->stringLiteral()) {
@@ -31,13 +30,13 @@ std::any cromio::visitor::LiteralsVisitor::visitLiteral(Grammar::LiteralContext*
         return std::any_cast<json>(formattedString);
     }
 
-    json node = utils::Helpers::createNode("", "None", ctx->start, ctx->stop);
+    json node = createNode("", "None", ctx->start, ctx->stop);
     return node;
 }
 
 std::any cromio::visitor::LiteralsVisitor::visitIntegerLiteral(Grammar::IntegerLiteralContext* ctx) {
-    json node = utils::Helpers::createNode(ctx->getText(), "IntegerLiteral", ctx->start, ctx->stop);
-    node["value"] = utils::Helpers::parseNumberString(ctx->getText());
+    json node = createNode(ctx->getText(), "IntegerLiteral", ctx->start, ctx->stop);
+    node["value"] = parseNumberString(ctx->getText());
     node["type"] = "int";
     node["stringValue"] = ctx->getText();
     node["numberValue"] = ctx->getText();
@@ -46,8 +45,8 @@ std::any cromio::visitor::LiteralsVisitor::visitIntegerLiteral(Grammar::IntegerL
 }
 
 std::any cromio::visitor::LiteralsVisitor::visitFloatLiteral(Grammar::FloatLiteralContext* ctx) {
-    json node = utils::Helpers::createNode(ctx->getText(), "FloatLiteral", ctx->start, ctx->stop);
-    node["value"] = utils::Helpers::parseFloat(ctx->getText());
+    json node = createNode(ctx->getText(), "FloatLiteral", ctx->start, ctx->stop);
+    node["value"] = parseFloat(ctx->getText());
     node["type"] = "float";
     node["stringValue"] = ctx->getText();
     node["numberValue"] = ctx->getText();
@@ -56,8 +55,8 @@ std::any cromio::visitor::LiteralsVisitor::visitFloatLiteral(Grammar::FloatLiter
 }
 
 std::any cromio::visitor::LiteralsVisitor::visitStringLiteral(Grammar::StringLiteralContext* ctx) {
-    json node = utils::Helpers::createNode(ctx->getText(), "StringLiteral", ctx->start, ctx->stop);
-    node["value"] = utils::Helpers::parseString(ctx->getText());
+    json node = createNode(ctx->getText(), "StringLiteral", ctx->start, ctx->stop);
+    node["value"] = parseString(ctx->getText());
     node["type"] = "str";
     node["stringValue"] = ctx->getText();
     node["numberValue"] = ctx->getText();
@@ -66,7 +65,7 @@ std::any cromio::visitor::LiteralsVisitor::visitStringLiteral(Grammar::StringLit
 }
 
 std::any cromio::visitor::LiteralsVisitor::visitBooleanLiteral(Grammar::BooleanLiteralContext* ctx) {
-    json node = utils::Helpers::createNode(ctx->getText() == "true" ? "1" : "0", "BooleanLiteral", ctx->start, ctx->stop);
+    json node = createNode(ctx->getText() == "true" ? "1" : "0", "BooleanLiteral", ctx->start, ctx->stop);
     node["value"] = ctx->getText();
     node["type"] = "bool";
     node["stringValue"] = ctx->getText();
@@ -76,7 +75,7 @@ std::any cromio::visitor::LiteralsVisitor::visitBooleanLiteral(Grammar::BooleanL
 }
 
 std::any cromio::visitor::LiteralsVisitor::visitNoneLiteral(Grammar::NoneLiteralContext* ctx) {
-    json node = utils::Helpers::createNode("0", "NoneLiteral", ctx->start, ctx->stop);
+    json node = createNode("0", "NoneLiteral", ctx->start, ctx->stop);
     node["value"] = ctx->getText();
     node["type"] = "none";
     node["stringValue"] = "none";
@@ -86,7 +85,7 @@ std::any cromio::visitor::LiteralsVisitor::visitNoneLiteral(Grammar::NoneLiteral
 }
 
 std::any cromio::visitor::LiteralsVisitor::visitFormattedString(Grammar::FormattedStringContext* ctx) {
-    json node = utils::Helpers::createNode(ctx->getText(), "StringFormatted", ctx->start, ctx->stop);
+    json node = createNode(ctx->getText(), "StringFormatted", ctx->start, ctx->stop);
     json params = json::array();
 
     for (const auto child : ctx->formattedStringContent()) {
@@ -124,7 +123,7 @@ std::any cromio::visitor::LiteralsVisitor::visitFormattedStringContent(Grammar::
 
     // -------- CASE 2: TEXT inside formatted string
     if (ctx->FORMATTED_STRING_TEXT()) {
-        json node = utils::Helpers::createNode(ctx->getText(), "StringFormattedText", ctx->start, ctx->stop);
+        json node = createNode(ctx->getText(), "StringFormattedText", ctx->start, ctx->stop);
         node["value"] = ctx->getText();
         node["stringValue"] = ctx->getText();
         return node;

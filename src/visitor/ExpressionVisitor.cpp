@@ -42,7 +42,7 @@ std::any cromio::visitor::ExpressionVisitor::visitExpression(Grammar::Expression
         const json left = std::any_cast<json>(visit(ctx->expression(0)));
         const json right = std::any_cast<json>(visit(ctx->expression(1)));
 
-        json node = utils::Helpers::createNode(ctx->getText(), "Expression", ctx->start, ctx->stop);
+        json node = createNode(ctx->getText(), "Expression", ctx->start, ctx->stop);
         node["left"] = left;
         node["right"] = right;
         node["operator"] = op;
@@ -60,7 +60,7 @@ std::any cromio::visitor::ExpressionVisitor::visitExpression(Grammar::Expression
 
         // Convert JSON → double
         auto toDouble = [&](const json& j) -> double {
-            std::string k = j["kind"];
+            const std::string k = j["kind"];
 
             if (k == "BooleanLiteral")
                 return j["value"] == "true" ? 1.0 : 0.0;

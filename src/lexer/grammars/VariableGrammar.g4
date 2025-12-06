@@ -1,4 +1,4 @@
-parser grammar Variable;
+parser grammar VariableGrammar;
 
 options {
     tokenVocab = Tokens;
@@ -18,6 +18,23 @@ variables
     |   variableAccessToMember
     ;
 
+// --------------------------------------------------------------------
+// ArrayDeclaration
+// --------------------------------------------------------------------
+//arrayDeclaration: arrayDeclarationType arrayAssignment ;
+//
+//arrayAssignment: IDENTIFIER EQ arrayExpression*;
+//
+//arrayExpression: IDENTIFIER EQ expression;
+//
+//arrayDeclarationType
+//    : {inVarMode = true;} variableDataType LBRACKET arrayDeclarationTypeSize RBRACKET  {inVarMode = false;};
+//
+//arrayDeclarationTypeSize: {inVarMode = false;} INTEGER_TYPES {inVarMode = true;};
+
+// --------------------------------------------------------------------
+// VariableDeclaration
+// --------------------------------------------------------------------
 variableDeclaration: variableDataType variableAssignment;
 
 variableDeclarationWithoutAssignment: variableDataType IDENTIFIER;
@@ -28,4 +45,6 @@ variableAccessToMember
     : {inVarMode = true;} IDENTIFIER DOT IDENTIFIER {inVarMode = false;};
 
 variableDataType: INTEGER_TYPES | UNSIGNED_INTEGER_TYPES | FLOAT_TYPES | BOOLEAN_TYPES | STRING_TYPES;
+
+
 

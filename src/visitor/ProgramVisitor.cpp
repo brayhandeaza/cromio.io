@@ -29,7 +29,7 @@ void processScope(cromio::semantic::Scope& scope, const json& body, const std::s
 }
 
 std::any cromio::visitor::Visitor::visitProgram(Grammar::ProgramContext* ctx) {
-    json node = utils::Helpers::createNode("", "Program", ctx->start, ctx->stop);
+    json node = createNode("", "Program", ctx->start, ctx->stop);
 
     json body;
     for (const auto child : ctx->children) {
