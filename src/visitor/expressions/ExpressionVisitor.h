@@ -6,7 +6,7 @@
 #define CROMIO_EXPRESSION_VISITOR_H
 
 #include "GrammarVisitor.h"
-#include "VariablesVisitor.h"
+#include "visitor/base/BaseVisitor.h"
 
 namespace cromio::visitor {
     class ExpressionVisitor : public virtual BaseVisitor {

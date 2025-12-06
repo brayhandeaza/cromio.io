@@ -5,7 +5,7 @@
 #ifndef CROMIO_VARIABLES_VISITOR_H
 #define CROMIO_VARIABLES_VISITOR_H
 
-#include "BaseVisitor.h"
+#include "visitor/base/BaseVisitor.h"
 #include "GrammarVisitor.h"
 #include "semantic/semantic.h"
 

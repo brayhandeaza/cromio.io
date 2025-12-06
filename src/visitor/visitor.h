@@ -5,9 +5,6 @@
 #ifndef CROMIO_VISITOR_H
 #define CROMIO_VISITOR_H
 
-#include "ProgramVisitor.h"
-#include "visitor.h"
+#include "program/ProgramVisitor.h"
 
-
-
-#endif //CROMIO_VISITOR_H
+#endif // CROMIO_VISITOR_H

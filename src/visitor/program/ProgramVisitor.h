@@ -5,10 +5,10 @@
 #ifndef CROMIO_PROGRAM_VISITOR_H
 #define CROMIO_PROGRAM_VISITOR_H
 
-#include "BaseVisitor.h"
-#include "ExpressionVisitor.h"
-#include "LiteralsVisitor.h"
-#include "VariablesVisitor.h"
+#include "visitor/base/BaseVisitor.h"
+#include "visitor/expressions/ExpressionVisitor.h"
+#include "visitor/literals/LiteralsVisitor.h"
+#include "visitor/variables/VariablesVisitor.h"
 
 namespace cromio::visitor {
     class Visitor final : public LiteralsVisitor, public VariablesVisitor, public ExpressionVisitor {

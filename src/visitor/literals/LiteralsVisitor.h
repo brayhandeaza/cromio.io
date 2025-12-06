@@ -5,7 +5,7 @@
 #ifndef CROMIO_LITERALS_VISITOR_H
 #define CROMIO_LITERALS_VISITOR_H
 
-#include "BaseVisitor.h"
+#include "visitor/base/BaseVisitor.h"
 #include "GrammarVisitor.h"
 
 namespace cromio::visitor {
