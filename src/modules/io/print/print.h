@@ -5,10 +5,8 @@
 #ifndef CROMIO_IO_H
 #define CROMIO_IO_H
 
-#include <string>
-
-namespace cromio::modules {
-    void print(const std::string& message);
+extern "C" {
+    void cromio_print(const char* msg);
 }
 
 #endif // CROMIO_IO_H

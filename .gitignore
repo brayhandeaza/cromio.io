@@ -12,3 +12,4 @@ antlr4
 /src/lexer/antlr
 /antlr4/
 /ast.json
+/src/modules/runtime.bc
