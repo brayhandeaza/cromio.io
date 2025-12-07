@@ -7,10 +7,11 @@
 
 #include "GrammarVisitor.h"
 #include "semantic/semantic.h"
+#include "semantic/scopes/Scope.h"
 
 namespace cromio::visitor {
 
-    class BaseVisitor : public GrammarVisitor, public utils::Error, public utils::Helpers, public semantic::Variables {
+    class BaseVisitor : public GrammarVisitor, public utils::Error, public utils::Helpers, public semantic::Semantic {
        protected:
         std::string& source;
         std::unique_ptr<semantic::Scope> rootScope;

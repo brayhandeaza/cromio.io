@@ -15,7 +15,6 @@ namespace cromio::visitor {
        public:
         explicit ArraysVisitor(std::string& source) : BaseVisitor(source) {}
         std::any visitArrayDeclaration(Grammar::ArrayDeclarationContext* ctx) override;
-        std::any visitArrayAssignment(Grammar::ArrayAssignmentContext* ctx) override;
         std::any visitArrayDeclarationTypeSize(Grammar::ArrayDeclarationTypeSizeContext* ctx) override;
     };
 } // namespace cromio::visitor

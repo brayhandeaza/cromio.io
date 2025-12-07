@@ -352,15 +352,18 @@ namespace cromio::lowering {
         if (initVal->getType() != varType) {
             if (initVal->getType()->isIntegerTy() && varType->isFloatingPointTy()) {
                 initVal = builder->CreateSIToFP(initVal, varType, "init_int_to_fp");
+
             } else if (initVal->getType()->isFloatingPointTy() && varType->isIntegerTy()) {
                 initVal = builder->CreateFPToSI(initVal, varType, "init_fp_to_int");
+
             } else if (initVal->getType()->isIntegerTy() && varType->isIntegerTy()) {
-                // extend/truncate as needed
                 const auto* Ival = llvm::cast<llvm::IntegerType>(initVal->getType());
                 if (auto* Vt = llvm::cast<llvm::IntegerType>(varType); Ival->getBitWidth() < Vt->getBitWidth())
                     initVal = builder->CreateSExt(initVal, Vt, "init_sext");
+
                 else if (Ival->getBitWidth() > Vt->getBitWidth())
                     initVal = builder->CreateTrunc(initVal, Vt, "init_trunc");
+
             } else if (initVal->getType()->isPointerTy() && varType->isPointerTy()) {
                 initVal = builder->CreateBitCast(initVal, varType, "init_bitcast");
             } else {
@@ -400,9 +403,11 @@ namespace cromio::lowering {
             if (const json sizeVal = node["ArraySize"]; sizeVal["value"] == "auto") {
                 if (!node["value"].contains("items") || !node["value"]["items"].is_array())
                     throw std::runtime_error("ArrayAssignment items missing for auto-size array");
+
                 arraySize = node["value"]["items"].size();
+
             } else {
-                const std::string size = sizeVal["value"]["raw"];
+                const std::string size = sizeVal["raw"];
                 arraySize = std::stoi(size);
             }
         } else {
@@ -426,21 +431,38 @@ namespace cromio::lowering {
 
                 // Get element pointer
                 llvm::Value* gep = builder->CreateGEP(arrType, allocaInst, {builder->getInt32(0), builder->getInt32(idx)}, arrayName + "_idx" + std::to_string(idx));
-
+                // Cast if necessary
                 // Cast if necessary
                 if (val->getType() != elementType) {
-                    if (val->getType()->isIntegerTy() && elementType->isFloatingPointTy())
-                        val = builder->CreateSIToFP(val, elementType, "elem_int_to_fp");
-                    else if (val->getType()->isFloatingPointTy() && elementType->isIntegerTy())
-                        val = builder->CreateFPToSI(val, elementType, "elem_fp_to_int");
+                    // bool -> int (i1 -> i8/i32/i64/etc)
+                    if (val->getType()->isIntegerTy(1) && elementType->isIntegerTy() && elementType->getIntegerBitWidth() > 1) {
+                        val = builder->CreateZExt(val, elementType, "bool_to_int");
+                    }
+
+                    // int -> bool (i32 -> i1)
+                    else if (val->getType()->isIntegerTy() && val->getType()->getIntegerBitWidth() > 1 && elementType->isIntegerTy(1)) {
+                        val = builder->CreateICmpNE(val, llvm::ConstantInt::get(val->getType(), 0), "int_to_bool");
+                    }
+
+                    // int <-> int (already have this)
                     else if (val->getType()->isIntegerTy() && elementType->isIntegerTy()) {
-                        const auto* vIt = llvm::cast<llvm::IntegerType>(val->getType());
-                        const auto* tIt = llvm::cast<llvm::IntegerType>(elementType);
+                        auto* vIt = llvm::cast<llvm::IntegerType>(val->getType());
+                        auto* tIt = llvm::cast<llvm::IntegerType>(elementType);
+
                         if (vIt->getBitWidth() < tIt->getBitWidth())
                             val = builder->CreateSExt(val, elementType, "elem_sext");
                         else if (vIt->getBitWidth() > tIt->getBitWidth())
                             val = builder->CreateTrunc(val, elementType, "elem_trunc");
-                    } else
+                    }
+
+                    // int <-> float (already have yours)
+                    else if (val->getType()->isIntegerTy() && elementType->isFloatingPointTy())
+                        val = builder->CreateSIToFP(val, elementType, "elem_int_to_fp");
+
+                    else if (val->getType()->isFloatingPointTy() && elementType->isIntegerTy())
+                        val = builder->CreateFPToSI(val, elementType, "elem_fp_to_int");
+
+                    else
                         throw std::runtime_error("Cannot convert array element type");
                 }
 

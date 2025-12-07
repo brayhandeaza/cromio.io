@@ -1,1 +1,1 @@
-int[1] ages = [10,20]
+bool[] ages = [false, true, true]

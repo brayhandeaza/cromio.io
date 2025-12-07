@@ -22,9 +22,7 @@ variables
 // --------------------------------------------------------------------
 // ArrayDeclaration
 // --------------------------------------------------------------------
-arrayDeclaration: {inVarMode = true;} variableDataType LBRACKET arrayDeclarationTypeSize RBRACKET  {inVarMode = false;} IDENTIFIER EQ arrayAssignment ;
-
-arrayAssignment: LBRACKET (expression (COMMA expression)*)? RBRACKET;
+arrayDeclaration: {inVarMode = true;} variableDataType LBRACKET arrayDeclarationTypeSize RBRACKET  {inVarMode = false;} IDENTIFIER EQ LBRACKET (expression (COMMA expression)*)? RBRACKET;
 
 arrayDeclarationTypeSize: {inVarMode = false;} expression? {inVarMode = true;};
 

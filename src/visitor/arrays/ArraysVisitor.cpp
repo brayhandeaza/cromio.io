@@ -15,34 +15,32 @@ namespace cromio::visitor {
         const auto arraySize = visit(ctx->arrayDeclarationTypeSize());
         const auto jArraySize = std::any_cast<json>(arraySize);
 
-        const auto arrayAssignment = visit(ctx->arrayAssignment());
-        const auto jArrayAssignment = std::any_cast<json>(arrayAssignment);
+        json value = createNode("", "ArrayAssignment", ctx->start, ctx->stop);
+        json items = json::array();
 
         json identifier = createNode("", "ArrayIdentifier", ctx->start, ctx->stop);
         identifier["value"] = ctx->IDENTIFIER()->getText();
-
-        node["DataType"] = jArrayType;
-        node["ArraySize"] = jArraySize;
-        node["Identifier"] = identifier;
-        node["value"] = jArrayAssignment;
-
-        return node;
-    }
-
-    std::any ArraysVisitor::visitArrayAssignment(Grammar::ArrayAssignmentContext* ctx) {
-        json node = createNode("", "ArrayAssignment", ctx->start, ctx->stop);
-        json items = json::array();
 
         for (const auto child : ctx->expression()) {
             const auto item = visit(child);
             const auto jItem = std::any_cast<json>(item);
 
+            const std::string itemType = jItem["type"];
+            if (const std::string type = jArrayType["value"].get<std::string>(); itemType != type) {
+                throwTypeError(identifier["value"], type, jItem, source);
+            }
+
             items.push_back(jItem);
         }
 
-        node["items"] = items;
+        value["items"] = items;
 
-        return node;
+        node["DataType"] = jArrayType;
+        node["ArraySize"] = jArraySize["value"];
+        node["Identifier"] = identifier;
+        node["value"] = value;
+
+        return analyzeArrayDeclaration(node, source);
     }
 
     std::any ArraysVisitor::visitArrayDeclarationTypeSize(Grammar::ArrayDeclarationTypeSizeContext* ctx) {
@@ -56,7 +54,9 @@ namespace cromio::visitor {
         }
 
         if (!expression.has_value()) {
-            node["value"] = "auto";
+            json size = createNode("auto", "Auto", ctx->start, ctx->stop);
+            size["value"] = "auto";
+            node["value"] = size;
         } else {
             node["value"] = std::any_cast<json>(expression);
         }

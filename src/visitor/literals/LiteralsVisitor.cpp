@@ -71,7 +71,7 @@ std::any cromio::visitor::LiteralsVisitor::visitStringLiteral(Grammar::StringLit
 
 std::any cromio::visitor::LiteralsVisitor::visitBooleanLiteral(Grammar::BooleanLiteralContext* ctx) {
     json node = createNode(ctx->getText() == "true" ? "1" : "0", "BooleanLiteral", ctx->start, ctx->stop);
-    node["value"] = ctx->getText();
+    node["value"] = ctx->getText() == "true";
     node["type"] = "bool";
     node["stringValue"] = ctx->getText();
     node["numberValue"] = ctx->getText() == "true" ? "1" : "0";

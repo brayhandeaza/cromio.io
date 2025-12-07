@@ -85,9 +85,9 @@ void cromio::utils::Error::throwError(const std::string& errorType, const std::s
     std::cout << "    " << std::string(node["end"]["column"].get<int>(), ' ') << "^";
 
     // If node spans more than 1 char, draw tildes
-    if (const int width = node["end"]["column"].get<int>() - 4; width > 0) {
-        std::cout << std::string(width, '~');
-    }
+    // if (const int width = node["end"]["column"].get<int>() - 4; width > 0) {
+    //     std::cout << std::string(width, '');
+    // }
 
     std::cout << "\n";
     std::exit(1);
