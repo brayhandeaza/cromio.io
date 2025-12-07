@@ -6,7 +6,7 @@
 #define CROMIO_IO_H
 
 extern "C" {
-    void cromio_print(const char* msg);
+    void cromio_print(const char* message);
 }
 
 #endif // CROMIO_IO_H

@@ -5,6 +5,6 @@
 #include "print.h"
 #include <iostream>
 
-extern "C" void cromio_print(const char* msg) {
-    std::cout << msg << std::endl;
+extern "C" void cromio_print(const char* message) {
+    std::cout << message << std::endl;
 }
