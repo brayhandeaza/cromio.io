@@ -16,21 +16,17 @@ variables
     |   variableDeclarationWithoutAssignment
     |   variableReAssignment
     |   variableAccessToMember
+    |   arrayDeclaration
     ;
 
 // --------------------------------------------------------------------
 // ArrayDeclaration
 // --------------------------------------------------------------------
-//arrayDeclaration: arrayDeclarationType arrayAssignment ;
-//
-//arrayAssignment: IDENTIFIER EQ arrayExpression*;
-//
-//arrayExpression: IDENTIFIER EQ expression;
-//
-//arrayDeclarationType
-//    : {inVarMode = true;} variableDataType LBRACKET arrayDeclarationTypeSize RBRACKET  {inVarMode = false;};
-//
-//arrayDeclarationTypeSize: {inVarMode = false;} INTEGER_TYPES {inVarMode = true;};
+arrayDeclaration: {inVarMode = true;} variableDataType LBRACKET arrayDeclarationTypeSize RBRACKET  {inVarMode = false;} IDENTIFIER EQ arrayAssignment ;
+
+arrayAssignment: LBRACKET (expression (COMMA expression)*)? RBRACKET;
+
+arrayDeclarationTypeSize: {inVarMode = false;} expression? {inVarMode = true;};
 
 // --------------------------------------------------------------------
 // VariableDeclaration

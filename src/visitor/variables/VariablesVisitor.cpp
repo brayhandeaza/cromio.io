@@ -26,6 +26,11 @@ std::any cromio::visitor::VariablesVisitor::visitVariables(Grammar::VariablesCon
         return std::any_cast<json>(visitVariableAccessToMember);
     }
 
+    if (ctx->arrayDeclaration()) {
+        const auto visitArrayDeclaration = visit(ctx->arrayDeclaration());
+        return std::any_cast<json>(visitArrayDeclaration);
+    }
+
     return json::object();
 }
 

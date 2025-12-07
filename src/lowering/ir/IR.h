@@ -43,6 +43,7 @@ namespace cromio::lowering {
         llvm::Value* variableDeclaration(const json& node);
         llvm::Value* variableAssignment(const json& node);
         llvm::Value* program(const json& node);
+        llvm::Value* arrayDeclaration(const json& node);
 
         void loadAndLinkModulesFromFolder() const;
         bool linkModule(std::unique_ptr<llvm::Module> other) const;

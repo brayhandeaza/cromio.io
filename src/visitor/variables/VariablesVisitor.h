@@ -20,12 +20,6 @@ namespace cromio::visitor {
         std::any visitVariableDeclarationWithoutAssignment(Grammar::VariableDeclarationWithoutAssignmentContext* ctx) override;
         std::any visitVariables(Grammar::VariablesContext* ctx) override;
         std::any visitVariableAccessToMember(Grammar::VariableAccessToMemberContext* ctx) override;
-
-        // std::any visitArrayDeclaration(Grammar::ArrayDeclarationContext* ctx) override;
-        // std::any visitArrayAssignment(Grammar::ArrayAssignmentContext* ctx) override;
-        // std::any visitArrayExpression(Grammar::ArrayExpressionContext* ctx) override;
-        // std::any visitArrayDeclarationType(Grammar::ArrayDeclarationTypeContext* ctx) override;
-        // std::any visitArrayDeclarationTypeSize(Grammar::ArrayDeclarationTypeSizeContext* ctx) override;
     };
 } // namespace cromio::visitor
 
