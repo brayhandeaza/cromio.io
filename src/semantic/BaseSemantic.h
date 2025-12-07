@@ -1,19 +1,16 @@
 //
-// Created by Brayhan De Aza on 12/2/25.
+// Created by Brayhan De Aza on 11/27/25.
 //
 
-#ifndef CROMIO_VARIABLES_SEMANTIC_ANALYZE_H
-#define CROMIO_VARIABLES_SEMANTIC_ANALYZE_H
+#ifndef CROMIO_BASE_SEMANTIC_H
+#define CROMIO_BASE_SEMANTIC_H
 
+#include <string>
 #include "utils/utils.h"
 
 namespace cromio::semantic {
-    class Variables {
+    class BaseSemantic {
        public:
-        static json analyzeVariableDeclaration(json& node, const std::string& source);
-        static json analyzeVariableWithoutAssignment(json& node, const antlr4::Token* start, const antlr4::Token* stop);
-
-       private:
         static const std::string INT64_MAX_STR;
         static const std::string INT64_MIN_STR;
         static const std::string UINT64_MAX_STR;
@@ -26,9 +23,7 @@ namespace cromio::semantic {
         static void analyzeUnsignedInteger(const std::string& rValue, const std::string& dataType, const std::string& identifier, const std::string& source, const json& node);
         static void analyzeFloat(const std::string& rValue, const std::string& dataType, const std::string& source, const json& node);
         static void analyze64BitInteger(const std::string& rValue, const std::string& dataType, const std::string& identifier, const std::string& source, const json& node);
-
-        static bool checkDataType(const std::string& dataType, const std::string& returnType);
     };
 } // namespace cromio::semantic
 
-#endif // CROMIO_VARIABLES_SEMANTIC_ANALYZE_H
+#endif // CROMIO_BASE_SEMANTIC_H

@@ -5,8 +5,8 @@
 #ifndef CROMIO_SEMANTIC_H
 #define CROMIO_SEMANTIC_H
 
-#include "Variables.h"
-#include "arrays/Arrays.h"
+#include "semantic/arrays/Arrays.h"
+#include "semantic/variables/Variables.h"
 
 namespace cromio::semantic {
     class Semantic : public virtual Variables, public virtual Arrays {};

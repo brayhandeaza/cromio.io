@@ -9,9 +9,10 @@
 #include <optional>
 #include <string>
 #include <unordered_map>
+#include "semantic/BaseSemantic.h"
 
 namespace cromio::semantic {
-    class Scope {
+    class Scope : public virtual BaseSemantic {
        public:
         explicit Scope(Scope* parent = nullptr) : parent(parent) {}
 

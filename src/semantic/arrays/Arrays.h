@@ -5,15 +5,14 @@
 #ifndef CROMIO_ARRAYS_SEMANTIC_ANALYZE_H
 #define CROMIO_ARRAYS_SEMANTIC_ANALYZE_H
 
+#include "semantic/BaseSemantic.h"
 #include "utils/utils.h"
 
 namespace cromio::semantic {
-    class Arrays {
+    class Arrays : public virtual BaseSemantic {
        public:
         static json analyzeArrayDeclaration(json& node, const std::string& source);
-
-       private:
-        static bool checkDataType(const std::string& dataType, const std::string& returnType);
+        static bool checkArrayDataType(const std::string& dataType, const std::string& returnType);
     };
 } // namespace cromio::semantic
 

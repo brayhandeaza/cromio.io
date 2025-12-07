@@ -4,6 +4,8 @@
 
 #include "ArraysVisitor.h"
 #include "semantic/semantic.h"
+#include "semantic/BaseSemantic.h"
+
 
 namespace cromio::visitor {
     std::any ArraysVisitor::visitArrayDeclaration(Grammar::ArrayDeclarationContext* ctx) {
@@ -23,11 +25,17 @@ namespace cromio::visitor {
 
         for (const auto child : ctx->expression()) {
             const auto item = visit(child);
-            const auto jItem = std::any_cast<json>(item);
+            auto jItem = std::any_cast<json>(item);
 
-            const std::string itemType = jItem["type"];
-            if (const std::string type = jArrayType["value"].get<std::string>(); itemType != type) {
-                throwTypeError(identifier["value"], type, jItem, source);
+            std::string dataType = jArrayType["value"];
+            std::string returnType = jItem["type"];
+
+            const std::string rValue = jItem["numberValue"];
+            const std::string stringValue = jItem["stringValue"];
+
+            analyzeSignedInteger(rValue, dataType, identifier["value"], source, jItem);
+            if (const auto passArrayDataType = checkArrayDataType(dataType, returnType); !passArrayDataType) {
+                throwTypeError(identifier["value"], dataType, jItem, source);
             }
 
             items.push_back(jItem);
