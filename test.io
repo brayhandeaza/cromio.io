@@ -1,1 +1,1 @@
-bool[] ages = [false, true, true]
+int8[] a = [4 % 2 + 5, 800]

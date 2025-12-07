@@ -142,19 +142,25 @@ namespace cromio::lowering {
         const std::string kind = node.value("kind", "");
 
         if (kind == "FloatLiteral") {
+            // For FloatLiteral, "value" contains the actual float number
+            if (!node.contains("value"))
+                throw std::runtime_error("FloatLiteral missing value field");
+
             const std::string t = node.value("type", std::string("float"));
             const llvm::Type* ty = mapDataType(t);
-
             const double val = node.value("value", 0.0);
             if (ty->isDoubleTy())
                 return llvm::ConstantFP::get(builder->getDoubleTy(), val);
             if (ty->isFloatTy())
                 return llvm::ConstantFP::get(builder->getFloatTy(), static_cast<float>(val));
-            // fallback
             return llvm::ConstantFP::get(builder->getDoubleTy(), val);
         }
 
         if (kind == "IntegerLiteral") {
+            // For IntegerLiteral, "value" contains the actual integer number
+            if (!node.contains("value"))
+                throw std::runtime_error("IntegerLiteral missing value field");
+
             const std::string t = node.value("type", std::string("int"));
             llvm::Type* ty = mapDataType(t);
             const long long v = node.value("value", 0LL);
@@ -162,7 +168,6 @@ namespace cromio::lowering {
                 const auto* it = llvm::cast<llvm::IntegerType>(ty);
                 return llvm::ConstantInt::get(it->getContext(), llvm::APInt(it->getBitWidth(), static_cast<uint64_t>(v), true));
             }
-            // fallback to i32
             return llvm::ConstantInt::get(builder->getInt32Ty(), v, true);
         }
 
@@ -173,9 +178,21 @@ namespace cromio::lowering {
             return llvm::ConstantInt::get(builder->getInt8Ty(), 0);
 
         if (kind == "StringLiteral" || kind == "StringFormatted") {
-            // Create a global constant string and return pointer (i8*)
-            // Use CreateGlobalStringPtr so we get an i8* value
             return builder->CreateGlobalString(node.value("value", ""), "str");
+        }
+
+        // IdentifierLiteral
+        if (kind == "IdentifierLiteral") {
+            const std::string name = node.value("value", "");
+            if (name.empty())
+                throw std::runtime_error("IdentifierLiteral missing value");
+
+            auto it = symbols.find(name);
+            if (it == symbols.end())
+                throw std::runtime_error("Undefined identifier (IdentifierLiteral): " + name);
+
+            llvm::AllocaInst* alloc = it->second;
+            return builder->CreateLoad(alloc->getAllocatedType(), alloc, name + ".load");
         }
 
         throw std::runtime_error("Unknown literal type: " + kind);
@@ -184,11 +201,12 @@ namespace cromio::lowering {
     llvm::Value* IR::expression(const json& node) {
         const std::string kind = node.value("kind", "");
 
-        // Literals
-        if (kind == "FloatLiteral" || kind == "IntegerLiteral" || kind == "BooleanLiteral" || kind == "NoneLiteral" || kind == "StringLiteral" || kind == "StringFormatted")
+        // If the node is a literal, delegate to literal()
+        if (kind == "FloatLiteral" || kind == "IntegerLiteral" || kind == "IdentifierLiteral" || kind == "BooleanLiteral" || kind == "NoneLiteral" || kind == "StringLiteral" || kind == "StringFormatted") {
             return literal(node);
+        }
 
-        // Load variable
+        // VariableIdentifier
         if (kind == "VariableIdentifier") {
             const std::string name = node.value("value", "");
             if (name.empty())
@@ -204,11 +222,23 @@ namespace cromio::lowering {
 
         // Binary Expression
         if (kind == "Expression") {
+            if (!node.contains("left") || !node.contains("right") || !node.contains("operator"))
+                throw std::runtime_error("Malformed Expression node (missing left/right/operator)");
+
+            // IMPORTANT: Recursively generate IR for operands - DO NOT use node["value"]!
+            // The "value" field in Expression nodes is metadata, not the actual computation.
             llvm::Value* L = expression(node["left"]);
             llvm::Value* R = expression(node["right"]);
             const std::string op = node.value("operator", "");
 
-            // Float promotion: if either is double -> use double
+            if (!L || !R)
+                throw std::runtime_error("Subexpression produced null");
+
+            // Debug: Ensure we're generating instructions, not using pre-computed values
+            // Expression nodes should NEVER directly return constants from node["value"]
+
+            // FLOATING POINT OPERATIONS
+            // If either operand is double, promote both to double
             if (L->getType()->isDoubleTy() || R->getType()->isDoubleTy()) {
                 L = promoteToDouble(L);
                 R = promoteToDouble(R);
@@ -221,11 +251,14 @@ namespace cromio::lowering {
                     return builder->CreateFMul(L, R, "fmul");
                 if (op == "/")
                     return builder->CreateFDiv(L, R, "fdiv");
+                if (op == "%")
+                    return builder->CreateFRem(L, R, "frem");
+
+                throw std::runtime_error("Unsupported operator for double: " + op);
             }
 
-            // If both are float (32)
+            // If either operand is float (32-bit)
             if (L->getType()->isFloatTy() || R->getType()->isFloatTy()) {
-                // cast ints to float if needed
                 if (!L->getType()->isFloatingPointTy())
                     L = builder->CreateSIToFP(L, builder->getFloatTy(), "int_to_float");
                 if (!R->getType()->isFloatingPointTy())
@@ -239,35 +272,48 @@ namespace cromio::lowering {
                     return builder->CreateFMul(L, R, "fmul");
                 if (op == "/")
                     return builder->CreateFDiv(L, R, "fdiv");
+                if (op == "%")
+                    return builder->CreateFRem(L, R, "frem");
+
+                throw std::runtime_error("Unsupported operator for float: " + op);
             }
 
-            // Integer ops (signed) - perform on the wider integer type
-            if (op == "+" || op == "-" || op == "*" || op == "/") {
-                if (!L->getType()->isIntegerTy() || !R->getType()->isIntegerTy())
-                    throw std::runtime_error("Integer operation on non-integer types");
-
+            // INTEGER OPERATIONS
+            if (L->getType()->isIntegerTy() && R->getType()->isIntegerTy()) {
+                // Get the bit widths
                 const auto* Lit = llvm::cast<llvm::IntegerType>(L->getType());
                 const auto* Rit = llvm::cast<llvm::IntegerType>(R->getType());
+
+                // Use the wider of the two types for the operation
                 const unsigned maxBits = std::max(Lit->getBitWidth(), Rit->getBitWidth());
-                llvm::IntegerType* resultTy = builder->getIntNTy(maxBits);
+                llvm::IntegerType* opType = builder->getIntNTy(maxBits);
 
-                // extend operands if needed (sign-extend)
+                // Extend both operands to the operation type if needed
                 if (Lit->getBitWidth() < maxBits)
-                    L = builder->CreateSExt(L, resultTy, "sext_l");
+                    L = builder->CreateSExt(L, opType, "sext_l");
                 if (Rit->getBitWidth() < maxBits)
-                    R = builder->CreateSExt(R, resultTy, "sext_r");
+                    R = builder->CreateSExt(R, opType, "sext_r");
 
+                // Perform the operation
+                // Note: LLVM automatically performs constant folding here.
+                // If both L and R are constants, CreateAdd/CreateSRem/etc will return
+                // a constant directly instead of creating an instruction.
+                // This is expected and normal LLVM behavior.
                 if (op == "+")
-                    return builder->CreateAdd(L, R, "add");
+                    return builder->CreateAdd(L, R, "addtmp");
                 if (op == "-")
-                    return builder->CreateSub(L, R, "sub");
+                    return builder->CreateSub(L, R, "subtmp");
                 if (op == "*")
-                    return builder->CreateMul(L, R, "mul");
+                    return builder->CreateMul(L, R, "multmp");
                 if (op == "/")
-                    return builder->CreateSDiv(L, R, "sdiv");
+                    return builder->CreateSDiv(L, R, "divtmp");
+                if (op == "%")
+                    return builder->CreateSRem(L, R, "modtmp");
+
+                throw std::runtime_error("Unsupported integer operator: " + op);
             }
 
-            throw std::runtime_error("Unknown operator: " + op);
+            throw std::runtime_error("Unsupported operand types in Expression: " + op);
         }
 
         if (kind == "VariableDeclaration")
@@ -329,8 +375,22 @@ namespace cromio::lowering {
         if (!node.contains("DataType") || !node.contains("Identifier") || !node.contains("value"))
             throw std::runtime_error("Malformed VariableDeclaration node");
 
-        const std::string variableName = node["Identifier"].value("value", "");
-        const std::string dataType = node["DataType"].value("value", "int");
+        // Extract identifier name
+        std::string variableName;
+        if (node["Identifier"].contains("value")) {
+            variableName = node["Identifier"].value("value", "");
+        } else {
+            throw std::runtime_error("VariableDeclaration Identifier missing 'value' field");
+        }
+
+        if (variableName.empty())
+            throw std::runtime_error("VariableDeclaration has empty identifier name");
+
+        // Extract data type
+        std::string dataType = "int";
+        if (node["DataType"].contains("value")) {
+            dataType = node["DataType"].value("value", "int");
+        }
 
         llvm::Type* varType = mapDataType(dataType);
 
@@ -338,39 +398,47 @@ namespace cromio::lowering {
         if (!currentFn)
             throw std::runtime_error("Must be inside a function to declare variable");
 
+        // Create alloca in entry block
         llvm::AllocaInst* allocaInst = createEntryBlockAlloca(currentFn, varType, variableName);
-
-        // Save in symbol table
         symbols[variableName] = allocaInst;
 
-        // Evaluate initializer
+        // Evaluate initializer expression
         llvm::Value* initVal = expression(node["value"]);
         if (!initVal)
             throw std::runtime_error("Variable initializer produced null");
 
-        // Convert if necessary
+        // Convert initializer to variable type if necessary
         if (initVal->getType() != varType) {
+            // Integer to floating point
             if (initVal->getType()->isIntegerTy() && varType->isFloatingPointTy()) {
                 initVal = builder->CreateSIToFP(initVal, varType, "init_int_to_fp");
-
-            } else if (initVal->getType()->isFloatingPointTy() && varType->isIntegerTy()) {
+            }
+            // Floating point to integer
+            else if (initVal->getType()->isFloatingPointTy() && varType->isIntegerTy()) {
                 initVal = builder->CreateFPToSI(initVal, varType, "init_fp_to_int");
+            }
+            // Integer to integer (different widths)
+            else if (initVal->getType()->isIntegerTy() && varType->isIntegerTy()) {
+                const auto* initType = llvm::cast<llvm::IntegerType>(initVal->getType());
+                const auto* targetType = llvm::cast<llvm::IntegerType>(varType);
 
-            } else if (initVal->getType()->isIntegerTy() && varType->isIntegerTy()) {
-                const auto* Ival = llvm::cast<llvm::IntegerType>(initVal->getType());
-                if (auto* Vt = llvm::cast<llvm::IntegerType>(varType); Ival->getBitWidth() < Vt->getBitWidth())
-                    initVal = builder->CreateSExt(initVal, Vt, "init_sext");
-
-                else if (Ival->getBitWidth() > Vt->getBitWidth())
-                    initVal = builder->CreateTrunc(initVal, Vt, "init_trunc");
-
-            } else if (initVal->getType()->isPointerTy() && varType->isPointerTy()) {
+                if (initType->getBitWidth() < targetType->getBitWidth()) {
+                    // Sign-extend for wider type
+                    initVal = builder->CreateSExt(initVal, varType, "init_sext");
+                } else if (initType->getBitWidth() > targetType->getBitWidth()) {
+                    // Truncate for narrower type
+                    initVal = builder->CreateTrunc(initVal, varType, "init_trunc");
+                }
+            }
+            // Pointer to pointer
+            else if (initVal->getType()->isPointerTy() && varType->isPointerTy()) {
                 initVal = builder->CreateBitCast(initVal, varType, "init_bitcast");
             } else {
                 throw std::runtime_error("Cannot convert initializer to variable type for: " + variableName);
             }
         }
 
+        // Store the initialized value
         builder->CreateStore(initVal, allocaInst);
         return allocaInst;
     }
@@ -431,20 +499,18 @@ namespace cromio::lowering {
 
                 // Get element pointer
                 llvm::Value* gep = builder->CreateGEP(arrType, allocaInst, {builder->getInt32(0), builder->getInt32(idx)}, arrayName + "_idx" + std::to_string(idx));
-                // Cast if necessary
+
                 // Cast if necessary
                 if (val->getType() != elementType) {
                     // bool -> int (i1 -> i8/i32/i64/etc)
                     if (val->getType()->isIntegerTy(1) && elementType->isIntegerTy() && elementType->getIntegerBitWidth() > 1) {
                         val = builder->CreateZExt(val, elementType, "bool_to_int");
                     }
-
                     // int -> bool (i32 -> i1)
                     else if (val->getType()->isIntegerTy() && val->getType()->getIntegerBitWidth() > 1 && elementType->isIntegerTy(1)) {
                         val = builder->CreateICmpNE(val, llvm::ConstantInt::get(val->getType(), 0), "int_to_bool");
                     }
-
-                    // int <-> int (already have this)
+                    // int <-> int
                     else if (val->getType()->isIntegerTy() && elementType->isIntegerTy()) {
                         auto* vIt = llvm::cast<llvm::IntegerType>(val->getType());
                         auto* tIt = llvm::cast<llvm::IntegerType>(elementType);
@@ -454,14 +520,11 @@ namespace cromio::lowering {
                         else if (vIt->getBitWidth() > tIt->getBitWidth())
                             val = builder->CreateTrunc(val, elementType, "elem_trunc");
                     }
-
-                    // int <-> float (already have yours)
+                    // int <-> float
                     else if (val->getType()->isIntegerTy() && elementType->isFloatingPointTy())
                         val = builder->CreateSIToFP(val, elementType, "elem_int_to_fp");
-
                     else if (val->getType()->isFloatingPointTy() && elementType->isIntegerTy())
                         val = builder->CreateFPToSI(val, elementType, "elem_fp_to_int");
-
                     else
                         throw std::runtime_error("Cannot convert array element type");
                 }
@@ -522,7 +585,7 @@ namespace cromio::lowering {
         if (!body.is_array())
             throw std::runtime_error("Program Body missing");
 
-        // For now always emit main as i64 -> return 0.
+        // Create main function with i32 return type
         llvm::Type* retType = builder->getInt32Ty();
 
         auto* fnType = llvm::FunctionType::get(retType, false);
@@ -544,7 +607,7 @@ namespace cromio::lowering {
                 expression(stmt);
         }
 
-        // Default return 0 (i64)
+        // Default return 0 (i32)
         builder->CreateRet(llvm::ConstantInt::get(builder->getInt32Ty(), 0));
 
         if (llvm::verifyFunction(*fn, &llvm::errs()))

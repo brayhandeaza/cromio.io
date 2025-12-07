@@ -56,7 +56,7 @@ void cromio::utils::Error::throwTypeError(const std::string& identifier, const s
     else if (dataType == "str")
         type = "type string";
 
-    const std::string message = "<" + identifier + "> expects " + type;
+    const std::string message = "'" + identifier + "' expects " + type;
 
     throwError("TypeError", message, node, source);
 }

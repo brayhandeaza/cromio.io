@@ -151,6 +151,7 @@ std::any cromio::visitor::LiteralsVisitor::visitIdentifierLiteral(Grammar::Ident
         const json value = variable.value();
 
         node["value"] = value;
+        node["type"] = value["type"];
         node["stringValue"] = value["stringValue"];
         node["numberValue"] = value["numberValue"];
     }

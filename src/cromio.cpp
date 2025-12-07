@@ -51,7 +51,7 @@ int main(int argc, const char* argv[]) {
 
         cromio::visitor::Visitor visitor(content);
         auto ast = std::any_cast<json>(visitor.visit(tree));
-        // std::cout << ast.dump(1) << std::endl;
+        std::cout << ast.dump(1) << std::endl;
 
         // ---------------------------------------------
         // Emit LLVM IR from AST
@@ -68,13 +68,8 @@ int main(int argc, const char* argv[]) {
         // ---------------------------------------------
         // Generate executable
         // ---------------------------------------------
-        // cromio::lowering::CodeEmitter::toExecutable(module, baseName);
-        // std::cout << "Executable generated successfully!" << std::endl;
-        // Optional: Also save object file
-        // cromio::lowering::CodeEmitter::toObjectFile(module, baseName + ".o");
-
-        // Optional: Save bitcode
-        // cromio::lowering::CodeEmitter::toFile(*module, baseName + ".bc");
+        cromio::lowering::CodeEmitter::toExecutable(module, baseName);
+        std::cout << "Executable generated successfully!" << std::endl;
 
     } catch (const std::exception& e) {
         std::cerr << e.what() << std::endl;

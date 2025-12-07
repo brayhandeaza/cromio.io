@@ -111,12 +111,13 @@ std::any cromio::visitor::ExpressionVisitor::visitExpression(Grammar::Expression
         else if (op == "*")
             result = L * R;
         else if (op == "/") {
-            if (R == 0.0) {
-                node["error"] = "Division by zero";
-                return node;
+                if (R == 0.0) {
+                    node["error"] = "Division by zero";
+                    return node;
+                }
+                result = L / R;
             }
-            result = L / R;
-        } else if (op == "%") {
+        else if (op == "%") {
             if (R == 0.0) {
                 node["error"] = "Modulo by zero";
                 return node;
@@ -132,9 +133,8 @@ std::any cromio::visitor::ExpressionVisitor::visitExpression(Grammar::Expression
         // -------------------------------------------------------
         auto determineType = [&](const std::string& mOp, const json& mLeft, const json& mRight) -> std::string {
             const bool leftFloat = mLeft["kind"] == "FloatLiteral";
-            const bool rightFloat = mRight["kind"] == "FloatLiteral";
 
-            if (leftFloat || rightFloat)
+            if (const bool rightFloat = mRight["kind"] == "FloatLiteral"; leftFloat || rightFloat)
                 return "float";
             if (mLeft["kind"] == "BooleanLiteral" || mRight["kind"] == "BooleanLiteral")
                 return "int";
@@ -144,6 +144,7 @@ std::any cromio::visitor::ExpressionVisitor::visitExpression(Grammar::Expression
                 return "int";
             if (mOp == "/")
                 return "float";
+
             return "int";
         };
 
