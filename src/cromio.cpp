@@ -51,7 +51,7 @@ int main(int argc, const char* argv[]) {
 
         cromio::visitor::Visitor visitor(content);
         auto ast = std::any_cast<json>(visitor.visit(tree));
-        std::cout << ast.dump(1) << std::endl;
+        // std::cout << ast.dump(1) << std::endl;
 
         // ---------------------------------------------
         // Emit LLVM IR from AST
