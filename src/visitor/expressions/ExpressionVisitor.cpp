@@ -78,7 +78,7 @@ std::any cromio::visitor::ExpressionVisitor::visitExpression(Grammar::Expression
             const std::string k = j["kind"];
 
             if (k == "BooleanLiteral")
-                return j["value"] == "true" ? 1.0 : 0.0;
+                return j["stringValue"] == "true" ? 1.0 : 0.0;
 
             if (k == "NoneLiteral")
                 return 0.0;
@@ -112,7 +112,7 @@ std::any cromio::visitor::ExpressionVisitor::visitExpression(Grammar::Expression
             result = L * R;
         else if (op == "/") {
                 if (R == 0.0) {
-                    node["error"] = "Division by zero";
+                    node["error"] = "Division by zero is not allowed";
                     return node;
                 }
                 result = L / R;

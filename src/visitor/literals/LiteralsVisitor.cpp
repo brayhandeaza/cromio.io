@@ -21,10 +21,6 @@ std::any cromio::visitor::LiteralsVisitor::visitLiteral(Grammar::LiteralContext*
         const std::any booleanLiteral = visit(ctx->booleanLiteral());
         return std::any_cast<json>(booleanLiteral);
     }
-    if (ctx->noneLiteral()) {
-        const std::any noneLiteral = visit(ctx->noneLiteral());
-        return std::any_cast<json>(noneLiteral);
-    }
     if (ctx->formattedString()) {
         const std::any formattedString = visit(ctx->formattedString());
         return std::any_cast<json>(formattedString);

@@ -9,10 +9,8 @@ literal: integerLiteral
        | formattedString
        | stringLiteral
        | booleanLiteral
-       | noneLiteral
        | identifierLiteral
        ;
-
 
 
 formattedString

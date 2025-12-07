@@ -289,10 +289,19 @@ namespace cromio::lowering {
                 llvm::IntegerType* opType = builder->getIntNTy(maxBits);
 
                 // Extend both operands to the operation type if needed
-                if (Lit->getBitWidth() < maxBits)
-                    L = builder->CreateSExt(L, opType, "sext_l");
-                if (Rit->getBitWidth() < maxBits)
-                    R = builder->CreateSExt(R, opType, "sext_r");
+                // Use ZExt for i1 (boolean), SExt for other integers
+                if (Lit->getBitWidth() < maxBits) {
+                    if (Lit->getBitWidth() == 1)
+                        L = builder->CreateZExt(L, opType, "zext_l"); // Zero-extend booleans
+                    else
+                        L = builder->CreateSExt(L, opType, "sext_l"); // Sign-extend other integers
+                }
+                if (Rit->getBitWidth() < maxBits) {
+                    if (Rit->getBitWidth() == 1)
+                        R = builder->CreateZExt(R, opType, "zext_r"); // Zero-extend booleans
+                    else
+                        R = builder->CreateSExt(R, opType, "sext_r"); // Sign-extend other integers
+                }
 
                 // Perform the operation
                 // Note: LLVM automatically performs constant folding here.
@@ -350,15 +359,23 @@ namespace cromio::lowering {
         if (rhs->getType() != varType) {
             // integer -> float
             if (rhs->getType()->isIntegerTy() && varType->isFloatingPointTy()) {
-                rhs = builder->CreateSIToFP(rhs, varType, "assign_int_to_fp");
+                // Use unsigned conversion for booleans, signed for others
+                if (rhs->getType()->getIntegerBitWidth() == 1)
+                    rhs = builder->CreateUIToFP(rhs, varType, "assign_bool_to_fp");
+                else
+                    rhs = builder->CreateSIToFP(rhs, varType, "assign_int_to_fp");
             } else if (rhs->getType()->isFloatingPointTy() && varType->isIntegerTy()) {
                 rhs = builder->CreateFPToSI(rhs, varType, "assign_fp_to_int");
             } else if (rhs->getType()->isIntegerTy() && varType->isIntegerTy()) {
-                // extend/truncate integers as needed (sign-ext)
+                // extend/truncate integers as needed
                 const auto* Rit = llvm::cast<llvm::IntegerType>(rhs->getType());
-                if (auto* Vt = llvm::cast<llvm::IntegerType>(varType); Rit->getBitWidth() < Vt->getBitWidth())
-                    rhs = builder->CreateSExt(rhs, Vt, "assign_sext");
-                else if (Rit->getBitWidth() > Vt->getBitWidth())
+                if (auto* Vt = llvm::cast<llvm::IntegerType>(varType); Rit->getBitWidth() < Vt->getBitWidth()) {
+                    // Zero-extend for booleans (i1), sign-extend for other integers
+                    if (Rit->getBitWidth() == 1)
+                        rhs = builder->CreateZExt(rhs, Vt, "assign_zext");
+                    else
+                        rhs = builder->CreateSExt(rhs, Vt, "assign_sext");
+                } else if (Rit->getBitWidth() > Vt->getBitWidth())
                     rhs = builder->CreateTrunc(rhs, Vt, "assign_trunc");
             } else if (rhs->getType()->isPointerTy() && varType->isPointerTy()) {
                 rhs = builder->CreateBitCast(rhs, varType, "assign_bitcast");
@@ -411,7 +428,11 @@ namespace cromio::lowering {
         if (initVal->getType() != varType) {
             // Integer to floating point
             if (initVal->getType()->isIntegerTy() && varType->isFloatingPointTy()) {
-                initVal = builder->CreateSIToFP(initVal, varType, "init_int_to_fp");
+                // Use unsigned conversion for booleans, signed for others
+                if (initVal->getType()->getIntegerBitWidth() == 1)
+                    initVal = builder->CreateUIToFP(initVal, varType, "init_bool_to_fp");
+                else
+                    initVal = builder->CreateSIToFP(initVal, varType, "init_int_to_fp");
             }
             // Floating point to integer
             else if (initVal->getType()->isFloatingPointTy() && varType->isIntegerTy()) {
@@ -423,8 +444,11 @@ namespace cromio::lowering {
                 const auto* targetType = llvm::cast<llvm::IntegerType>(varType);
 
                 if (initType->getBitWidth() < targetType->getBitWidth()) {
-                    // Sign-extend for wider type
-                    initVal = builder->CreateSExt(initVal, varType, "init_sext");
+                    // Zero-extend for booleans (i1), sign-extend for other integers
+                    if (initType->getBitWidth() == 1)
+                        initVal = builder->CreateZExt(initVal, varType, "init_zext");
+                    else
+                        initVal = builder->CreateSExt(initVal, varType, "init_sext");
                 } else if (initType->getBitWidth() > targetType->getBitWidth()) {
                     // Truncate for narrower type
                     initVal = builder->CreateTrunc(initVal, varType, "init_trunc");

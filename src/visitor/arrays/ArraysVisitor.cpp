@@ -27,6 +27,11 @@ namespace cromio::visitor {
             const auto item = visit(child);
             auto jItem = std::any_cast<json>(item);
 
+            if (jItem.contains("error")) {
+                const std::string error = jItem["error"];
+                throwError("Error", error, jItem, source);
+            }
+
             std::string dataType = jArrayType["value"];
             std::string returnType = jItem["type"];
 
