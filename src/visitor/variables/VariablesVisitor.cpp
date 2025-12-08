@@ -72,12 +72,16 @@ namespace cromio::visitor {
         const auto value = std::any_cast<json>(expression);
 
         parser->inVarMode = false;
-        scope->declareVariable(identifier, value);
 
         node["DataType"] = dataType;
         node["Identifier"] = identifierNode;
         node["value"] = value;
 
+        json scopeVarInfo = value;
+        scopeVarInfo["DataType"] = dataType;
+        scopeVarInfo["Identifier"] = identifierNode;
+
+        scope->declareVariable(identifier, scopeVarInfo);
         return analyzeVariableDeclaration(node, source);
     }
 
@@ -93,14 +97,22 @@ namespace cromio::visitor {
         json jIdentifier = createNode("", "VariableIdentifier", ctx->IDENTIFIER()->getSymbol(), ctx->IDENTIFIER()->getSymbol());
         jIdentifier["value"] = identifier;
 
+        const auto variable = scope->lookup(identifier);
         if (!scope->existsInCurrent(identifier)) {
             throwScopeError("variable '" + identifier + "' " + "is not declared", jIdentifier, source);
+        }
+
+        if (variable.has_value()) {
+            node["DataType"] = variable.value()["DataType"];
         }
 
         node["Identifier"] = jIdentifier;
         node["value"] = jExpression;
 
-        return node;
+        const auto varNode = analyzeVariableDeclaration(node, source);
+        scope->updateVariable(identifier, jExpression);
+
+        return varNode;
     }
 
     std::any VariablesVisitor::visitVariableDataType(Grammar::VariableDataTypeContext* ctx) {

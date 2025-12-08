@@ -1,2 +1,6 @@
-int edad = 2025 - 1993
-edad = edad - 1
+int edad = 31
+edad = edad - 1 * edad
+
+dict<str,str> brayhan = {
+    edad: edad
+}

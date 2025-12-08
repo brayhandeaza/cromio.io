@@ -11,7 +11,6 @@
 
 namespace cromio::semantic {
 
-
     json Variables::cleanASTExpression(const json& node) {
         if (!node.is_object())
             return node;
@@ -119,18 +118,18 @@ namespace cromio::semantic {
             utils::Error::throwTypeError(identifier, dataType, node, source);
         }
 
-       BaseSemantic::analyze64BitInteger(rValue, dataType, identifier, source, node);
+        analyze64BitInteger(rValue, dataType, identifier, source, node);
 
         if (dataType.contains("uint")) {
-            BaseSemantic::analyzeUnsignedInteger(rValue, dataType, identifier, source, node);
+            analyzeUnsignedInteger(rValue, dataType, identifier, source, node);
         }
 
         else if (dataType.contains("int")) {
-            BaseSemantic::analyzeSignedInteger(rValue, dataType, identifier, source, node);
+            analyzeSignedInteger(rValue, dataType, identifier, source, node);
         }
 
         else if (dataType.contains("float")) {
-            BaseSemantic::analyzeFloat(rValue, dataType, source, node);
+            analyzeFloat(rValue, dataType, source, node);
         }
 
         else if (dataType == "str" && returnType != "str") {

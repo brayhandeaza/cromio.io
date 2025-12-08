@@ -18,6 +18,7 @@ namespace cromio::semantic {
 
         bool declareVariable(const std::string& name, const json& info);
         bool existsInCurrent(const std::string& name) const;
+        void updateVariable(const std::string& name, const json& info);
 
         std::optional<json> lookup(const std::string& name);
 
@@ -32,7 +33,7 @@ namespace cromio::semantic {
 
        private:
         Scope* parent;
-        std::unordered_map<std::string, json> symbols;
+        std::unordered_map<std::string, json> symbols = json::object();
     };
 
 } // namespace cromio::semantic

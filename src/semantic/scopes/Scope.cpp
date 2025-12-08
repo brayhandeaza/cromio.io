@@ -16,6 +16,13 @@ namespace cromio::semantic {
         return symbols.contains(name);
     }
 
+    void Scope::updateVariable(const std::string& name, const json& info) {
+        if (!symbols.contains(name))
+            return;
+
+        symbols[name] = info;
+    }
+
     std::optional<json> Scope::lookup(const std::string& name) {
         if (symbols.contains(name))
             return symbols.at(name);
