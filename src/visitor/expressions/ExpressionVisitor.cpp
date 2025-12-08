@@ -68,6 +68,7 @@ std::any cromio::visitor::ExpressionVisitor::visitExpression(Grammar::Expression
             return k == "IntegerLiteral" || k == "IdentifierLiteral" || k == "FloatLiteral" || k == "BooleanLiteral" || k == "NoneLiteral" || k == "Expression";
         };
 
+
         if (!isAllowed(leftNode) || !isAllowed(rightNode)) {
             node["error"] = "Arithmetic only allowed on numeric literals (int, float, bool, none)";
             return node;

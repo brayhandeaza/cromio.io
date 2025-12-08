@@ -3,92 +3,112 @@
 //
 
 #include "Error.h"
+#include <algorithm>
+#include <iostream>
+#include <sstream>
+#include <vector>
 
-void cromio::utils::Error::throwRangeError(const std::string& message, const json& node, const std::string& source) {
-    throwError("RangeError", message, node, source);
-}
+namespace cromio::utils {
 
-void cromio::utils::Error::throwScopeError(const std::string& message, const json& node, const std::string& source) {
-    throwError("ScopeError", message, node, source);
-}
+    // ------------------- Helper privado -------------------
 
-void cromio::utils::Error::throwTypeError(const std::string& identifier, const std::string& dataType, const json& node, const std::string& source) {
-    std::string type = "";
+    void Error::printContext(const json& node, const std::string& source, const std::string& hint , int context) {
+        int startLine = node["start"]["line"];
+        int startCol = node["start"]["column"];
+        int endLine = node["end"]["line"];
+        int endCol = node["end"]["column"];
 
-    // SIGNED
-    if (dataType == "int8")
-        type = "signed 8-bit integer range";
+        std::istringstream stream(source);
+        std::string lineText;
+        std::vector<std::string> lines;
+        while (std::getline(stream, lineText))
+            lines.push_back(lineText);
 
-    else if (dataType == "int16")
-        type = "signed 16-bit integer range";
+        const int totalLines = static_cast<int>(lines.size());
 
-    else if (dataType == "int" || dataType == "int32")
-        type = "signed 32-bit integer range";
+        int from = std::max(1, startLine - context);
+        int to = std::min(totalLines, endLine + context);
 
-    else if (dataType == "int64")
-        type = "signed 64-bit integer range";
+        for (int i = from; i <= to; i++) {
+            std::string prefix = i >= startLine && i <= endLine ? "\033[1;37m>" : " ";
+            std::cout << prefix << " \033[36m" << i << " | \033[0m" << lines[i - 1] << "\n";
 
-    // UNSIGNED
-    else if (dataType == "uint8")
-        type = "unsigned 8-bit integer range";
+            if (i == startLine) {
+                std::cout << "    ";
+                int underlineStart = startCol;
+                int underlineSize = startLine == endLine ? std::max(1, endCol - startCol + 1) : static_cast<int>(lines[i - 1].size()) - startCol;
 
-    else if (dataType == "uint16")
-        type = "unsigned 16-bit integer range";
+                std::cout << std::string(underlineStart, ' ');
+                std::cout << "\033[1;31m" << std::string(underlineSize, '^') << "\033[0m";
 
-    else if (dataType == "uint" || dataType == "uint32")
-        type = "unsigned 32-bit integer range";
+                if (!hint.empty()) {
+                    std::cout << "    " << std::string(underlineStart, ' ') << "\033[33m\n";
+                }
+            }
 
-    else if (dataType == "uint64")
-        type = "unsigned 64-bit integer range";
+            if (i > startLine && i <= endLine) {
+                std::cout << "    " << std::string(0, ' ');
+                std::cout << "\033[1;31m" << std::string(lines[i - 1].size(), '^') << "\033[0m";
+            }
+        }
 
-    // FLOAT
-    else if (dataType == "float" || dataType == "float32")
-        type = "float 32-bit float range";
-
-    else if (dataType == "float64")
-        type = "float 64-bit float range";
-
-    // BOOLEAN
-    else if (dataType == "bool")
-        type = "type boolean ";
-
-    // STRING
-    else if (dataType == "str")
-        type = "type string";
-
-    const std::string message = "'" + identifier + "' expects " + type;
-
-    throwError("TypeError", message, node, source);
-}
-
-void cromio::utils::Error::throwError(const std::string& errorType, const std::string& message, const json& node, const std::string& source) {
-    const int line = node["start"]["line"];
-    const int col = node["start"]["column"];
-
-    std::cerr << "\n\033[1;31m" + errorType + ": " << message << "\n";
-
-    // Split source into lines
-    std::istringstream stream(source);
-    std::string lineText;
-    int current = 1;
-
-    while (std::getline(stream, lineText)) {
-        if (current == line)
-            break;
-        current++;
+        std::cout << "\n";
     }
 
-    // Print line number + code
-    std::cout << "\033[37m" << line << " | " << lineText << "\n";
+    // ------------------- Errores -------------------
+    void Error::throwError(const std::string& errorType, const std::string& message, const json& node, const std::string& source) {
+        std::cerr << "\n\033[1;31m" << errorType << ": " << message << "\033[0m\n";
+        printContext(node, source, message, 2);
+        std::exit(1);
+    }
 
-    // Print arrow below the code
-    std::cout << "    " << std::string(node["end"]["column"].get<int>(), ' ') << "^";
+    void Error::throwRangeError(const std::string& message, const json& node, const std::string& source) {
+        throwError("RangeError", message, node, source);
+    }
 
-    // If node spans more than 1 char, draw tildes
-    // if (const int width = node["end"]["column"].get<int>() - 4; width > 0) {
-    //     std::cout << std::string(width, '');
-    // }
+    void Error::throwScopeError(const std::string& message, const json& node, const std::string& source) {
+        throwError("ScopeError", message, node, source);
+    }
 
-    std::cout << "\n";
-    std::exit(1);
-}
+    void Error::throwTypeError(const std::string& identifier, const std::string& dataType, const json& node, const std::string& source) {
+        std::string typeMsg = "";
+
+        // SIGNED
+        if (dataType == "int8")
+            typeMsg = "signed 8-bit integer range";
+        else if (dataType == "int16")
+            typeMsg = "signed 16-bit integer range";
+        else if (dataType == "int" || dataType == "int32")
+            typeMsg = "signed 32-bit integer range";
+        else if (dataType == "int64")
+            typeMsg = "signed 64-bit integer range";
+
+        // UNSIGNED
+        else if (dataType == "uint8")
+            typeMsg = "unsigned 8-bit integer range";
+        else if (dataType == "uint16")
+            typeMsg = "unsigned 16-bit integer range";
+        else if (dataType == "uint" || dataType == "uint32")
+            typeMsg = "unsigned 32-bit integer range";
+        else if (dataType == "uint64")
+            typeMsg = "unsigned 64-bit integer range";
+
+        // FLOAT
+        else if (dataType == "float" || dataType == "float32")
+            typeMsg = "32-bit float";
+        else if (dataType == "float64")
+            typeMsg = "64-bit float";
+
+        // BOOLEAN
+        else if (dataType == "bool")
+            typeMsg = "boolean type";
+
+        // STRING
+        else if (dataType == "str")
+            typeMsg = "string type";
+
+        const std::string message = "'" + identifier + "' expects " + typeMsg;
+        throwError("TypeError", message, node, source);
+    }
+
+} // namespace cromio::utils

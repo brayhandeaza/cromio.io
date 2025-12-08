@@ -7,20 +7,22 @@
 
 #include "visitor/arrays/ArraysVisitor.h"
 #include "visitor/base/BaseVisitor.h"
+#include "visitor/dictionary/DictionaryVisitor.h"
 #include "visitor/expressions/ExpressionVisitor.h"
 #include "visitor/literals/LiteralsVisitor.h"
 #include "visitor/variables/VariablesVisitor.h"
 
 namespace cromio::visitor {
-    class Visitor final : public LiteralsVisitor, public ArraysVisitor, public VariablesVisitor, public ExpressionVisitor {
+    class Visitor final : public LiteralsVisitor, public ArraysVisitor, public VariablesVisitor, public DictionaryVisitor, public ExpressionVisitor {
        public:
-        explicit Visitor(std::string& source) : BaseVisitor(source), ArraysVisitor(source), LiteralsVisitor(source), VariablesVisitor(source), ExpressionVisitor(source), source(source) {}
+        explicit Visitor(std::string& source, Grammar* parser) : BaseVisitor(source, parser), LiteralsVisitor(), ArraysVisitor(), VariablesVisitor(), DictionaryVisitor(), ExpressionVisitor(), source(source), parser(parser) {}
 
         std::any visitProgram(Grammar::ProgramContext* ctx) override;
         std::any visitStatements(Grammar::StatementsContext* ctx) override;
 
        private:
         std::string& source;
+        Grammar* parser;
     };
 } // namespace cromio::visitor
 

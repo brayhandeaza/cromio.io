@@ -12,7 +12,6 @@ literal: integerLiteral
        | identifierLiteral
        ;
 
-
 formattedString
     : FORMATTED_STRING_START formattedStringContent* FORMATTED_STRING_END
     ;

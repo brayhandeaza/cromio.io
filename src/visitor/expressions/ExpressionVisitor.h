@@ -11,12 +11,8 @@
 namespace cromio::visitor {
     class ExpressionVisitor : public virtual BaseVisitor {
        public:
-        explicit ExpressionVisitor(std::string& source) : source(source) {}
         std::any visitExpression(Grammar::ExpressionContext* ctx) override;
-
-       private:
-        std::string& source;
     };
-} // namespace cromio::parser
+} // namespace cromio::visitor
 
 #endif // CROMIO_EXPRESSION_VISITOR_H

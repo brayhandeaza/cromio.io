@@ -56,21 +56,24 @@ std::any cromio::visitor::LiteralsVisitor::visitFloatLiteral(Grammar::FloatLiter
 }
 
 std::any cromio::visitor::LiteralsVisitor::visitStringLiteral(Grammar::StringLiteralContext* ctx) {
-    json node = createNode(ctx->getText(), "StringLiteral", ctx->start, ctx->stop);
-    node["value"] = parseString(ctx->getText());
+    const std::string literal = parseString(ctx->getText());
+    json node = createNode(literal, "StringLiteral", ctx->start, ctx->stop);
+    node["value"] = literal;
     node["type"] = "str";
-    node["stringValue"] = ctx->getText();
-    node["numberValue"] = ctx->getText();
+    node["stringValue"] = literal;
+    node["numberValue"] = literal;
 
     return node;
 }
 
 std::any cromio::visitor::LiteralsVisitor::visitBooleanLiteral(Grammar::BooleanLiteralContext* ctx) {
-    json node = createNode(ctx->getText() == "true" ? "1" : "0", "BooleanLiteral", ctx->start, ctx->stop);
-    node["value"] = ctx->getText() == "true";
+    const std::string literal = parseString(ctx->getText());
+    json node = createNode(literal == "true" ? "1" : "0", "BooleanLiteral", ctx->start, ctx->stop);
+
+    node["value"] = literal == "true";
     node["type"] = "bool";
-    node["stringValue"] = ctx->getText();
-    node["numberValue"] = ctx->getText() == "true" ? "1" : "0";
+    node["stringValue"] = literal;
+    node["numberValue"] = literal == "true" ? "1" : "0";
 
     return node;
 }
@@ -138,18 +141,19 @@ std::any cromio::visitor::LiteralsVisitor::visitIdentifierLiteral(Grammar::Ident
     json node = createNode(identifier, "IdentifierLiteral", ctx->start, ctx->stop);
     node["type"] = "identifier";
 
-    const auto variable = scope->lookup(identifier);
-    if (!scope->existsInCurrent(identifier) || !variable.has_value()) {
-        throwScopeError("identifier '" + identifier + "' " + "not found in scope", node, source);
-    }
+    if (parser->inVarMode) {
+        const auto variable = scope->lookup(identifier);
+        if (!scope->existsInCurrent(identifier) || !variable.has_value()) {
+            throwScopeError("identifier '" + identifier + "' " + "not found in scope", node, source);
+        }
 
-    if (variable.has_value()) {
-        const json value = variable.value();
+        if (variable.has_value()) {
+            const json value = variable.value();
 
-        node["value"] = value;
-        node["type"] = value["type"];
-        node["stringValue"] = value["stringValue"];
-        node["numberValue"] = value["numberValue"];
+            node["value"] = value;
+            node["stringValue"] = value["stringValue"];
+            node["numberValue"] = value["numberValue"];
+        }
     }
 
     return node;

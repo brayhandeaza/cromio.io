@@ -5,13 +5,12 @@
 #ifndef CROMIO_LITERALS_VISITOR_H
 #define CROMIO_LITERALS_VISITOR_H
 
-#include "visitor/base/BaseVisitor.h"
 #include "GrammarVisitor.h"
+#include "visitor/base/BaseVisitor.h"
 
 namespace cromio::visitor {
     class LiteralsVisitor : public virtual BaseVisitor {
        public:
-        explicit LiteralsVisitor(std::string& source) : source(source) {}
         std::any visitLiteral(Grammar::LiteralContext* ctx) override;
         std::any visitIntegerLiteral(Grammar::IntegerLiteralContext* ctx) override;
         std::any visitFloatLiteral(Grammar::FloatLiteralContext* ctx) override;
@@ -23,8 +22,6 @@ namespace cromio::visitor {
 
         std::any visitIdentifierLiteral(Grammar::IdentifierLiteralContext* ctx) override;
 
-       private:
-        std::string& source;
     };
 } // namespace cromio::visitor
 

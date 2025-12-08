@@ -1,3 +1,6 @@
-int[] a = [4 % 2 + 5, 800 / 2]
+int edad = 2025 - 1993
+edad = edad - 1
 
-
+dict<str,str> brayhan = {
+    edad: 10
+}

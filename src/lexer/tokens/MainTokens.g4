@@ -4,8 +4,8 @@ lexer grammar MainTokens;
 // FLAG compartida entre parser y lexer
 // --------------------------------------------------------------------
 @members {
-    bool* inVarMode = nullptr;
-    void setParserFlag(bool* flag) { inVarMode = flag; }
+    bool* inSkipMode = nullptr;
+    void setParserFlag(bool* flag) { inSkipMode = flag; }
 }
 
 
@@ -13,21 +13,22 @@ lexer grammar MainTokens;
 // MainTokens
 // =======================================================================================================================================================
 
+DICT_KEYWORD
+    : 'dict'
+    ;
+
 // Boolean types
 BOOLEAN_TYPES
     : 'bool'
-    | 'bool*'
     ;
 
 STRING_TYPES
     : 'str'
-    | 'str*'
     ;
 
 // Integer types
 INTEGER_TYPES
     : 'int'
-    | 'int*'
     | 'int8'
     | 'int16'
     | 'int32'
@@ -45,7 +46,6 @@ UNSIGNED_INTEGER_TYPES
 
 FLOAT_TYPES
     : 'float'      // 32-bit
-    | 'float*'
     | 'float32'    // 34-bit
     | 'float64'    // 64-bit
     ;
@@ -70,12 +70,16 @@ LBRACKET: '[';
 RBRACKET: ']';
 DOT: '.';
 COMMA: ',';
+AMPERSAND: '&';
+LESSTHAN: '<';
+GREATERTHAN: '>';
+COLON: ':';
 
 // --------------------------------------------------------------------
 // NEWLINE normal → skip
 // --------------------------------------------------------------------
 NEWLINE
-    : [\r\n]+   { if (inVarMode && *inVarMode) emit(); else skip(); }
+    : [\r\n]+   { if (inSkipMode && *inSkipMode) emit(); else skip(); }
     ;
 
 
@@ -84,7 +88,7 @@ NEWLINE_VISIBLE
     : [\r\n]+
     ;
 
-WS_VISIBLE: [ \t]+ { if (inVarMode && *inVarMode) emit(); else skip(); };
+WS_VISIBLE: [ \t]+ { if (inSkipMode && *inSkipMode) emit(); else skip(); };
 
 
 WS: [ \t]+ -> skip;

@@ -6,19 +6,20 @@
 #define CROMIO_BASE_VISITOR_H
 
 #include "GrammarVisitor.h"
-#include "semantic/semantic.h"
 #include "semantic/scopes/Scope.h"
+#include "semantic/semantic.h"
 
 namespace cromio::visitor {
 
     class BaseVisitor : public GrammarVisitor, public utils::Error, public utils::Helpers, public semantic::Semantic {
        protected:
         std::string& source;
+        Grammar* parser;
         std::unique_ptr<semantic::Scope> rootScope;
         semantic::Scope* scope;
 
        public:
-        explicit BaseVisitor(std::string& source) : source(source), rootScope(std::make_unique<semantic::Scope>(nullptr)), scope(rootScope.get()) {}
+        explicit BaseVisitor(std::string& source, Grammar* parser) : source(source), parser(parser), rootScope(std::make_unique<semantic::Scope>(nullptr)), scope(rootScope.get()) {}
 
         void enterScope();
         void exitScope();

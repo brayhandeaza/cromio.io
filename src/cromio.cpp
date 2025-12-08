@@ -3,6 +3,7 @@
 //
 
 #include "cromio.h"
+#include <vector>
 
 int main(int argc, const char* argv[]) {
     try {
@@ -49,7 +50,7 @@ int main(int argc, const char* argv[]) {
 
         auto* tree = grammar.program();
 
-        cromio::visitor::Visitor visitor(content);
+        cromio::visitor::Visitor visitor(content, &grammar);
         auto ast = std::any_cast<json>(visitor.visit(tree));
         // std::cout << ast.dump(1) << std::endl;
 

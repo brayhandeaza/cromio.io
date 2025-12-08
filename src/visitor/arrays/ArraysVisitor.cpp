@@ -3,9 +3,8 @@
 //
 
 #include "ArraysVisitor.h"
-#include "semantic/semantic.h"
 #include "semantic/BaseSemantic.h"
-
+#include "semantic/semantic.h"
 
 namespace cromio::visitor {
     std::any ArraysVisitor::visitArrayDeclaration(Grammar::ArrayDeclarationContext* ctx) {

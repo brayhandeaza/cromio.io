@@ -5,15 +5,12 @@
 #ifndef CROMIO_VARIABLES_VISITOR_H
 #define CROMIO_VARIABLES_VISITOR_H
 
-#include "visitor/base/BaseVisitor.h"
 #include "GrammarVisitor.h"
-#include "semantic/semantic.h"
+#include "visitor/base/BaseVisitor.h"
 
 namespace cromio::visitor {
-    class Parser;
     class VariablesVisitor : public virtual BaseVisitor {
        public:
-        explicit VariablesVisitor(std::string& source) : BaseVisitor(source) {}
         std::any visitVariableDeclaration(Grammar::VariableDeclarationContext* ctx) override;
         std::any visitVariableDataType(Grammar::VariableDataTypeContext* ctx) override;
         std::any visitVariableReAssignment(Grammar::VariableReAssignmentContext* ctx) override;

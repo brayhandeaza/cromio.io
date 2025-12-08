@@ -74,7 +74,6 @@ add_compile_options(-I${LLVM_ROOT}/include)
 # ============================================================
 #                 Collect Sources & Executable
 # ============================================================
-
 file(GLOB_RECURSE ALL_SOURCES
         "${SOURCES_DIR}/cromio.cpp"
         "${GENERATED_DIR}/*.cpp"
@@ -93,7 +92,6 @@ add_executable(${PROJECT_NAME} ${ALL_SOURCES})
 # ============================================================
 #                     Target Setup
 # ============================================================
-
 # Project & ANTLR includes
 target_include_directories(${PROJECT_NAME} PUBLIC
         ${CMAKE_SOURCE_DIR}

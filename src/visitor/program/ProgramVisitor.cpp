@@ -53,5 +53,15 @@ std::any cromio::visitor::Visitor::visitStatements(Grammar::StatementsContext* c
         return std::any_cast<json>(variableStatement);
     }
 
+    if (ctx->arrayDeclaration()) {
+        const auto visitArrayDeclaration = visit(ctx->arrayDeclaration());
+        return std::any_cast<json>(visitArrayDeclaration);
+    }
+
+    if (ctx->dictionaryDeclaration()) {
+        const auto dictionaryDeclaration = visit(ctx->dictionaryDeclaration());
+        return std::any_cast<json>(dictionaryDeclaration);
+    }
+
     return json::object();
 }
