@@ -84,8 +84,10 @@ namespace cromio::visitor {
     std::any VariablesVisitor::visitVariableReAssignment(Grammar::VariableReAssignmentContext* ctx) {
         json node = createNode("", "VariableReAssignment", ctx->start, ctx->stop);
 
+        parser->inVarMode = true;
         const auto expression = visit(ctx->expression());
         const auto jExpression = std::any_cast<json>(expression);
+        parser->inVarMode = false;
 
         std::string identifier = ctx->IDENTIFIER()->getText();
         json jIdentifier = createNode("", "VariableIdentifier", ctx->IDENTIFIER()->getSymbol(), ctx->IDENTIFIER()->getSymbol());
