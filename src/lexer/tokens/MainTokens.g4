@@ -91,5 +91,14 @@ NEWLINE_VISIBLE
 WS_VISIBLE: [ \t]+ { if (inSkipMode && *inSkipMode) emit(); else skip(); };
 
 
+// Lexer rules
+COMMENT
+    : '//' ~[\r\n]* -> skip   // comentario de línea, se ignora
+    ;
+
+BLOCK_COMMENT
+    : '/*' .*? '*/' -> skip   // comentario de bloque, se ignora
+    ;
+
 WS: [ \t]+ -> skip;
 

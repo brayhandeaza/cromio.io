@@ -108,6 +108,9 @@ namespace cromio::semantic {
             const std::string error = node["value"]["error"];
             utils::Error::throwError("Error", error, node, source);
         }
+
+        std::cout << node.dump(1) << std::endl;
+
         const std::string identifier = node["Identifier"]["value"];
         const std::string dataType = node["DataType"]["value"];
         const std::string rValue = node["value"]["numberValue"];
