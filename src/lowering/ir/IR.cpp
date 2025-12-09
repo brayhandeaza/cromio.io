@@ -202,11 +202,13 @@ namespace cromio::lowering {
         const std::string kind = node.value("kind", "");
 
         // If the node is a literal, delegate to literal()
-        if (kind == "FloatLiteral" || kind == "IntegerLiteral" || kind == "IdentifierLiteral" || kind == "BooleanLiteral" || kind == "NoneLiteral" || kind == "StringLiteral" || kind == "StringFormatted") {
+        // NOTE: Added "IdentifierLiteral" to this list!
+        if (kind == "FloatLiteral" || kind == "IntegerLiteral" || kind == "IdentifierLiteral" || // <-- This was missing!
+            kind == "VariableIdentifier" || kind == "BooleanLiteral" || kind == "NoneLiteral" || kind == "StringLiteral" || kind == "StringFormatted") {
             return literal(node);
         }
 
-        // VariableIdentifier
+        // VariableIdentifier (keeping this for backward compatibility)
         if (kind == "VariableIdentifier") {
             const std::string name = node.value("value", "");
             if (name.empty())
@@ -225,8 +227,6 @@ namespace cromio::lowering {
             if (!node.contains("left") || !node.contains("right") || !node.contains("operator"))
                 throw std::runtime_error("Malformed Expression node (missing left/right/operator)");
 
-            // IMPORTANT: Recursively generate IR for operands - DO NOT use node["value"]!
-            // The "value" field in Expression nodes is metadata, not the actual computation.
             llvm::Value* L = expression(node["left"]);
             llvm::Value* R = expression(node["right"]);
             const std::string op = node.value("operator", "");
@@ -234,11 +234,7 @@ namespace cromio::lowering {
             if (!L || !R)
                 throw std::runtime_error("Subexpression produced null");
 
-            // Debug: Ensure we're generating instructions, not using pre-computed values
-            // Expression nodes should NEVER directly return constants from node["value"]
-
             // FLOATING POINT OPERATIONS
-            // If either operand is double, promote both to double
             if (L->getType()->isDoubleTy() || R->getType()->isDoubleTy()) {
                 L = promoteToDouble(L);
                 R = promoteToDouble(R);
@@ -280,34 +276,25 @@ namespace cromio::lowering {
 
             // INTEGER OPERATIONS
             if (L->getType()->isIntegerTy() && R->getType()->isIntegerTy()) {
-                // Get the bit widths
                 const auto* Lit = llvm::cast<llvm::IntegerType>(L->getType());
                 const auto* Rit = llvm::cast<llvm::IntegerType>(R->getType());
 
-                // Use the wider of the two types for the operation
                 const unsigned maxBits = std::max(Lit->getBitWidth(), Rit->getBitWidth());
                 llvm::IntegerType* opType = builder->getIntNTy(maxBits);
 
-                // Extend both operands to the operation type if needed
-                // Use ZExt for i1 (boolean), SExt for other integers
                 if (Lit->getBitWidth() < maxBits) {
                     if (Lit->getBitWidth() == 1)
-                        L = builder->CreateZExt(L, opType, "zext_l"); // Zero-extend booleans
+                        L = builder->CreateZExt(L, opType, "zext_l");
                     else
-                        L = builder->CreateSExt(L, opType, "sext_l"); // Sign-extend other integers
+                        L = builder->CreateSExt(L, opType, "sext_l");
                 }
                 if (Rit->getBitWidth() < maxBits) {
                     if (Rit->getBitWidth() == 1)
-                        R = builder->CreateZExt(R, opType, "zext_r"); // Zero-extend booleans
+                        R = builder->CreateZExt(R, opType, "zext_r");
                     else
-                        R = builder->CreateSExt(R, opType, "sext_r"); // Sign-extend other integers
+                        R = builder->CreateSExt(R, opType, "sext_r");
                 }
 
-                // Perform the operation
-                // Note: LLVM automatically performs constant folding here.
-                // If both L and R are constants, CreateAdd/CreateSRem/etc will return
-                // a constant directly instead of creating an instruction.
-                // This is expected and normal LLVM behavior.
                 if (op == "+")
                     return builder->CreateAdd(L, R, "addtmp");
                 if (op == "-")

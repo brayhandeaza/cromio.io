@@ -139,7 +139,6 @@ std::any cromio::visitor::LiteralsVisitor::visitFormattedStringContent(Grammar::
 std::any cromio::visitor::LiteralsVisitor::visitIdentifierLiteral(Grammar::IdentifierLiteralContext* ctx) {
     const std::string identifier = ctx->getText();
     json node = createNode(identifier, "IdentifierLiteral", ctx->start, ctx->stop);
-    node["type"] = "identifier";
 
     if (parser->inVarMode) {
         const auto variable = scope->lookup(identifier);
@@ -150,6 +149,7 @@ std::any cromio::visitor::LiteralsVisitor::visitIdentifierLiteral(Grammar::Ident
         if (variable.has_value()) {
             const json value = variable.value();
 
+            node["type"] = value["type"];
             node["value"] = value;
             node["stringValue"] = value["stringValue"];
             node["numberValue"] = value["numberValue"];

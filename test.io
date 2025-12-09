@@ -1,7 +1,5 @@
 int edad = 31
-edad = edad - 1
-
-int[] a = [edad]
+int[] a = [edad + 10, 10, false]
 
 /*
 dict<str,str> brayhan = {

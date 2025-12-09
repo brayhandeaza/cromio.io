@@ -22,6 +22,7 @@ namespace cromio::visitor {
         json identifier = createNode("", "ArrayIdentifier", ctx->start, ctx->stop);
         identifier["value"] = ctx->IDENTIFIER()->getText();
 
+        parser->inVarMode = true;
         for (const auto child : ctx->expression()) {
             const auto item = visit(child);
             auto jItem = std::any_cast<json>(item);
@@ -38,13 +39,19 @@ namespace cromio::visitor {
             const std::string stringValue = jItem["stringValue"];
 
             analyzeSignedInteger(rValue, dataType, identifier["value"], source, jItem);
+
             if (const auto passArrayDataType = checkArrayDataType(dataType, returnType); !passArrayDataType) {
                 throwTypeError(identifier["value"], dataType, jItem, source);
             }
 
-            items.push_back(jItem);
+            if (jItem["kind"] == "IdentifierLiteral") {
+                items.push_back(jItem["value"]);
+            } else {
+                items.push_back(jItem);
+            }
         }
 
+        parser->inVarMode = false;
         value["items"] = items;
 
         node["DataType"] = jArrayType;
