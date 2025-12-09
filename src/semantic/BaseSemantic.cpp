@@ -15,6 +15,45 @@ namespace cromio::semantic {
     const std::string BaseSemantic::FLOAT64_MAX_STR = "1.7976931348623157e308";
     const std::string BaseSemantic::FLOAT64_MIN_STR = "-1.7976931348623157e308";
 
+    bool BaseSemantic::checkDataType(const std::string& dataType, const std::string& returnType) {
+        if (dataType == "int" || dataType == "int8" || dataType == "int16" || dataType == "int32" || dataType == "int64") {
+            if (returnType == "int" || returnType == "float")
+                return true;
+
+            return false;
+        }
+
+        if (dataType == "uint" || dataType == "uint8" || dataType == "uint16" || dataType == "uint32" || dataType == "uint64") {
+            if (returnType == "int" || returnType == "float")
+                return true;
+
+            return false;
+        }
+
+        if (dataType == "float" || dataType == "float32" || dataType == "float64") {
+            if (returnType == "float" || returnType == "int")
+                return true;
+
+            return false;
+        }
+
+        if (dataType == "bool") {
+            if (returnType == "bool")
+                return true;
+
+            return false;
+        }
+
+        if (dataType == "str") {
+            if (returnType == "str")
+                return true;
+
+            return false;
+        }
+
+        return false;
+    }
+
     void BaseSemantic::analyzeSignedInteger(const std::string& rValue, const std::string& dataType, const std::string& identifier, const std::string& source, const json& node) {
         const auto value = utils::Helpers::parseInteger(rValue);
         const bool isValidNumber = utils::Helpers::isValidNumber(std::to_string(value));

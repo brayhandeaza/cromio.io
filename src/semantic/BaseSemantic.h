@@ -19,6 +19,7 @@ namespace cromio::semantic {
         static const std::string FLOAT64_MAX_STR;
         static const std::string FLOAT64_MIN_STR;
 
+        static bool checkDataType(const std::string& dataType, const std::string& returnType);
         static void analyzeSignedInteger(const std::string& rValue, const std::string& dataType, const std::string& identifier, const std::string& source, const json& node);
         static void analyzeUnsignedInteger(const std::string& rValue, const std::string& dataType, const std::string& identifier, const std::string& source, const json& node);
         static void analyzeFloat(const std::string& rValue, const std::string& dataType, const std::string& source, const json& node);

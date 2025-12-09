@@ -7,9 +7,10 @@
 
 #include "semantic/arrays/Arrays.h"
 #include "semantic/variables/Variables.h"
+#include "semantic/dictionaries/Dictionaries.h"
 
 namespace cromio::semantic {
-    class Semantic : public virtual Variables, public virtual Arrays {};
+    class Semantic : public virtual Variables, public virtual Arrays, public virtual Dictionaries {};
 } // namespace cromio::semantic
 
 #endif // CROMIO_SEMANTIC_H

@@ -7,7 +7,7 @@
 
 #include "visitor/arrays/ArraysVisitor.h"
 #include "visitor/base/BaseVisitor.h"
-#include "visitor/dictionary/DictionaryVisitor.h"
+#include "visitor/dictionaries/DictionaryVisitor.h"
 #include "visitor/expressions/ExpressionVisitor.h"
 #include "visitor/literals/LiteralsVisitor.h"
 #include "visitor/variables/VariablesVisitor.h"

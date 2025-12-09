@@ -1,8 +1,7 @@
-int edad = 31
-int[] a = [edad + 10, 10, false]
+int a = 31
+// int[] b = [a + 10]
 
-/*
-dict<str,str> brayhan = {
-    edad: edad
+dict<int,int[]> brayhan = {
+    1: a
 }
-*/
+

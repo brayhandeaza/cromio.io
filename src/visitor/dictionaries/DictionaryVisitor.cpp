@@ -9,30 +9,27 @@ namespace cromio::visitor {
         json node = createNode("", "DictionaryDeclaration", ctx->start, ctx->stop);
 
         const auto type = visit(ctx->dictionaryDeclarationType());
-        const auto assignment = visit(ctx->dictionaryAssignment());
-
         const auto typeNode = std::any_cast<json>(type);
-        const auto assignmentNode = std::any_cast<json>(assignment);
 
-        node["Type"] = typeNode;
-        node["Assignment"] = assignmentNode;
+        const std::string keyType = typeNode["KeyType"]["value"];
+        const std::string valueType = typeNode["ValueType"]["value"];
 
-        // std::cout << node.dump(1);
-
-        return node;
-    }
-
-    std::any DictionaryVisitor::visitDictionaryAssignment(Grammar::DictionaryAssignmentContext* ctx) {
-        json node = createNode("", "DictionaryAssignment", ctx->start, ctx->stop);
-
+        json assignment = createNode("", "DictionaryAssignment", ctx->start, ctx->stop);
         json members = json::object();
         for (const auto child : ctx->dictionaryAssignmentBody()) {
             const auto memberCtx = visit(child);
             const auto memberFullNode = std::any_cast<json>(memberCtx);
-            const std::string rawKey = memberFullNode["Key"]["raw"];
 
-            json member = memberFullNode["Value"];
-            if (member["kind"] == "IdentifierLiteral") {
+            const json keyNode = memberFullNode["Key"];
+            const std::string memberKeyRaw = keyNode["raw"];
+            const std::string memberKeyType = keyNode["type"];
+            const json valueNode = memberFullNode["Value"];
+
+            if (keyType != memberKeyType) {
+                throwTypeError(memberKeyRaw, keyType, memberFullNode, source);
+            }
+
+            if (json member = memberFullNode["Value"]; member["kind"] == "IdentifierLiteral") {
                 const std::string identifier = member["raw"];
                 const auto variable = scope->lookup(identifier);
 
@@ -42,18 +39,22 @@ namespace cromio::visitor {
 
                 if (variable.has_value()) {
                     const json value = variable.value();
-
-                    member["value"] = value;
-                    member["type"] = value["type"];
-                    member["stringValue"] = value["stringValue"];
-                    member["numberValue"] = value["numberValue"];
+                    if (const std::string memberValueType = value["type"]; memberValueType != valueType) {
+                        throwTypeError(value["raw"], keyType, valueNode, source);
+                    }
+                    members[memberKeyRaw] = value;
                 }
-            }
 
-            members[rawKey] = member;
+            } else {
+                members[memberKeyRaw] = member;
+            }
         }
 
+        node["Type"] = typeNode;
         node["Members"] = members;
+
+        // std::cout << node.dump(1);
+
         return node;
     }
 
