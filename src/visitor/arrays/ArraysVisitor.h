@@ -14,6 +14,8 @@ namespace cromio::visitor {
        public:
         std::any visitArrayDeclaration(Grammar::ArrayDeclarationContext* ctx) override;
         std::any visitArrayDeclarationTypeSize(Grammar::ArrayDeclarationTypeSizeContext* ctx) override;
+        std::any visitArrayType(Grammar::ArrayTypeContext* ctx) override;
+        std::any visitArrayDataType(Grammar::ArrayDataTypeContext* ctx) override;
     };
 } // namespace cromio::visitor
 

@@ -10,44 +10,20 @@ namespace cromio::visitor {
 
         const auto type = visit(ctx->dictionaryDeclarationType());
         const auto typeNode = std::any_cast<json>(type);
+        const std::string valueType = typeNode["ValueType"]["value"];
+
+        auto keyTypeNode = typeNode["KeyType"];
+        auto valueTypeNode = typeNode["ValueType"];
 
         const std::string keyType = typeNode["KeyType"]["value"];
-        const std::string valueType = typeNode["ValueType"]["value"];
 
         json assignment = createNode("", "DictionaryAssignment", ctx->start, ctx->stop);
         json members = json::object();
         for (const auto child : ctx->dictionaryAssignmentBody()) {
             const auto memberCtx = visit(child);
-            const auto memberFullNode = std::any_cast<json>(memberCtx);
+            auto memberNode = std::any_cast<json>(memberCtx);
 
-            const json keyNode = memberFullNode["Key"];
-            const std::string memberKeyRaw = keyNode["raw"];
-            const std::string memberKeyType = keyNode["type"];
-            const json valueNode = memberFullNode["Value"];
-
-            if (keyType != memberKeyType) {
-                throwTypeError(memberKeyRaw, keyType, memberFullNode, source);
-            }
-
-            if (json member = memberFullNode["Value"]; member["kind"] == "IdentifierLiteral") {
-                const std::string identifier = member["raw"];
-                const auto variable = scope->lookup(identifier);
-
-                if (!scope->existsInCurrent(identifier) || !variable.has_value()) {
-                    throwScopeError("identifier '" + identifier + "' " + "not found in scope", member, source);
-                }
-
-                if (variable.has_value()) {
-                    const json value = variable.value();
-                    if (const std::string memberValueType = value["type"]; memberValueType != valueType) {
-                        throwTypeError(value["raw"], keyType, valueNode, source);
-                    }
-                    members[memberKeyRaw] = value;
-                }
-
-            } else {
-                members[memberKeyRaw] = member;
-            }
+            members = analyzeDictionaryItemsDataType(keyTypeNode, valueTypeNode, memberNode, scope, source);
         }
 
         node["Type"] = typeNode;
@@ -76,16 +52,36 @@ namespace cromio::visitor {
     std::any DictionaryVisitor::visitDictionaryDeclarationType(Grammar::DictionaryDeclarationTypeContext* ctx) {
         json node = createNode("", "DictionaryType", ctx->start, ctx->stop);
 
-        const auto keyType = visit(ctx->dictionaryDataType(0));
-        const auto valueType = visit(ctx->dictionaryDataType(1));
+        // Visit both type elements (key and value)
+        const auto keyType = visit(ctx->dictionaryTypeElement(0));
+        const auto valueType = visit(ctx->dictionaryTypeElement(1));
 
-        const auto keyTypeNode = std::any_cast<json>(keyType);
-        const auto valueTypeNode = std::any_cast<json>(valueType);
-
-        node["KeyType"] = keyTypeNode;
-        node["ValueType"] = valueTypeNode;
+        node["KeyType"] = std::any_cast<json>(keyType);
+        node["ValueType"] = std::any_cast<json>(valueType);
 
         return node;
+    }
+
+    std::any DictionaryVisitor::visitDictionaryDeclarationTypeArray(Grammar::DictionaryDeclarationTypeArrayContext* ctx) {
+        json node = createNode("", "TypeArray", ctx->start, ctx->stop);
+        std::string type = ctx->dictionaryDataType()->getText() + "[]";
+
+        if (ctx->expression()) {
+            const auto expression = visit(ctx->expression());
+            node["size"] = std::any_cast<json>(expression);
+        } else {
+            node["size"] = "auto";
+        }
+
+        node["value"] = type;
+        return node;
+    }
+
+    std::any DictionaryVisitor::visitDictionaryTypeElement(Grammar::DictionaryTypeElementContext* ctx) {
+        if (ctx->dictionaryDeclarationTypeArray()) {
+            return visit(ctx->dictionaryDeclarationTypeArray());
+        }
+        return visit(ctx->dictionaryDataType());
     }
 
     std::any DictionaryVisitor::visitDictionaryDataType(Grammar::DictionaryDataTypeContext* ctx) {

@@ -12,7 +12,18 @@ dictionaryAssignmentBody
     : literal COLON expression
     ;
 
-dictionaryDeclarationType: dictionaryDataType COMMA dictionaryDataType;
+dictionaryDeclarationType
+    : dictionaryTypeElement COMMA dictionaryTypeElement
+    ;
+
+dictionaryTypeElement
+    : dictionaryDeclarationTypeArray
+    | dictionaryDataType
+    ;
+
+dictionaryDeclarationTypeArray
+    : dictionaryDataType LBRACKET (expression)? RBRACKET
+    ;
 
 dictionaryDataType: INTEGER_TYPES | UNSIGNED_INTEGER_TYPES | FLOAT_TYPES | BOOLEAN_TYPES | STRING_TYPES;
 

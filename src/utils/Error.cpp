@@ -73,6 +73,8 @@ namespace cromio::utils {
     void Error::throwTypeError(const std::string& identifier, const std::string& dataType, const json& node, const std::string& source) {
         std::string typeMsg = "";
 
+
+
         // SIGNED
         if (dataType == "int8")
             typeMsg = "signed 8-bit integer range";
@@ -95,17 +97,29 @@ namespace cromio::utils {
 
         // FLOAT
         else if (dataType == "float" || dataType == "float32")
-            typeMsg = "32-bit float";
-        else if (dataType == "float64")
-            typeMsg = "64-bit float";
+            typeMsg = "32-bit 'float'";
+        else if (dataType == "'float64'")
+            typeMsg = "64-bit 'float'";
 
         // BOOLEAN
         else if (dataType == "bool")
-            typeMsg = "boolean type";
+            typeMsg = "'boolean' type";
 
         // STRING
         else if (dataType == "str")
-            typeMsg = "string type";
+            typeMsg = "'string' type";
+
+        // ARRAY
+        else if (dataType == "int[]")
+            typeMsg = "'int[]' array type";
+        else if (dataType == "uint[]")
+            typeMsg = "unsigned 'int[]' array type";
+        else if (dataType == "float[]")
+            typeMsg = "'float[]' array type";
+        else if (dataType == "bool[]")
+            typeMsg = "'bool[]' array type";
+        else if (dataType == "str[]")
+            typeMsg = "'str[]' array type";
 
         const std::string message = "'" + identifier + "' expects " + typeMsg;
         throwError("TypeError", message, node, source);

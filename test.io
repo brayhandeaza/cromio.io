@@ -1,7 +1,8 @@
-int a = 31
-// int[] b = [a + 10]
+int a = 10
+int[] b = [a,0]
 
-dict<int,int[]> brayhan = {
-    1: a
-}
+// dict<str,int[]> brayhan = {
+//    edad: b
+//
+//}
 

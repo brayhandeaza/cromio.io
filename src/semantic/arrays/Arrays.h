@@ -11,7 +11,7 @@
 namespace cromio::semantic {
     class Arrays : public virtual BaseSemantic {
        public:
-        static json analyzeArrayDeclaration(json& node, const std::string& source);
+        static json analyzeArrayDeclaration(const json& node, const std::string& source);
         static bool checkArrayDataType(const std::string& dataType, const std::string& returnType);
     };
 } // namespace cromio::semantic

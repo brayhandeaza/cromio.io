@@ -6,15 +6,14 @@
 #include "semantic/variables/Variables.h"
 
 namespace cromio::semantic {
-    json Arrays::analyzeArrayDeclaration(json& node, const std::string& source) {
-        const std::string type = node["DataType"]["value"];
-        const std::string size = node["ArraySize"]["raw"];
+    json Arrays::analyzeArrayDeclaration(const json& node, const std::string& source) {
+        const std::string type = node["Type"]["raw"];
+        const std::string size = node["Type"]["size"];
         const std::string identifier = node["Identifier"]["value"];
 
         const auto items = node["value"]["items"];
-
         if (const int length = items.size(); size != "auto" && length > std::stoi(size)) {
-            utils::Error::throwRangeError("Expected array size of " + size + ", but received " + std::to_string(length) + " elements.", items[0], source);
+            utils::Error::throwRangeError("Expected array size of " + size + ", but received " + std::to_string(length) + " elements.", node["value"], source);
         }
 
         return node;

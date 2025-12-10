@@ -187,7 +187,7 @@ namespace cromio::lowering {
             if (name.empty())
                 throw std::runtime_error("IdentifierLiteral missing value");
 
-            auto it = symbols.find(name);
+            const auto it = symbols.find(name);
             if (it == symbols.end())
                 throw std::runtime_error("Undefined identifier (IdentifierLiteral): " + name);
 
@@ -428,9 +428,8 @@ namespace cromio::lowering {
             // Integer to integer (different widths)
             else if (initVal->getType()->isIntegerTy() && varType->isIntegerTy()) {
                 const auto* initType = llvm::cast<llvm::IntegerType>(initVal->getType());
-                const auto* targetType = llvm::cast<llvm::IntegerType>(varType);
 
-                if (initType->getBitWidth() < targetType->getBitWidth()) {
+                if (const auto* targetType = llvm::cast<llvm::IntegerType>(varType); initType->getBitWidth() < targetType->getBitWidth()) {
                     // Zero-extend for booleans (i1), sign-extend for other integers
                     if (initType->getBitWidth() == 1)
                         initVal = builder->CreateZExt(initVal, varType, "init_zext");
@@ -468,26 +467,24 @@ namespace cromio::lowering {
     }
 
     llvm::Value* IR::arrayDeclaration(const json& node) {
-        if (!node.contains("DataType") || !node.contains("Identifier") || !node.contains("value"))
+        if (!node.contains("Type") || !node.contains("Identifier") || !node.contains("value"))
             throw std::runtime_error("Malformed ArrayDeclaration node");
 
         const std::string arrayName = node["Identifier"].value("value", "");
-        const std::string dataType = node["DataType"].value("value", "int");
+        const std::string dataType = node["Type"].value("value", "int");
 
         llvm::Type* elementType = mapDataType(dataType);
 
         // Determine array size
         int arraySize = 0;
-        if (node.contains("ArraySize") && node["ArraySize"].contains("value")) {
-            if (const json sizeVal = node["ArraySize"]; sizeVal["value"] == "auto") {
+        if (node.contains("Type") && node["Type"].contains("size")) {
+            if (const std::string sizeVal = node["Type"]["size"]; sizeVal == "auto") {
                 if (!node["value"].contains("items") || !node["value"]["items"].is_array())
                     throw std::runtime_error("ArrayAssignment items missing for auto-size array");
 
                 arraySize = node["value"]["items"].size();
-
             } else {
-                const std::string size = sizeVal["raw"];
-                arraySize = std::stoi(size);
+                arraySize = std::stoi(sizeVal);
             }
         } else {
             throw std::runtime_error("ArrayDeclaration missing ArraySize");
@@ -523,11 +520,11 @@ namespace cromio::lowering {
                     }
                     // int <-> int
                     else if (val->getType()->isIntegerTy() && elementType->isIntegerTy()) {
-                        auto* vIt = llvm::cast<llvm::IntegerType>(val->getType());
-                        auto* tIt = llvm::cast<llvm::IntegerType>(elementType);
+                        const auto* vIt = llvm::cast<llvm::IntegerType>(val->getType());
 
-                        if (vIt->getBitWidth() < tIt->getBitWidth())
+                        if (const auto* tIt = llvm::cast<llvm::IntegerType>(elementType); vIt->getBitWidth() < tIt->getBitWidth())
                             val = builder->CreateSExt(val, elementType, "elem_sext");
+
                         else if (vIt->getBitWidth() > tIt->getBitWidth())
                             val = builder->CreateTrunc(val, elementType, "elem_trunc");
                     }
@@ -607,8 +604,7 @@ namespace cromio::lowering {
 
         // Iterate statements
         for (const auto& stmt : body) {
-            const std::string kind = stmt.value("kind", "");
-            if (kind == "VariableDeclaration")
+            if (const std::string kind = stmt.value("kind", ""); kind == "VariableDeclaration")
                 variableDeclaration(stmt);
             else if (kind == "ArrayDeclaration")
                 arrayDeclaration(stmt);
