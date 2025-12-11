@@ -3,7 +3,6 @@
 //
 
 #include "cromio.h"
-#include <vector>
 
 int main(int argc, const char* argv[]) {
     try {
@@ -51,29 +50,46 @@ int main(int argc, const char* argv[]) {
         auto* tree = grammar.program();
 
         cromio::visitor::Visitor visitor(content, &grammar);
-        auto ast = std::any_cast<json>(visitor.visit(tree));
-        std::cout << ast.dump(1) << std::endl;
+        std::any ast = visitor.visit(tree);
 
         // ---------------------------------------------
-        // Emit LLVM IR from AST
+        // Print AST (for debugging)
         // ---------------------------------------------
-        cromio::lowering::IR ir(fileName);
-        llvm::Module* module = ir.generate(ast);
+        if (ast.type() == typeid(cromio::visitor::nodes::ProgramNode)) {
+            std::cout << "=== AST ===" << std::endl;
+            cromio::utils::Helpers::printNode(ast, 0);
+            std::cout << std::endl << std::endl;
+        } else {
+            std::cerr << "Error: Expected ProgramNode at root" << std::endl;
+            return 1;
+        }
 
-        // ---------------------------------------------
-        // Print LLVM IR (for debugging)
-        // ---------------------------------------------
+        // // ---------------------------------------------
+        // // Extract ProgramNode for LLVM IR generation
+        // // ---------------------------------------------
+        // auto programNode = std::any_cast<cromio::visitor::nodes::ProgramNode>(ast);
+        //
+        // // ---------------------------------------------
+        // // Emit LLVM IR from AST
+        // // ---------------------------------------------
+        // cromio::lowering::IR ir(fileName);
+        // llvm::Module* module = ir.generate(programNode);  // Pass ProgramNode instead of json
+        //
+        // // ---------------------------------------------
+        // // Print LLVM IR (for debugging)
+        // // ---------------------------------------------
         // std::cout << "=== LLVM IR ===" << std::endl;
-        module->print(llvm::outs(), nullptr);
-
-        // ---------------------------------------------
-        // Generate executable
-        // ---------------------------------------------
-        cromio::lowering::CodeEmitter::toExecutable(module, baseName);
-        std::cout << "Executable generated successfully!" << std::endl;
+        // module->print(llvm::outs(), nullptr);
+        // std::cout << std::endl;
+        //
+        // // ---------------------------------------------
+        // // Generate executable
+        // // ---------------------------------------------
+        // cromio::lowering::CodeEmitter::toExecutable(module, baseName);
+        // std::cout << "Executable generated successfully!" << std::endl;
 
     } catch (const std::exception& e) {
-        std::cerr << e.what() << std::endl;
+        std::cerr << "Error: " << e.what() << std::endl;
         return 1;
     }
 

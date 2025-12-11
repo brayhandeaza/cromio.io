@@ -4,158 +4,141 @@
 
 #include "LiteralsVisitor.h"
 
+#include <visitor/nodes/nodes.h>
+
 std::any cromio::visitor::LiteralsVisitor::visitLiteral(Grammar::LiteralContext* ctx) {
     if (ctx->stringLiteral()) {
-        const std::any stringLiteral = visit(ctx->stringLiteral());
-        return std::any_cast<json>(stringLiteral);
+        return visit(ctx->stringLiteral());
     }
     if (ctx->integerLiteral()) {
-        const std::any integerLiteral = visit(ctx->integerLiteral());
-        return std::any_cast<json>(integerLiteral);
+        return visit(ctx->integerLiteral());
     }
     if (ctx->floatLiteral()) {
-        const std::any floatLiteral = visit(ctx->floatLiteral());
-        return std::any_cast<json>(floatLiteral);
+        return visit(ctx->floatLiteral());
     }
     if (ctx->booleanLiteral()) {
-        const std::any booleanLiteral = visit(ctx->booleanLiteral());
-        return std::any_cast<json>(booleanLiteral);
+        return visit(ctx->booleanLiteral());
     }
     if (ctx->formattedString()) {
-        const std::any formattedString = visit(ctx->formattedString());
-        return std::any_cast<json>(formattedString);
+        return visit(ctx->formattedString());
     }
-
     if (ctx->identifierLiteral()) {
-        const std::any identifierLiteral = visit(ctx->identifierLiteral());
-        return std::any_cast<json>(identifierLiteral);
+        return visit(ctx->identifierLiteral());
     }
 
-    json node = createNode("", "None", ctx->start, ctx->stop);
-    return node;
+    // Return a NoneLiteralNode as default
+    const nodes::Position start{ctx->start->getLine(), ctx->start->getCharPositionInLine()};
+    const nodes::Position end{ctx->stop->getLine(), ctx->stop->getCharPositionInLine()};
+    return nodes::NoneLiteralNode("None", start, end);
 }
 
 std::any cromio::visitor::LiteralsVisitor::visitIntegerLiteral(Grammar::IntegerLiteralContext* ctx) {
-    json node = createNode(ctx->getText(), "IntegerLiteral", ctx->start, ctx->stop);
-    node["value"] = parseNumberString(ctx->getText());
-    node["type"] = "int";
-    node["stringValue"] = ctx->getText();
-    node["numberValue"] = ctx->getText();
+    const nodes::Position start{ctx->start->getLine(), ctx->start->getCharPositionInLine()};
+    const nodes::Position end{ctx->stop->getLine(), ctx->stop->getCharPositionInLine()};
 
+    const auto node = nodes::IntegerLiteralNode(ctx->getText(), start, end);
     return node;
 }
 
 std::any cromio::visitor::LiteralsVisitor::visitFloatLiteral(Grammar::FloatLiteralContext* ctx) {
-    json node = createNode(ctx->getText(), "FloatLiteral", ctx->start, ctx->stop);
-    node["value"] = parseFloat(ctx->getText());
-    node["type"] = "float";
-    node["stringValue"] = ctx->getText();
-    node["numberValue"] = ctx->getText();
+    const nodes::Position start{ctx->start->getLine(), ctx->start->getCharPositionInLine()};
+    const nodes::Position end{ctx->stop->getLine(), ctx->stop->getCharPositionInLine()};
 
+    const auto node = nodes::FloatLiteralNode(ctx->getText(), start, end);
     return node;
 }
 
 std::any cromio::visitor::LiteralsVisitor::visitStringLiteral(Grammar::StringLiteralContext* ctx) {
-    const std::string literal = parseString(ctx->getText());
-    json node = createNode(literal, "StringLiteral", ctx->start, ctx->stop);
-    node["value"] = literal;
-    node["type"] = "str";
-    node["stringValue"] = literal;
-    node["numberValue"] = literal;
+    const std::string value = parseString(ctx->getText());
+    const nodes::Position start{ctx->start->getLine(), ctx->start->getCharPositionInLine()};
+    const nodes::Position end{ctx->stop->getLine(), ctx->stop->getCharPositionInLine()};
 
+    const auto node = nodes::StringLiteralNode(value, start, end);
     return node;
 }
 
 std::any cromio::visitor::LiteralsVisitor::visitBooleanLiteral(Grammar::BooleanLiteralContext* ctx) {
     const std::string literal = parseString(ctx->getText());
-    json node = createNode(literal == "true" ? "1" : "0", "BooleanLiteral", ctx->start, ctx->stop);
+    const std::string value = literal == "true" ? "1" : "0";
+    const nodes::Position start{ctx->start->getLine(), ctx->start->getCharPositionInLine()};
+    const nodes::Position end{ctx->stop->getLine(), ctx->stop->getCharPositionInLine()};
 
-    node["value"] = literal == "true";
-    node["type"] = "bool";
-    node["stringValue"] = literal;
-    node["numberValue"] = literal == "true" ? "1" : "0";
-
+    const auto node = nodes::BooleanLiteralNode(value, start, end);
     return node;
 }
 
 std::any cromio::visitor::LiteralsVisitor::visitNoneLiteral(Grammar::NoneLiteralContext* ctx) {
-    json node = createNode("0", "NoneLiteral", ctx->start, ctx->stop);
-    node["value"] = ctx->getText();
-    node["type"] = "none";
-    node["stringValue"] = "none";
-    node["numberValue"] = "0";
+    const std::string value = ctx->getText();
+    const nodes::Position start{ctx->start->getLine(), ctx->start->getCharPositionInLine()};
+    const nodes::Position end{ctx->stop->getLine(), ctx->stop->getCharPositionInLine()};
 
+    const auto node = nodes::NoneLiteralNode(value, start, end);
+    return node;
+}
+
+std::any cromio::visitor::LiteralsVisitor::visitIdentifierLiteral(Grammar::IdentifierLiteralContext* ctx) {
+    const std::string identifier = ctx->getText();
+    const nodes::Position start{ctx->start->getLine(), ctx->start->getCharPositionInLine()};
+    const nodes::Position end{ctx->stop->getLine(), ctx->stop->getCharPositionInLine()};
+
+    const auto node = nodes::IdentifierLiteral(identifier, start, end);
     return node;
 }
 
 std::any cromio::visitor::LiteralsVisitor::visitFormattedString(Grammar::FormattedStringContext* ctx) {
-    json node = createNode(ctx->getText(), "StringFormatted", ctx->start, ctx->stop);
-    json params = json::array();
+    const nodes::Position start{ctx->start->getLine(), ctx->start->getCharPositionInLine()};
+    const nodes::Position end{ctx->stop->getLine(), ctx->stop->getCharPositionInLine()};
 
+    // Create the formatted string node
+    auto node = nodes::FormattedStringNode(ctx->getText(), start, end);
+
+    // Process all formatted string content parts
     for (const auto child : ctx->formattedStringContent()) {
         if (auto result = visit(child); result.has_value()) {
-            auto expression = std::any_cast<json>(result);
-            params.push_back(expression);
+            try {
+                // Try to cast to different node types and add to params
+                if (result.type() == typeid(nodes::StringLiteralNode)) {
+                    auto contentNode = std::any_cast<nodes::StringLiteralNode>(result);
+                    node.params.push_back(contentNode);
+                } else if (result.type() == typeid(nodes::IntegerLiteralNode)) {
+                    auto contentNode = std::any_cast<nodes::IntegerLiteralNode>(result);
+                    node.params.push_back(contentNode);
+                } else if (result.type() == typeid(nodes::FloatLiteralNode)) {
+                    auto contentNode = std::any_cast<nodes::FloatLiteralNode>(result);
+                    node.params.push_back(contentNode);
+                } else if (result.type() == typeid(nodes::BooleanLiteralNode)) {
+                    auto contentNode = std::any_cast<nodes::BooleanLiteralNode>(result);
+                    node.params.push_back(contentNode);
+                } else if (result.type() == typeid(nodes::IdentifierLiteral)) {
+                    auto contentNode = std::any_cast<nodes::IdentifierLiteral>(result);
+                    node.params.push_back(contentNode);
+                }
+                // Add more types as needed (expressions, etc.)
+            } catch (const std::bad_any_cast& _) {
+                // ReSharper disable once CppRedundantControlFlowJump
+                continue;
+            }
         }
     }
-
-    std::string value;
-    for (const auto& param : params) {
-        if (param["kind"] == "Expression") {
-            value += std::to_string(static_cast<float>(param["value"]));
-        } else {
-            value += param["value"];
-            node["stringValue"] += param["value"];
-        }
-    }
-
-    node["value"] = value;
-    node["stringValue"] = node["stringValue"];
-    node["numberValue"] = value;
-    node["type"] = "fstr";
-    node["params"] = params;
 
     return node;
 }
 
 std::any cromio::visitor::LiteralsVisitor::visitFormattedStringContent(Grammar::FormattedStringContentContext* ctx) {
-    // -------- CASE 1: { expression }
+    // CASE 1: { expression }
     if (ctx->expression()) {
-        const auto expression = visit(ctx->expression());
-        return std::any_cast<json>(expression);
+        return visit(ctx->expression());
     }
 
-    // -------- CASE 2: TEXT inside formatted string
+    // CASE 2: TEXT inside formatted string
     if (ctx->FORMATTED_STRING_TEXT()) {
-        json node = createNode(ctx->getText(), "StringFormattedText", ctx->start, ctx->stop);
-        node["value"] = ctx->getText();
-        node["stringValue"] = ctx->getText();
+        const nodes::Position start{ctx->start->getLine(), ctx->start->getCharPositionInLine()};
+        const nodes::Position end{ctx->stop->getLine(), ctx->stop->getCharPositionInLine()};
+
+        const auto node = nodes::StringLiteralNode(ctx->getText(), start, end);
         return node;
     }
 
-    return json::object();
-}
-
-std::any cromio::visitor::LiteralsVisitor::visitIdentifierLiteral(Grammar::IdentifierLiteralContext* ctx) {
-    const std::string identifier = ctx->getText();
-    json node = createNode(identifier, "IdentifierLiteral", ctx->start, ctx->stop);
-    node["type"] = "str";
-
-    if (parser->inVarMode) {
-        const auto variable = scope->lookup(identifier);
-        if (!scope->existsInCurrent(identifier) || !variable.has_value()) {
-            throwScopeError("identifier '" + identifier + "' " + "not found in scope", node, source);
-        }
-
-        if (variable.has_value()) {
-            const json value = variable.value();
-
-            node["type"] = value["type"];
-            node["value"] = value;
-            node["stringValue"] = value["stringValue"];
-            node["numberValue"] = value["numberValue"];
-        }
-    }
-
-    return node;
+    // Return empty if nothing matches
+    return std::any();
 }

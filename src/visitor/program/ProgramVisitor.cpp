@@ -4,6 +4,7 @@
 
 #include "ProgramVisitor.h"
 #include <utils/utils.h>
+#include <visitor/nodes/nodes.h>
 
 void processScope(cromio::semantic::Scope& scope, const json& body, const std::string& source) {
     for (const auto& node : body) {
@@ -19,49 +20,71 @@ void processScope(cromio::semantic::Scope& scope, const json& body, const std::s
                 cromio::utils::Error::throwScopeError("Variable '" + name + "' not found", node, source);
             }
         }
-
-        // In the future you will add:
-        // - Block statements
-        // - Functions (push new scope)
-        // - Classes
-        // - Loops
     }
 }
 
 std::any cromio::visitor::Visitor::visitProgram(Grammar::ProgramContext* ctx) {
-    json node = createNode("", "Program", ctx->start, ctx->stop);
+    const nodes::Position start{ctx->start->getLine(), ctx->start->getCharPositionInLine()};
+    const nodes::Position end{ctx->stop->getLine(), ctx->stop->getCharPositionInLine()};
 
-    json body;
-    for (const auto child : ctx->children) {
-        if (const std::any statement = visit(child); statement.has_value()) {
-            body.push_back(std::any_cast<json>(statement));
+    // Create program node
+    auto programNode = nodes::ProgramNode(start, end);
+
+    // Visit all children and add them to the program body
+    for (antlr4::tree::ParseTree* child : ctx->children) {
+        if (std::any statement = visit(child); statement.has_value()) {
+            // Check if it's a StatementNode
+            if (statement.type() == typeid(nodes::StatementNode)) {
+                auto stmtNode = std::any_cast<nodes::StatementNode>(statement);
+                programNode.addStatement(std::move(stmtNode));
+            }
+            // If it's a direct node (expression, literal, etc.), wrap it in StatementNode
+            else {
+                auto wrappedStmt = nodes::StatementNode(start, end);
+                wrappedStmt.addChild(statement);
+                programNode.addStatement(std::move(wrappedStmt));
+            }
         }
     }
 
-    node["Body"] = body;
-    return node;
+    return programNode;
 }
 
 std::any cromio::visitor::Visitor::visitStatements(Grammar::StatementsContext* ctx) {
+    const nodes::Position start{ctx->start->getLine(), ctx->start->getCharPositionInLine()};
+    const nodes::Position end{ctx->stop->getLine(), ctx->stop->getCharPositionInLine()};
+
+    // Create a statement node that will hold the child
+    auto statementNode = nodes::StatementNode(start, end);
+
+    // Expression statement
     if (ctx->expression()) {
-        const std::any expression = visit(ctx->expression());
-        return std::any_cast<json>(expression);
+        const std::any expressionResult = visit(ctx->expression());
+        statementNode.addChild(expressionResult);
+        return statementNode;
     }
 
+    // Variable declaration statement
     if (ctx->variables()) {
         const std::any variableStatement = visit(ctx->variables());
-        return std::any_cast<json>(variableStatement);
+        statementNode.addChild(variableStatement);
+        return statementNode;
     }
 
+    // Array declaration statement
     if (ctx->arrayDeclaration()) {
-        const auto visitArrayDeclaration = visit(ctx->arrayDeclaration());
-        return std::any_cast<json>(visitArrayDeclaration);
+        const std::any arrayDeclaration = visit(ctx->arrayDeclaration());
+        statementNode.addChild(arrayDeclaration);
+        return statementNode;
     }
 
+    // Dictionary declaration statement
     if (ctx->dictionaryDeclaration()) {
-        const auto dictionaryDeclaration = visit(ctx->dictionaryDeclaration());
-        return std::any_cast<json>(dictionaryDeclaration);
+        const std::any dictionaryDeclaration = visit(ctx->dictionaryDeclaration());
+        statementNode.addChild(dictionaryDeclaration);
+        return statementNode;
     }
 
-    return json::object();
+    // Return empty statement if nothing matches
+    return statementNode;
 }

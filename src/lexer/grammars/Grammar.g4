@@ -4,7 +4,6 @@ options {
     tokenVocab = Tokens;
 }
 
-// bandera que controlará qué hace el lexer
 @parser::members {
     public:
         bool inVarMode = false;

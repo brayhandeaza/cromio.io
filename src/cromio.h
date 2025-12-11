@@ -2,8 +2,7 @@
 // Created by Brayhan De Aza on 11/27/25.
 //
 
-#ifndef CROMIO_CROMIO_H
-#define CROMIO_CROMIO_H
+#pragma once
 
 // standard headers
 #include <fstream>
@@ -20,8 +19,7 @@
 #include "runtime/runtime.h"
 #include "semantic/semantic.h"
 #include "visitor/visitor.h"
+#include "visitor/nodes/nodes.h"
 
 // utils headers
 #include <utils/AntlrErrorListener.h>
-
-#endif // CROMIO_CROMIO_H

@@ -3,170 +3,164 @@
 //
 
 #include "ExpressionVisitor.h"
+#include <visitor/nodes/nodes.h>
 
-std::any cromio::visitor::ExpressionVisitor::visitExpression(Grammar::ExpressionContext* ctx) {
-    // -------------------------------------------------------
-    // (1) Literal → return literal node
-    // -------------------------------------------------------
-    if (ctx->literal()) {
-        return visit(ctx->literal());
-    }
+#include <cmath>
+#include <stdexcept>
 
-    // -------------------------------------------------------
-    // (2) Detect operator
-    // -------------------------------------------------------
-    std::string op;
+namespace cromio::visitor {
+    std::any ExpressionVisitor::visitExpression(Grammar::ExpressionContext* ctx) {
+        // -------------------------------------------------------
+        // (1) Literal → return literal node
+        // -------------------------------------------------------
+        if (ctx->literal()) {
+            return visit(ctx->literal());
+        }
 
-    if (ctx->PLUS())
-        op = "+";
-    else if (ctx->MINUS())
-        op = "-";
-    else if (ctx->MUL())
-        op = "*";
-    else if (ctx->DIV())
-        op = "/";
-    else if (ctx->MOD())
-        op = "%";
+        // -------------------------------------------------------
+        // (2) Detect operator
+        // -------------------------------------------------------
+        std::string op;
+        if (ctx->PLUS())
+            op = "+";
+        else if (ctx->MINUS())
+            op = "-";
+        else if (ctx->MUL())
+            op = "*";
+        else if (ctx->DIV())
+            op = "/";
+        else if (ctx->MOD())
+            op = "%";
 
-    // -------------------------------------------------------
-    // (3) Parenthesized expression
-    // -------------------------------------------------------
-    if (ctx->expression().size() == 1 && op.empty()) {
-        return visit(ctx->expression(0));
-    }
+        // -------------------------------------------------------
+        // (3) Parenthesized expression
+        // -------------------------------------------------------
+        if (ctx->expression().size() == 1 && op.empty()) {
+            return visit(ctx->expression(0));
+        }
 
-    // -------------------------------------------------------
-    // (4) Binary expression
-    // -------------------------------------------------------
-    if (!op.empty() && ctx->expression().size() >= 2) {
-        json leftNode = std::any_cast<json>(visit(ctx->expression(0)));
-        json rightNode = std::any_cast<json>(visit(ctx->expression(1)));
+        // -------------------------------------------------------
+        // (4) Binary expression
+        // -------------------------------------------------------
+        if (!op.empty() && ctx->expression().size() >= 2) {
+            std::any leftResult = visit(ctx->expression(0));
+            std::any rightResult = visit(ctx->expression(1));
 
-        // Resolve IdentifierLiteral values if they point to variables
-        auto resolveIdentifier = [&](json& node) {
-            if (node["kind"] == "IdentifierLiteral") {
-                // Replace the value with the underlying literal
-                if (node.contains("value")) {
-                    node = node["value"];
-                } else {
-                    node["error"] = "Undefined identifier";
+            const nodes::Position start{ctx->start->getLine(), ctx->start->getCharPositionInLine()};
+            const nodes::Position end{ctx->stop->getLine(), ctx->stop->getCharPositionInLine()};
+
+            // Helper to extract numeric value from any literal node
+            auto extractValue = [](const std::any& result) -> std::pair<double, std::string> {
+                try {
+                    if (result.type() == typeid(nodes::IntegerLiteralNode)) {
+                        auto node = std::any_cast<nodes::IntegerLiteralNode>(result);
+                        return {std::stod(node.value), "int"};
+                    }
+                    if (result.type() == typeid(nodes::FloatLiteralNode)) {
+                        auto node = std::any_cast<nodes::FloatLiteralNode>(result);
+                        return {std::stod(node.value), "float"};
+                    }
+                    if (result.type() == typeid(nodes::BooleanLiteralNode)) {
+                        auto node = std::any_cast<nodes::BooleanLiteralNode>(result);
+                        return {std::stod(node.value), "bool"};
+                    }
+                    if (result.type() == typeid(nodes::NoneLiteralNode)) {
+                        return {0.0, "none"};
+                    }
+                    if (result.type() == typeid(nodes::BinaryExpressionNode)) {
+                        auto node = std::any_cast<nodes::BinaryExpressionNode>(result);
+                        return {std::stod(node.value), node.resultType};
+                    }
+                    if (result.type() == typeid(nodes::IdentifierLiteral)) {
+                        auto node = std::any_cast<nodes::IdentifierLiteral>(result);
+                        // TODO: Look up identifier value from symbol table
+                        throw std::runtime_error("Undefined identifier: " + node.value);
+                    }
+                } catch (const std::exception& _) {
+                    throw std::runtime_error("Cannot extract numeric value");
                 }
+                throw std::runtime_error("Unsupported node type in expression");
+            };
+
+            double leftValue, rightValue;
+            std::string leftType, rightType;
+
+            try {
+                auto [lv, lt] = extractValue(leftResult);
+                auto [rv, rt] = extractValue(rightResult);
+                leftValue = lv;
+                rightValue = rv;
+                leftType = lt;
+                rightType = rt;
+            } catch (const std::exception& _) {
+                // Return error node
+                auto errorNode = nodes::BinaryExpressionNode(leftResult, rightResult, op, "0.0", "error", start, end);
+                return errorNode;
             }
-        };
 
-        resolveIdentifier(leftNode);
-        resolveIdentifier(rightNode);
+            // -------------------------------------------------------
+            // (5) Perform arithmetic
+            // -------------------------------------------------------
+            double result = 0.0;
 
-        json node = createNode(ctx->getText(), "Expression", ctx->start, ctx->stop);
-        node["left"] = leftNode;
-        node["right"] = rightNode;
-        node["operator"] = op;
+            if (op == "+")
+                result = leftValue + rightValue;
+            else if (op == "-")
+                result = leftValue - rightValue;
+            else if (op == "*")
+                result = leftValue * rightValue;
+            else if (op == "/") {
+                if (rightValue == 0.0) {
+                    auto errorNode = nodes::BinaryExpressionNode(leftResult, rightResult, op, "0.0", "error", start, end);
+                    return errorNode;
+                }
+                result = leftValue / rightValue;
+            } else if (op == "%") {
+                if (rightValue == 0.0) {
+                    auto errorNode = nodes::BinaryExpressionNode(leftResult, rightResult, op, "0.0", "error", start, end);
+                    return errorNode;
+                }
+                if (leftValue == static_cast<int>(leftValue) && rightValue == static_cast<int>(rightValue))
+                    result = static_cast<int>(leftValue) % static_cast<int>(rightValue);
+                else
+                    result = std::fmod(leftValue, rightValue);
+            }
 
-        // Types allowed in arithmetic
-        auto isAllowed = [&](const json& j) {
-            const std::string k = j["kind"].get<std::string>();
-            return k == "IntegerLiteral" || k == "IdentifierLiteral" || k == "FloatLiteral" || k == "BooleanLiteral" || k == "NoneLiteral" || k == "Expression";
-        };
+            // -------------------------------------------------------
+            // (6) Determine final data type
+            // -------------------------------------------------------
+            auto determineType = [](const std::string& mOp, const std::string& mLeftType, const std::string& mRightType) -> std::string {
+                if (mLeftType == "float" || mRightType == "float")
+                    return "float";
+                if (mLeftType == "bool" || mRightType == "bool")
+                    return "int";
+                if (mLeftType == "none" || mRightType == "none")
+                    return "int";
+                if (mOp == "%")
+                    return "int";
+                if (mOp == "/")
+                    return "float";
+                return "int";
+            };
 
+            std::string finalType = determineType(op, leftType, rightType);
 
-        if (!isAllowed(leftNode) || !isAllowed(rightNode)) {
-            node["error"] = "Arithmetic only allowed on numeric literals (int, float, bool, none)";
+            // -------------------------------------------------------
+            // (7) Create and return BinaryExpressionNode
+            // -------------------------------------------------------
+            auto node = nodes::BinaryExpressionNode(leftResult, rightResult, op, std::to_string(result), finalType, start, end);
             return node;
         }
 
-        // Convert JSON → double
-        auto toDouble = [&](const json& j) -> double {
-            const std::string k = j["kind"];
-
-            if (k == "BooleanLiteral")
-                return j["stringValue"] == "true" ? 1.0 : 0.0;
-
-            if (k == "NoneLiteral")
-                return 0.0;
-
-            if (j["value"].is_number())
-                return j["value"].get<double>();
-
-            return std::stod(j["value"].get<std::string>());
-        };
-
-        double L = 0.0, R = 0.0;
-
-        try {
-            L = toDouble(leftNode);
-            R = toDouble(rightNode);
-        } catch (...) {
-            node["error"] = "Invalid numeric literal";
-            return node;
-        }
-
         // -------------------------------------------------------
-        // (5) Perform arithmetic
+        // (8) Fallback
         // -------------------------------------------------------
-        double result = 0.0;
+        if (!ctx->expression().empty())
+            return visit(ctx->expression(0));
 
-        if (op == "+")
-            result = L + R;
-        else if (op == "-")
-            result = L - R;
-        else if (op == "*")
-            result = L * R;
-        else if (op == "/") {
-                if (R == 0.0) {
-                    node["error"] = "Division by zero is not allowed";
-                    return node;
-                }
-                result = L / R;
-            }
-        else if (op == "%") {
-            if (R == 0.0) {
-                node["error"] = "Modulo by zero";
-                return node;
-            }
-            if (L == static_cast<int>(L) && R == static_cast<int>(R))
-                result = static_cast<int>(L) % static_cast<int>(R);
-            else
-                result = std::fmod(L, R);
-        }
-
-        // -------------------------------------------------------
-        // (6) Determine final data type
-        // -------------------------------------------------------
-        auto determineType = [&](const std::string& mOp, const json& mLeft, const json& mRight) -> std::string {
-            const bool leftFloat = mLeft["kind"] == "FloatLiteral";
-
-            if (const bool rightFloat = mRight["kind"] == "FloatLiteral"; leftFloat || rightFloat)
-                return "float";
-            if (mLeft["kind"] == "BooleanLiteral" || mRight["kind"] == "BooleanLiteral")
-                return "int";
-            if (mLeft["kind"] == "NoneLiteral" || mRight["kind"] == "NoneLiteral")
-                return "int";
-            if (mOp == "%")
-                return "int";
-            if (mOp == "/")
-                return "float";
-
-            return "int";
-        };
-
-        std::string finalType = determineType(op, leftNode, rightNode);
-
-        // -------------------------------------------------------
-        // (7) Store results
-        // -------------------------------------------------------
-        node["value"] = result;
-        node["stringValue"] = std::to_string(result);
-        node["numberValue"] = std::to_string(result);
-        node["type"] = finalType;
-
-        return node;
+        // Return None literal as fallback
+        const nodes::Position start{ctx->start->getLine(), ctx->start->getCharPositionInLine()};
+        const nodes::Position end{ctx->stop->getLine(), ctx->stop->getCharPositionInLine()};
+        return nodes::NoneLiteralNode("None", start, end);
     }
-
-    // -------------------------------------------------------
-    // (8) Fallback
-    // -------------------------------------------------------
-    if (!ctx->expression().empty())
-        return visit(ctx->expression(0));
-
-    return json::object();
-}
+} // namespace cromio::visitor

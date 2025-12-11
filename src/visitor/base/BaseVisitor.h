@@ -9,6 +9,7 @@
 #include "semantic/scopes/Scope.h"
 #include "semantic/semantic.h"
 
+
 namespace cromio::visitor {
 
     class BaseVisitor : public GrammarVisitor, public utils::Error, public utils::Helpers, public semantic::Semantic {
