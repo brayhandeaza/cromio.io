@@ -25,4 +25,18 @@ namespace cromio::visitor::nodes {
 
         explicit DictionaryDeclarationNode(const std::string& id, const std::string& kType, const std::string& vType, const Position start, const Position end) : BaseNode(Kind::DICTIONARY_DECLARATION, start, end), identifier(id), keyType(kType), valueType(vType), size(0) {}
     };
+
+    struct DataTypeNode : BaseNode {
+        std::string typeName;
+
+        DataTypeNode(const std::string& t, const Position& start, const Position& end) : BaseNode(Kind::DATA_TYPE, start, end), typeName(t) {}
+    };
+
+    struct DictionaryTypeNode : BaseNode {
+        std::string keyType;
+        std::string valueType;
+
+        DictionaryTypeNode(const std::string& k, const std::string& v, const Position& start, const Position& end) : BaseNode(Kind::DICTIONARY_TYPE, start, end), keyType(k), valueType(v) {}
+    };
+
 } // namespace cromio::visitor::nodes

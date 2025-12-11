@@ -6,22 +6,6 @@
 #include <utils/utils.h>
 #include <visitor/nodes/nodes.h>
 
-void processScope(cromio::semantic::Scope& scope, const json& body, const std::string& source) {
-    for (const auto& node : body) {
-        if (node["kind"] == "VariableDeclaration") {
-            std::string name = node["Identifier"]["value"];
-            scope.declareVariable(name, node);
-        }
-
-        if (node["kind"] == "VariableAssignment") {
-            const std::string name = node["Identifier"]["value"];
-
-            if (auto lookup = scope.lookup(name); !lookup.has_value()) {
-                cromio::utils::Error::throwScopeError("Variable '" + name + "' not found", node, source);
-            }
-        }
-    }
-}
 
 std::any cromio::visitor::Visitor::visitProgram(Grammar::ProgramContext* ctx) {
     const nodes::Position start{ctx->start->getLine(), ctx->start->getCharPositionInLine()};

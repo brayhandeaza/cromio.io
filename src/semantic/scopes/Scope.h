@@ -6,6 +6,8 @@
 #define CROMIO_SCOPE_H
 
 #include <utils/utils.h>
+#include <visitor/nodes/nodes.h>
+#include <memory>
 #include <optional>
 #include <string>
 #include <unordered_map>
@@ -16,13 +18,14 @@ namespace cromio::semantic {
        public:
         explicit Scope(Scope* parent = nullptr) : parent(parent) {}
 
-        bool declareVariable(const std::string& name, const json& info);
+        bool declareVariable(const std::string& name, const visitor::nodes::VariableDeclarationNode& info);
+        bool exists(const std::string& name) const;
         bool existsInCurrent(const std::string& name) const;
-        void updateVariable(const std::string& name, const json& info);
+        void updateVariable(const std::string& name, const visitor::nodes::VariableDeclarationNode& info);
 
-        std::optional<json> lookup(const std::string& name);
+        std::optional<std::shared_ptr<visitor::nodes::VariableDeclarationNode>> lookup(const std::string& name) const;
 
-        // NEW
+        // Create a child scope
         Scope* createChild() {
             return new Scope(this);
         }
@@ -33,7 +36,8 @@ namespace cromio::semantic {
 
        private:
         Scope* parent;
-        std::unordered_map<std::string, json> symbols = json::object();
+        // Use shared_ptr to avoid copy issues with std::any
+        std::unordered_map<std::string, std::shared_ptr<visitor::nodes::VariableDeclarationNode>> symbols;
     };
 
 } // namespace cromio::semantic

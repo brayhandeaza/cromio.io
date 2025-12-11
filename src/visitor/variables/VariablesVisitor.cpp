@@ -3,138 +3,179 @@
 //
 
 #include "VariablesVisitor.h"
+#include <visitor/nodes/nodes.h>
 #include "semantic/semantic.h"
 
 namespace cromio::visitor {
     std::any VariablesVisitor::visitVariables(Grammar::VariablesContext* ctx) {
         if (ctx->variableDeclaration()) {
-            const auto visitVariableDeclaration = visit(ctx->variableDeclaration());
-            return std::any_cast<json>(visitVariableDeclaration);
+            return visit(ctx->variableDeclaration());
         }
 
         if (ctx->variableDeclarationWithoutAssignment()) {
-            const auto visitVariableDeclarationWithoutAssignment = visit(ctx->variableDeclarationWithoutAssignment());
-            return std::any_cast<json>(visitVariableDeclarationWithoutAssignment);
+            return visit(ctx->variableDeclarationWithoutAssignment());
         }
 
         if (ctx->variableReAssignment()) {
-            const auto visitVariableAssignment = visit(ctx->variableReAssignment());
-            return std::any_cast<json>(visitVariableAssignment);
+            return visit(ctx->variableReAssignment());
         }
 
         if (ctx->variableAccessToMember()) {
-            const auto visitVariableAccessToMember = visit(ctx->variableAccessToMember());
-            return std::any_cast<json>(visitVariableAccessToMember);
+            return visit(ctx->variableAccessToMember());
         }
 
-        return json::object();
+        // Return empty node
+        const nodes::Position start{ctx->start->getLine(), ctx->start->getCharPositionInLine()};
+        const nodes::Position end{ctx->stop->getLine(), ctx->stop->getCharPositionInLine()};
+        return nodes::NoneLiteralNode("None", start, end);
     }
 
     std::any VariablesVisitor::visitVariableDeclarationWithoutAssignment(Grammar::VariableDeclarationWithoutAssignmentContext* ctx) {
-        json node = createNode("", "VariableDeclaration", ctx->start, ctx->stop);
+        const nodes::Position start{ctx->start->getLine(), ctx->start->getCharPositionInLine()};
+        const nodes::Position end{ctx->stop->getLine(), ctx->stop->getCharPositionInLine()};
 
+        // Get data type
         const auto visitDataType = visit(ctx->variableDataType());
-        const auto jDataType = std::any_cast<json>(visitDataType);
+        const std::string dataType = std::any_cast<std::string>(visitDataType);
 
-        const std::string rIdentifier = ctx->IDENTIFIER()->getText();
-        if (scope->existsInCurrent(rIdentifier)) {
-            throwScopeError("variable '" + rIdentifier + "' " + "is already declared", jDataType, source);
+        // Get identifier
+        const std::string identifier = ctx->IDENTIFIER()->getText();
+
+        // Check if variable already exists in current scope
+        if (scope->existsInCurrent(identifier)) {
+            const auto message = "variable '" + identifier + "' is already declared";
+            throwScopeError(message, identifier, visitDataType, source);
         }
 
-        json identifier = createNode("", "VariableIdentifier", ctx->IDENTIFIER()->getSymbol(), ctx->IDENTIFIER()->getSymbol());
-        identifier["value"] = rIdentifier;
+        // Create variable declaration node with no initial value
+        auto node = nodes::VariableDeclarationNode(identifier, dataType, std::any(), false, start, end);
 
-        node["DataType"] = jDataType;
-        node["Identifier"] = identifier;
+        // Register variable in scope
+        scope->declareVariable(identifier, node);
 
-        json variable = analyzeVariableWithoutAssignment(node, ctx->start, ctx->stop);
-        scope->declareVariable(rIdentifier, variable["value"]);
-
-        return variable;
+        return node;
     }
 
     std::any VariablesVisitor::visitVariableDeclaration(Grammar::VariableDeclarationContext* ctx) {
-        json node = createNode("", "VariableDeclaration", ctx->start, ctx->stop);
+        const nodes::Position start{ctx->start->getLine(), ctx->start->getCharPositionInLine()};
+        const nodes::Position end{ctx->stop->getLine(), ctx->stop->getCharPositionInLine()};
 
         parser->inVarMode = true;
-        const auto visitDataType = visit(ctx->variableDataType());
-        const auto dataType = std::any_cast<json>(visitDataType);
 
-        std::string identifier = ctx->IDENTIFIER()->getText();
+        // Get data type
+        const auto visitDataType = visit(ctx->variableDataType());
+        const std::string dataType = std::any_cast<std::string>(visitDataType);
+
+        // Get identifier
+        const std::string identifier = ctx->IDENTIFIER()->getText();
+
+        // // Check if variable already exists in current scope
         if (scope->existsInCurrent(identifier)) {
-            throwScopeError("variable '" + identifier + "' " + "is already declared", dataType, source);
+            throwScopeError("variable '" + identifier + "' is already declared", identifier, visitDataType, source);
         }
 
-        json identifierNode = createNode("", "VariableIdentifier", ctx->IDENTIFIER()->getSymbol(), ctx->IDENTIFIER()->getSymbol());
-        identifierNode["value"] = identifier;
-
-        const auto expression = visit(ctx->expression());
-        const auto value = std::any_cast<json>(expression);
+        // Get initial value expression
+        const std::any value = visit(ctx->expression());
 
         parser->inVarMode = false;
 
-        node["DataType"] = dataType;
-        node["Identifier"] = identifierNode;
-        node["value"] = value;
+        // Determine if it's a constant (const keyword)
+        const bool isConstant = toUpper(identifier) == identifier;
 
-        json scopeVarInfo = value;
-        scopeVarInfo["DataType"] = dataType;
-        scopeVarInfo["Identifier"] = identifierNode;
+        // Create variable declaration node
+        auto node = nodes::VariableDeclarationNode(identifier, dataType, value, isConstant, start, end);
 
-        scope->declareVariable(identifier, scopeVarInfo);
-        return analyzeVariableDeclaration(node, source);
+        // Perform semantic analysis
+        // auto analyzedNode = analyzeVariableDeclaration(node, source);
+
+        // Register variable in scope
+        scope->declareVariable(identifier, node);
+        return node;
     }
 
     std::any VariablesVisitor::visitVariableReAssignment(Grammar::VariableReAssignmentContext* ctx) {
-        json node = createNode("", "VariableReAssignment", ctx->start, ctx->stop);
+        const nodes::Position start{ctx->start->getLine(), ctx->start->getCharPositionInLine()};
+        const nodes::Position end{ctx->stop->getLine(), ctx->stop->getCharPositionInLine()};
 
         parser->inVarMode = true;
-        const auto expression = visit(ctx->expression());
-        const auto jExpression = std::any_cast<json>(expression);
+
+        // Get new value expression
+        std::any newValue = visit(ctx->expression());
+
         parser->inVarMode = false;
 
-        std::string identifier = ctx->IDENTIFIER()->getText();
-        json jIdentifier = createNode("", "VariableIdentifier", ctx->IDENTIFIER()->getSymbol(), ctx->IDENTIFIER()->getSymbol());
-        jIdentifier["value"] = identifier;
+        // Get identifier
+        const std::string identifier = ctx->IDENTIFIER()->getText();
 
-        const auto variable = scope->lookup(identifier);
-        if (!scope->existsInCurrent(identifier)) {
-            throwScopeError("variable '" + identifier + "' " + "is not declared", jIdentifier, source);
+        // Check if variable exists
+        if (!scope->exists(identifier)) {
+            throwScopeError("variable '" + identifier + "' is not declared", identifier, newValue, source);
         }
 
+        // Get variable info from scope
+        auto variable = scope->lookup(identifier);
+        if (!variable.has_value()) {
+            throwScopeError("variable '" + identifier + "' is not declared", identifier, newValue, source);
+        }
+
+        // Check if it's a constant
         if (variable.has_value()) {
-            node["DataType"] = variable.value()["DataType"];
+            try {
+                if (const auto varNode = std::any_cast<nodes::VariableDeclarationNode>(variable.value()); varNode.isConstant) {
+                    throwScopeError("cannot reassign constant variable '" + identifier + "'", identifier, varNode, source);
+                }
+            } catch (const std::bad_any_cast&) {
+                // Variable might be stored differently, continue
+            }
         }
 
-        node["Identifier"] = jIdentifier;
-        node["value"] = jExpression;
+        // Create variable reassignment node (reuse VariableDeclarationNode)
+        auto node = nodes::VariableDeclarationNode(identifier,
+                                                   "", // Type will be inferred from existing variable
+                                                   newValue,
+                                                   false,
+                                                   start,
+                                                   end);
 
-        const auto varNode = analyzeVariableDeclaration(node, source);
-        scope->updateVariable(identifier, jExpression);
+        // Perform semantic analysis
+        // auto analyzedNode = analyzeVariableReassignment(node, source);
 
-        return varNode;
+        // Update variable in scope
+        scope->updateVariable(identifier, node);
+
+        return node;
     }
 
     std::any VariablesVisitor::visitVariableDataType(Grammar::VariableDataTypeContext* ctx) {
-        json node = createNode("", "DataType", ctx->start, ctx->stop);
-        node["value"] = ctx->getText();
-
-        return node;
+        // Return the type as a string
+        return ctx->getText();
     }
 
     std::any VariablesVisitor::visitVariableAccessToMember(Grammar::VariableAccessToMemberContext* ctx) {
-        json node = createNode("", "VariableMember", ctx->start, ctx->stop);
+        const nodes::Position start{ctx->start->getLine(), ctx->start->getCharPositionInLine()};
+        const nodes::Position end{ctx->stop->getLine(), ctx->stop->getCharPositionInLine()};
 
+        // Get identifier
         const auto identifier = ctx->IDENTIFIER()[0];
-        json jIdentifier = createNode("", "VariableIdentifier", identifier->getSymbol(), identifier->getSymbol());
-        jIdentifier["value"] = identifier->getText();
+        const std::string identifierText = identifier->getText();
 
+        // Get member
         const auto member = ctx->IDENTIFIER()[1];
-        const json jMember = createNode("", "Member", member->getSymbol(), member->getSymbol());
+        const std::string memberText = member->getText();
 
-        node["Identifier"] = jIdentifier;
-        node["Member"] = jMember;
+        // Create a member access node (you might want to create a specific node type for this)
+        const auto identifierNode = nodes::IdentifierLiteral(identifierText, start, end);
+        const auto memberNode = nodes::IdentifierLiteral(memberText, start, end);
 
-        return node;
+        // For now, return as a tuple or create a MemberAccessNode
+        // This is a placeholder - you should create a proper MemberAccessNode struct
+        struct MemberAccessNode {
+            nodes::IdentifierLiteral object;
+            nodes::IdentifierLiteral member;
+            nodes::Position start;
+            nodes::Position end;
+        };
+
+        return MemberAccessNode{identifierNode, memberNode, start, end};
     }
 } // namespace cromio::visitor

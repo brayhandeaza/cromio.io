@@ -4,9 +4,16 @@
 
 #include "utils/Helpers.h"
 #include <visitor/nodes/nodes.h>
+#include <algorithm>
+#include <string>
 #include "antlr4-runtime.h"
 
 namespace cromio::utils {
+    std::string Helpers::toUpper(std::string s) {
+        std::ranges::transform(s, s.begin(), [](unsigned char c) { return std::toupper(c); });
+        return s;
+    }
+
     long long Helpers::parseNumberString(const std::string& raw) {
         try {
             // Binary: 0bxxxx

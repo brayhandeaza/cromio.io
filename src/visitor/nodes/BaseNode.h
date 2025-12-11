@@ -3,12 +3,16 @@
 //
 
 #pragma once
+#include <cstddef>
+
 
 namespace cromio::visitor::nodes {
 
     enum class Kind {
         PROGRAM,
         STATEMENT,
+        DATA_TYPE,
+
 
         // Literal
         INTEGER_LITERAL,
@@ -31,8 +35,10 @@ namespace cromio::visitor::nodes {
 
         DICTIONARY_DECLARATION,
         DICTIONARY_PAIR,
+        DICTIONARY_TYPE,
 
-        BLOCK
+        BLOCK,
+        MEMBER_ACCESS
     };
 
     struct Position {

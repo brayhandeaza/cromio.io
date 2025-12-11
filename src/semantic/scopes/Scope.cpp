@@ -5,31 +5,54 @@
 #include "Scope.h"
 
 namespace cromio::semantic {
-    bool Scope::declareVariable(const std::string& name, const json& info) {
+    bool Scope::declareVariable(const std::string& name, const visitor::nodes::VariableDeclarationNode& info) {
         if (symbols.contains(name))
             return false;
-        symbols[name] = info;
+
+        // Store a shared_ptr copy of the node
+        symbols[name] = std::make_shared<visitor::nodes::VariableDeclarationNode>(info);
         return true;
+    }
+
+    bool Scope::exists(const std::string& name) const {
+        // Check current scope
+        if (symbols.contains(name))
+            return true;
+
+        // Check parent scopes recursively
+        if (parent)
+            return parent->exists(name);
+
+        return false;
     }
 
     bool Scope::existsInCurrent(const std::string& name) const {
         return symbols.contains(name);
     }
 
-    void Scope::updateVariable(const std::string& name, const json& info) {
-        if (!symbols.contains(name))
+    void Scope::updateVariable(const std::string& name, const visitor::nodes::VariableDeclarationNode& info) {
+        // Update in current scope if it exists
+        if (symbols.contains(name)) {
+            symbols[name] = std::make_shared<visitor::nodes::VariableDeclarationNode>(info);
             return;
+        }
 
-        symbols[name] = info;
+        // Otherwise try to update in parent scope
+        if (parent) {
+            parent->updateVariable(name, info);
+        }
     }
 
-    std::optional<json> Scope::lookup(const std::string& name) {
+    std::optional<std::shared_ptr<visitor::nodes::VariableDeclarationNode>> Scope::lookup(const std::string& name) const {
+        // Check current scope
         if (symbols.contains(name))
             return symbols.at(name);
+
+        // Check parent scopes recursively
         if (parent)
             return parent->lookup(name);
+
         return std::nullopt;
     }
-
 
 } // namespace cromio::semantic

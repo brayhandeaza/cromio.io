@@ -5,18 +5,29 @@
 #ifndef CROMIO_ERROR_H
 #define CROMIO_ERROR_H
 
+#include <visitor/nodes/nodes.h>
+#include <any>
 #include <string>
-#include "utils/utils.h"
 
 namespace cromio::utils {
+
+    struct NodePosition; // Forward declaration
+
     class Error {
        public:
-        static void printContext(const json& node, const std::string& source, const std::string& hint = "", int context = 2);
-        static void throwRangeError(const std::string& message, const json& node, const std::string& source);
-        static void throwScopeError(const std::string& message, const json& node, const std::string& source);
-        static void throwTypeError(const std::string& identifier, const std::string& dataType, const json& node, const std::string& source);
-        static void throwError(const std::string& errorType, const std::string& message, const json& node, const std::string& source);
+        // ------------------- Error functions with AST nodes -------------------
+        static void throwError(const std::string& errorType, const std::string& message, const std::any& node, const std::string& source);
+        static void throwRangeError(const std::string& message, const std::any& node, const std::string& source);
+        static void throwScopeError(const std::string& message, const std::string& identifier, const std::any& node, const std::string& source);
+        static void throwTypeError(const std::string& identifier, const std::string& dataType, const std::any& node, const std::string& source);
+        static void throwTypeMismatchError(const std::string& identifier, const std::string& expectedType, const std::string& actualType, const std::any& node, const std::string& source);
+
+        static std::string getTypeMessage(const std::string& dataType);
+
+       private:
+        static void printContext(const NodePosition& pos, const std::string& source, const std::string& hint);
     };
+
 } // namespace cromio::utils
 
 #endif // CROMIO_ERROR_H

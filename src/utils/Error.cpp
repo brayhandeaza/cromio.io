@@ -3,6 +3,7 @@
 //
 
 #include "Error.h"
+#include <visitor/nodes/nodes.h>
 #include <algorithm>
 #include <iostream>
 #include <sstream>
@@ -10,13 +11,85 @@
 
 namespace cromio::utils {
 
-    // ------------------- Helper privado -------------------
+    // ------------------- Helper to extract position from any node -------------------
+    struct NodePosition {
+        size_t startLine;
+        size_t startCol;
+        size_t endLine;
+        size_t endCol;
+    };
 
-    void Error::printContext(const json& node, const std::string& source, const std::string& hint , int context) {
-        int startLine = node["start"]["line"];
-        int startCol = node["start"]["column"];
-        int endLine = node["end"]["line"];
-        int endCol = node["end"]["column"];
+    NodePosition extractPosition(const std::any& node) {
+        using namespace cromio::visitor::nodes;
+
+        try {
+            // Try to extract BaseNode
+            if (node.type() == typeid(IntegerLiteralNode)) {
+                auto n = std::any_cast<IntegerLiteralNode>(node);
+                return NodePosition{n.start.line, n.start.column, n.end.line, n.end.column};
+            }
+            if (node.type() == typeid(FloatLiteralNode)) {
+                auto n = std::any_cast<FloatLiteralNode>(node);
+                return NodePosition{n.start.line, n.start.column, n.end.line, n.end.column};
+            }
+            if (node.type() == typeid(StringLiteralNode)) {
+                auto n = std::any_cast<StringLiteralNode>(node);
+                return NodePosition{n.start.line, n.start.column, n.end.line, n.end.column};
+            }
+            if (node.type() == typeid(BooleanLiteralNode)) {
+                auto n = std::any_cast<BooleanLiteralNode>(node);
+                return NodePosition{n.start.line, n.start.column, n.end.line, n.end.column};
+            }
+            if (node.type() == typeid(NoneLiteralNode)) {
+                auto n = std::any_cast<NoneLiteralNode>(node);
+                return NodePosition{n.start.line, n.start.column, n.end.line, n.end.column};
+            }
+            if (node.type() == typeid(IdentifierLiteral)) {
+                auto n = std::any_cast<IdentifierLiteral>(node);
+                return NodePosition{n.start.line, n.start.column, n.end.line, n.end.column};
+            }
+            if (node.type() == typeid(BinaryExpressionNode)) {
+                auto n = std::any_cast<BinaryExpressionNode>(node);
+                return NodePosition{n.start.line, n.start.column, n.end.line, n.end.column};
+            }
+            if (node.type() == typeid(VariableDeclarationNode)) {
+                auto n = std::any_cast<VariableDeclarationNode>(node);
+                return NodePosition{n.start.line, n.start.column, n.end.line, n.end.column};
+            }
+            if (node.type() == typeid(ArrayDeclarationNode)) {
+                auto n = std::any_cast<ArrayDeclarationNode>(node);
+                return NodePosition{n.start.line, n.start.column, n.end.line, n.end.column};
+            }
+            if (node.type() == typeid(DictionaryDeclarationNode)) {
+                auto n = std::any_cast<DictionaryDeclarationNode>(node);
+                return NodePosition{n.start.line, n.start.column, n.end.line, n.end.column};
+            }
+            if (node.type() == typeid(StatementNode)) {
+                auto n = std::any_cast<StatementNode>(node);
+                return NodePosition{n.start.line, n.start.column, n.end.line, n.end.column};
+            }
+            if (node.type() == typeid(ProgramNode)) {
+                auto n = std::any_cast<ProgramNode>(node);
+                return NodePosition{n.start.line, n.start.column, n.end.line, n.end.column};
+            }
+        } catch (const std::bad_any_cast&) {
+            // Return default position if cast fails
+        }
+
+        return NodePosition{1, 0, 1, 0};
+    }
+
+    // Overload for Position struct directly
+    NodePosition extractPosition(const visitor::nodes::Position& start, const visitor::nodes::Position& end) {
+        return NodePosition{start.line, start.column, end.line, end.column};
+    }
+
+    void Error::printContext(const NodePosition& pos, const std::string& source, const std::string& hint) {
+        constexpr int context = 2;
+        int startLine = static_cast<int>(pos.startLine);
+        int startCol = static_cast<int>(pos.startCol);
+        int endLine = static_cast<int>(pos.endLine);
+        int endCol = static_cast<int>(pos.endCol);
 
         std::istringstream stream(source);
         std::string lineText;
@@ -42,87 +115,107 @@ namespace cromio::utils {
                 std::cout << "\033[1;31m" << std::string(underlineSize, '^') << "\033[0m";
 
                 if (!hint.empty()) {
-                    std::cout << "    " << std::string(underlineStart, ' ') << "\033[33m\n";
+                    std::cout << " \033[33m" << hint << "\033[0m";
                 }
+                std::cout << "\n";
             }
 
             if (i > startLine && i <= endLine) {
-                std::cout << "    " << std::string(0, ' ');
-                std::cout << "\033[1;31m" << std::string(lines[i - 1].size(), '^') << "\033[0m";
+                std::cout << "    ";
+                std::cout << "\033[1;31m" << std::string(lines[i - 1].size(), '^') << "\033[0m\n";
             }
         }
 
         std::cout << "\n";
     }
 
-    // ------------------- Errores -------------------
-    void Error::throwError(const std::string& errorType, const std::string& message, const json& node, const std::string& source) {
+
+    void Error::throwError(const std::string& errorType, const std::string& message, const std::any& node, const std::string& source) {
         std::cerr << "\n\033[1;31m" << errorType << ": " << message << "\033[0m\n";
-        printContext(node, source, message, 2);
+        const NodePosition pos = extractPosition(node);
+        printContext(pos, source, "");
         std::exit(1);
     }
 
-    void Error::throwRangeError(const std::string& message, const json& node, const std::string& source) {
+    void Error::throwRangeError(const std::string& message, const std::any& node, const std::string& source) {
         throwError("RangeError", message, node, source);
     }
 
-    void Error::throwScopeError(const std::string& message, const json& node, const std::string& source) {
-        throwError("ScopeError", message, node, source);
-    }
-
-    void Error::throwTypeError(const std::string& identifier, const std::string& dataType, const json& node, const std::string& source) {
-        std::string typeMsg = "";
-
-
-
-        // SIGNED
-        if (dataType == "int8")
-            typeMsg = "signed 8-bit integer range";
-        else if (dataType == "int16")
-            typeMsg = "signed 16-bit integer range";
-        else if (dataType == "int" || dataType == "int32")
-            typeMsg = "signed 32-bit integer range";
-        else if (dataType == "int64")
-            typeMsg = "signed 64-bit integer range";
-
-        // UNSIGNED
-        else if (dataType == "uint8")
-            typeMsg = "unsigned 8-bit integer range";
-        else if (dataType == "uint16")
-            typeMsg = "unsigned 16-bit integer range";
-        else if (dataType == "uint" || dataType == "uint32")
-            typeMsg = "unsigned 32-bit integer range";
-        else if (dataType == "uint64")
-            typeMsg = "unsigned 64-bit integer range";
-
-        // FLOAT
-        else if (dataType == "float" || dataType == "float32")
-            typeMsg = "32-bit 'float'";
-        else if (dataType == "'float64'")
-            typeMsg = "64-bit 'float'";
-
-        // BOOLEAN
-        else if (dataType == "bool")
-            typeMsg = "'boolean' type";
-
-        // STRING
-        else if (dataType == "str")
-            typeMsg = "'string' type";
-
-        // ARRAY
-        else if (dataType == "int[]")
-            typeMsg = "'int[]' array type";
-        else if (dataType == "uint[]")
-            typeMsg = "unsigned 'int[]' array type";
-        else if (dataType == "float[]")
-            typeMsg = "'float[]' array type";
-        else if (dataType == "bool[]")
-            typeMsg = "'bool[]' array type";
-        else if (dataType == "str[]")
-            typeMsg = "'str[]' array type";
-
+    void Error::throwTypeError(const std::string& identifier, const std::string& dataType, const std::any& node, const std::string& source) {
+        const std::string typeMsg = getTypeMessage(dataType);
         const std::string message = "'" + identifier + "' expects " + typeMsg;
         throwError("TypeError", message, node, source);
+    }
+
+    void Error::throwScopeError(const std::string& message, const std::string& identifier, const std::any& node, const std::string& source) {
+        std::cerr << "  Identifier: \033[1;33m" << identifier << "\033[0m\n\n";
+        throwError("ScopeError", message, node, source);
+        std::exit(1);
+    }
+
+    void Error::throwTypeMismatchError(const std::string& identifier, const std::string& expectedType, const std::string& actualType, const std::any& node, const std::string& source) {
+        const std::string expectedMsg = getTypeMessage(expectedType);
+        const std::string actualMsg = getTypeMessage(actualType);
+
+        const std::string message = "Type mismatch for '" + identifier +
+            "'\n"
+            "  Expected: " +
+            expectedMsg +
+            "\n"
+            "  Actual:   " +
+            actualMsg;
+
+        throwError("TypeError", message, node, source);
+    }
+
+    std::string Error::getTypeMessage(const std::string& dataType) {
+        // SIGNED
+        if (dataType == "int8")
+            return "signed 8-bit integer";
+        if (dataType == "int16")
+            return "signed 16-bit integer";
+        if (dataType == "int" || dataType == "int32")
+            return "signed 32-bit integer";
+        if (dataType == "int64")
+            return "signed 64-bit integer";
+
+        // UNSIGNED
+        if (dataType == "uint8")
+            return "unsigned 8-bit integer";
+        if (dataType == "uint16")
+            return "unsigned 16-bit integer";
+        if (dataType == "uint" || dataType == "uint32")
+            return "unsigned 32-bit integer";
+        if (dataType == "uint64")
+            return "unsigned 64-bit integer";
+
+        // FLOAT
+        if (dataType == "float" || dataType == "float32")
+            return "32-bit float";
+        if (dataType == "float64")
+            return "64-bit float";
+
+        // BOOLEAN
+        if (dataType == "bool")
+            return "boolean";
+
+        // STRING
+        if (dataType == "str")
+            return "string";
+
+        // ARRAY
+        if (dataType == "int[]")
+            return "int array";
+        if (dataType == "uint[]")
+            return "unsigned int array";
+        if (dataType == "float[]")
+            return "float array";
+        if (dataType == "bool[]")
+            return "boolean array";
+        if (dataType == "str[]")
+            return "string array";
+
+        return "'" + dataType + "'";
     }
 
 } // namespace cromio::utils

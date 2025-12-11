@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <vector>
+#include <any>
 #include "BaseNode.h"
 
 namespace cromio::visitor::nodes {
@@ -11,7 +13,8 @@ namespace cromio::visitor::nodes {
     struct StatementNode : BaseNode {
         std::vector<std::any> children; // Can hold any mix of node types
 
-        explicit StatementNode(const Position start, const Position end) : BaseNode(Kind::STATEMENT, start, end) {}
+        explicit StatementNode(const Position start, const Position end)
+            : BaseNode(Kind::STATEMENT, start, end) {}
 
         // Add a single child node
         void addChild(std::any child) {

@@ -8,103 +8,146 @@
 
 namespace cromio::visitor {
     std::any ArraysVisitor::visitArrayDeclaration(Grammar::ArrayDeclarationContext* ctx) {
-        json node = createNode("", "ArrayDeclaration", ctx->start, ctx->stop);
+        const nodes::Position start{ctx->start->getLine(), ctx->start->getCharPositionInLine()};
+        const nodes::Position end{ctx->stop->getLine(), ctx->stop->getCharPositionInLine()};
 
+        // Get array type information
         const auto arrayType = visit(ctx->arrayType());
-        const auto jArrayType = std::any_cast<json>(arrayType);
+        const auto [first, second] = std::any_cast<std::pair<std::string, std::string>>(arrayType); // {elementType, size}
+        const std::string elementType = first;
+        const std::string arraySize = second;
 
-        json value = createNode("", "ArrayAssignment", ctx->start, ctx->stop);
-        json items = json::array();
+        // Get identifier
+        const std::string identifier = ctx->IDENTIFIER()->getText();
 
-        json identifier = createNode("", "ArrayIdentifier", ctx->start, ctx->stop);
-        identifier["value"] = ctx->IDENTIFIER()->getText();
+        // Check if array already declared
+        if (scope->existsInCurrent(identifier)) {
+            const auto message = "Array '" + identifier + "' is already declared";
+            throwScopeError(message, identifier, arrayType, source);
+        }
+
+        // Create array declaration node
+        auto arrayNode = nodes::ArrayDeclarationNode(identifier, elementType, start, end);
 
         parser->inVarMode = true;
-        for (const auto child : ctx->expression()) {
-            const auto item = visit(child);
-            auto jItem = std::any_cast<json>(item);
 
-            if (jItem.contains("error")) {
-                throwError("Error", jItem["error"], jItem, source);
-            }
+        // Process array elements
+        for (auto* exprCtx : ctx->expression()) {
+            const auto itemResult = visit(exprCtx);
 
-            const std::string dataType = jArrayType["value"];
-            const std::string returnType = jItem["type"];
-            const std::string rValue = jItem["numberValue"];
-            const std::string stringValue = jItem["stringValue"];
+            // Extract value and type from the item
+            std::string itemType;
+            std::any itemValue;
 
-            if (const auto passArrayDataType = checkArrayDataType(dataType, returnType); !passArrayDataType) {
-                throwTypeError(identifier["value"], dataType, jItem, source);
-            }
+            if (itemResult.type() == typeid(nodes::IntegerLiteralNode)) {
+                auto item = std::any_cast<nodes::IntegerLiteralNode>(itemResult);
+                itemType = "int";
+                itemValue = itemResult;
+            } else if (itemResult.type() == typeid(nodes::FloatLiteralNode)) {
+                auto item = std::any_cast<nodes::FloatLiteralNode>(itemResult);
+                itemType = "float";
+                itemValue = itemResult;
+            } else if (itemResult.type() == typeid(nodes::StringLiteralNode)) {
+                auto item = std::any_cast<nodes::StringLiteralNode>(itemResult);
+                itemType = "string";
+                itemValue = itemResult;
+            } else if (itemResult.type() == typeid(nodes::BooleanLiteralNode)) {
+                auto item = std::any_cast<nodes::BooleanLiteralNode>(itemResult);
+                itemType = "bool";
+                itemValue = itemResult;
+            } else if (itemResult.type() == typeid(nodes::BinaryExpressionNode)) {
+                auto item = std::any_cast<nodes::BinaryExpressionNode>(itemResult);
+                itemType = item.resultType;
+                itemValue = itemResult;
+            } else if (itemResult.type() == typeid(nodes::IdentifierLiteral)) {
+                auto item = std::any_cast<nodes::IdentifierLiteral>(itemResult);
 
-            analyzeSignedInteger(rValue, dataType, identifier["value"], source, jItem);
+                auto varInfo = scope->lookup(item.value);
+                if (!varInfo.has_value()) {
+                    const auto message = "Variable '" + item.value + "' is not declared";
+                    throwScopeError(message, item.value, item, source);
+                }
 
-            if (jItem["kind"] == "IdentifierLiteral") {
-                items.push_back(jItem["value"]);
+                itemType = varInfo.value()->varType;
+                itemValue = itemResult;
             } else {
-                items.push_back(jItem);
+                throwError("Error", "Unsupported array element type", start, source);
             }
+
+            // Check type compatibility
+            if (!checkArrayDataType(elementType, itemType)) {
+                throwTypeError(identifier, elementType, itemType, source);
+            }
+
+            // Add element to array
+            auto elementNode = nodes::ArrayElementNode(itemValue, start, end);
+            arrayNode.elements.push_back(std::move(elementNode));
         }
 
         parser->inVarMode = false;
-        value["items"] = items;
 
-        node["Type"] = jArrayType;
-        node["Identifier"] = identifier;
-        node["value"] = value;
+        // Set array size
+        if (arraySize == "auto") {
+            arrayNode.size = arrayNode.elements.size();
+        } else {
+            try {
+                arrayNode.size = std::stoull(arraySize);
 
-        json varInfo = json::object();
-        varInfo["type"] = node["Type"]["raw"];
-        varInfo["size"] = node["Type"]["size"];
-        varInfo["name"] = identifier["value"];
-        varInfo["value"] = value;
+                // Check if declared size matches actual elements
+                if (arrayNode.size != arrayNode.elements.size()) {
+                    throwError("Error", "Array size mismatch: declared " + arraySize + " but provided " + std::to_string(arrayNode.elements.size()) + " elements", start, source);
+                }
+            } catch (const std::exception&) {
+                throwError("Error", "Invalid array size: " + arraySize, arrayNode, source);
+            }
+        }
 
-        scope->declareVariable(varInfo["name"], varInfo);
-        const auto analyzeedNode = analyzeArrayDeclaration(node, source);
+        // Perform semantic analysis
+        // auto analyzedNode = analyzeArrayDeclaration(arrayNode, source);
 
-        return analyzeedNode;
+        // Register in scope (wrap in VariableDeclarationNode)
+        nodes::VariableDeclarationNode varNode(identifier, elementType + "[]", std::any(arrayNode), false, start, end);
+        scope->declareVariable(identifier, varNode);
+
+        return varNode;
     }
 
     std::any ArraysVisitor::visitArrayDeclarationTypeSize(Grammar::ArrayDeclarationTypeSizeContext* ctx) {
-        json node = createNode("", "ArraySize", ctx->start, ctx->stop);
-
-        // Only visit expression if it exists
-        std::any expression;
-        if (ctx->expression() != nullptr) {
-            expression = visit(ctx->expression());
+        // Return size as string: either "auto" or the actual size value
+        if (ctx->expression() == nullptr) {
+            return std::string("auto");
         }
 
-        if (!expression.has_value()) {
-            json size = createNode("auto", "Auto", ctx->start, ctx->stop);
-            size["value"] = "auto";
-            size["raw"] = "auto";
-            node["value"] = size;
-        } else {
-            const auto expr = std::any_cast<json>(expression);
-            node["value"] = expr;
-            node["raw"] = expr["raw"];
+        const auto expression = visit(ctx->expression());
+
+        // Extract numeric value from expression
+        if (expression.type() == typeid(nodes::IntegerLiteralNode)) {
+            auto node = std::any_cast<nodes::IntegerLiteralNode>(expression);
+            return node.value;
+        }
+        if (expression.type() == typeid(nodes::BinaryExpressionNode)) {
+            auto node = std::any_cast<nodes::BinaryExpressionNode>(expression);
+            return node.value;
         }
 
-        return node;
+        return std::string("auto");
     }
 
     std::any ArraysVisitor::visitArrayType(Grammar::ArrayTypeContext* ctx) {
-        json node = createNode("", "ArrayType", ctx->start, ctx->stop);
+        // Get element type
+        const std::string elementType = ctx->arrayDataType()->getText();
 
-        const auto arrayDataType = ctx->arrayDataType()->getText();
-        const auto arraySize = visit(ctx->arrayDeclarationTypeSize());
-        const auto jArraySize = std::any_cast<json>(arraySize);
-        const auto size = jArraySize["value"]["raw"].get<std::string>();
+        // Get array size
+        const auto arraySizeResult = visit(ctx->arrayDeclarationTypeSize());
+        const std::string arraySize = std::any_cast<std::string>(arraySizeResult);
 
-        node["raw"] = arrayDataType + "[]";
-        node["value"] = arrayDataType;
-        node["size"] = size;
-
-        return node;
+        // Return as pair: {elementType, size}
+        return std::make_pair(elementType, arraySize);
     }
 
     std::any ArraysVisitor::visitArrayDataType(Grammar::ArrayDataTypeContext* ctx) {
-        return visitChildren(ctx);
+        // Return the data type as string
+        return ctx->getText();
     }
 
 } // namespace cromio::visitor

@@ -1,80 +1,71 @@
 //
-// Created by Brayhan De Aza on 10/19/25.
+// DictionaryVisitor.cpp - AST version
 //
 
 #include "DictionaryVisitor.h"
+#include "visitor/nodes/nodes.h"
 
 namespace cromio::visitor {
+    using namespace cromio::visitor::nodes;
+
+    Position makeStart(const antlr4::ParserRuleContext* ctx) {
+        return {ctx->start->getLine(), ctx->start->getCharPositionInLine()};
+    }
+
+    Position makeEnd(const antlr4::ParserRuleContext* ctx) {
+        return {ctx->stop->getLine(), ctx->stop->getCharPositionInLine()};
+    }
+
     std::any DictionaryVisitor::visitDictionaryDeclaration(Grammar::DictionaryDeclarationContext* ctx) {
-        json node = createNode("", "DictionaryDeclaration", ctx->start, ctx->stop);
+        // Extract the type information
+        const auto typeAny = visit(ctx->dictionaryDeclarationType());
+        const auto typeNode = std::any_cast<std::shared_ptr<DictionaryTypeNode>>(typeAny);
 
-        const auto type = visit(ctx->dictionaryDeclarationType());
-        const auto typeNode = std::any_cast<json>(type);
-        const std::string valueType = typeNode["ValueType"]["value"];
+        // Create DictionaryDeclarationNode
+        auto* decl = new DictionaryDeclarationNode(ctx->IDENTIFIER()->getText(), typeNode->keyType, typeNode->valueType, makeStart(ctx), makeEnd(ctx));
 
-        auto keyTypeNode = typeNode["KeyType"];
-        auto valueTypeNode = typeNode["ValueType"];
+        // Visit assignment items
+        for (auto* child : ctx->dictionaryAssignmentBody()) {
+            auto anyPair = visit(child);
+            auto pairNode = std::any_cast<std::shared_ptr<DictionaryPairNode>>(anyPair);
 
-        const std::string keyType = typeNode["KeyType"]["value"];
-
-        json assignment = createNode("", "DictionaryAssignment", ctx->start, ctx->stop);
-        json members = json::object();
-        for (const auto child : ctx->dictionaryAssignmentBody()) {
-            const auto memberCtx = visit(child);
-            auto memberNode = std::any_cast<json>(memberCtx);
-
-            members = analyzeDictionaryItemsDataType(keyTypeNode, valueTypeNode, memberNode, scope, source);
+            decl->pairs.push_back(*pairNode);
         }
 
-        node["Type"] = typeNode;
-        node["Members"] = members;
+        decl->size = decl->pairs.size();
 
-        // std::cout << node.dump(1);
-
-        return node;
+        return std::shared_ptr<DictionaryDeclarationNode>(decl);
     }
 
     std::any DictionaryVisitor::visitDictionaryAssignmentBody(Grammar::DictionaryAssignmentBodyContext* ctx) {
-        json node = createNode("", "DictionaryAssignmentBody", ctx->start, ctx->stop);
+        const auto keyAny = visit(ctx->literal());
+        const auto valAny = visit(ctx->expression());
+        const auto keyNode = keyAny;
+        const auto valueNode = valAny;
 
-        const auto key = visit(ctx->literal());
-        const auto value = visit(ctx->expression());
-
-        const auto keyNode = std::any_cast<json>(key);
-        const auto valueNode = std::any_cast<json>(value);
-
-        node["Key"] = keyNode;
-        node["Value"] = valueNode;
-
-        return node;
+        auto* pair = new DictionaryPairNode(keyNode, valueNode, makeStart(ctx), makeEnd(ctx));
+        return std::shared_ptr<DictionaryPairNode>(pair);
     }
 
     std::any DictionaryVisitor::visitDictionaryDeclarationType(Grammar::DictionaryDeclarationTypeContext* ctx) {
-        json node = createNode("", "DictionaryType", ctx->start, ctx->stop);
+        const auto keyAny = visit(ctx->dictionaryTypeElement(0));
+        const auto valueAny = visit(ctx->dictionaryTypeElement(1));
+        const auto keyNode = std::any_cast<std::shared_ptr<DataTypeNode>>(keyAny);
+        const auto valueNode = std::any_cast<std::shared_ptr<DataTypeNode>>(valueAny);
 
-        // Visit both type elements (key and value)
-        const auto keyType = visit(ctx->dictionaryTypeElement(0));
-        const auto valueType = visit(ctx->dictionaryTypeElement(1));
-
-        node["KeyType"] = std::any_cast<json>(keyType);
-        node["ValueType"] = std::any_cast<json>(valueType);
-
-        return node;
+        auto* node = new DictionaryTypeNode(keyNode->typeName, valueNode->typeName, makeStart(ctx), makeEnd(ctx));
+        return std::shared_ptr<DictionaryTypeNode>(node);
     }
 
     std::any DictionaryVisitor::visitDictionaryDeclarationTypeArray(Grammar::DictionaryDeclarationTypeArrayContext* ctx) {
-        json node = createNode("", "TypeArray", ctx->start, ctx->stop);
-        std::string type = ctx->dictionaryDataType()->getText() + "[]";
-
+        const std::string type = ctx->dictionaryDataType()->getText() + "[]";
         if (ctx->expression()) {
-            const auto expression = visit(ctx->expression());
-            node["size"] = std::any_cast<json>(expression);
-        } else {
-            node["size"] = "auto";
+            auto sizeAny = visit(ctx->expression());
+            // store expression raw; semantic phase will validate
         }
 
-        node["value"] = type;
-        return node;
+        auto* node = new DataTypeNode(type, makeStart(ctx), makeEnd(ctx));
+        return std::shared_ptr<DataTypeNode>(node);
     }
 
     std::any DictionaryVisitor::visitDictionaryTypeElement(Grammar::DictionaryTypeElementContext* ctx) {
@@ -85,10 +76,9 @@ namespace cromio::visitor {
     }
 
     std::any DictionaryVisitor::visitDictionaryDataType(Grammar::DictionaryDataTypeContext* ctx) {
-        json node = createNode("", "DataType", ctx->start, ctx->stop);
-        node["value"] = ctx->getText();
+        auto* node = new DataTypeNode(ctx->getText(), makeStart(ctx), makeEnd(ctx));
 
-        return node;
+        return std::shared_ptr<DataTypeNode>(node);
     }
 
 } // namespace cromio::visitor
