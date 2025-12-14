@@ -37,17 +37,25 @@ public:
 
     virtual std::any visitExpression(Grammar::ExpressionContext *context) = 0;
 
+    virtual std::any visitConcatenationExpression(Grammar::ConcatenationExpressionContext *context) = 0;
+
+    virtual std::any visitBinaryExpression(Grammar::BinaryExpressionContext *context) = 0;
+
     virtual std::any visitLiteral(Grammar::LiteralContext *context) = 0;
+
+    virtual std::any visitNumberLiterals(Grammar::NumberLiteralsContext *context) = 0;
+
+    virtual std::any visitStringLiterals(Grammar::StringLiteralsContext *context) = 0;
 
     virtual std::any visitFormattedString(Grammar::FormattedStringContext *context) = 0;
 
     virtual std::any visitFormattedStringContent(Grammar::FormattedStringContentContext *context) = 0;
 
+    virtual std::any visitStringLiteral(Grammar::StringLiteralContext *context) = 0;
+
     virtual std::any visitIntegerLiteral(Grammar::IntegerLiteralContext *context) = 0;
 
     virtual std::any visitFloatLiteral(Grammar::FloatLiteralContext *context) = 0;
-
-    virtual std::any visitStringLiteral(Grammar::StringLiteralContext *context) = 0;
 
     virtual std::any visitBooleanLiteral(Grammar::BooleanLiteralContext *context) = 0;
 

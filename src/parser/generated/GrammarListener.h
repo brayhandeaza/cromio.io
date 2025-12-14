@@ -41,8 +41,20 @@ public:
   virtual void enterExpression(Grammar::ExpressionContext *ctx) = 0;
   virtual void exitExpression(Grammar::ExpressionContext *ctx) = 0;
 
+  virtual void enterConcatenationExpression(Grammar::ConcatenationExpressionContext *ctx) = 0;
+  virtual void exitConcatenationExpression(Grammar::ConcatenationExpressionContext *ctx) = 0;
+
+  virtual void enterBinaryExpression(Grammar::BinaryExpressionContext *ctx) = 0;
+  virtual void exitBinaryExpression(Grammar::BinaryExpressionContext *ctx) = 0;
+
   virtual void enterLiteral(Grammar::LiteralContext *ctx) = 0;
   virtual void exitLiteral(Grammar::LiteralContext *ctx) = 0;
+
+  virtual void enterNumberLiterals(Grammar::NumberLiteralsContext *ctx) = 0;
+  virtual void exitNumberLiterals(Grammar::NumberLiteralsContext *ctx) = 0;
+
+  virtual void enterStringLiterals(Grammar::StringLiteralsContext *ctx) = 0;
+  virtual void exitStringLiterals(Grammar::StringLiteralsContext *ctx) = 0;
 
   virtual void enterFormattedString(Grammar::FormattedStringContext *ctx) = 0;
   virtual void exitFormattedString(Grammar::FormattedStringContext *ctx) = 0;
@@ -50,14 +62,14 @@ public:
   virtual void enterFormattedStringContent(Grammar::FormattedStringContentContext *ctx) = 0;
   virtual void exitFormattedStringContent(Grammar::FormattedStringContentContext *ctx) = 0;
 
+  virtual void enterStringLiteral(Grammar::StringLiteralContext *ctx) = 0;
+  virtual void exitStringLiteral(Grammar::StringLiteralContext *ctx) = 0;
+
   virtual void enterIntegerLiteral(Grammar::IntegerLiteralContext *ctx) = 0;
   virtual void exitIntegerLiteral(Grammar::IntegerLiteralContext *ctx) = 0;
 
   virtual void enterFloatLiteral(Grammar::FloatLiteralContext *ctx) = 0;
   virtual void exitFloatLiteral(Grammar::FloatLiteralContext *ctx) = 0;
-
-  virtual void enterStringLiteral(Grammar::StringLiteralContext *ctx) = 0;
-  virtual void exitStringLiteral(Grammar::StringLiteralContext *ctx) = 0;
 
   virtual void enterBooleanLiteral(Grammar::BooleanLiteralContext *ctx) = 0;
   virtual void exitBooleanLiteral(Grammar::BooleanLiteralContext *ctx) = 0;

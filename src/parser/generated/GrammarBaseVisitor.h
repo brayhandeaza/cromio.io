@@ -51,7 +51,23 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual std::any visitConcatenationExpression(Grammar::ConcatenationExpressionContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitBinaryExpression(Grammar::BinaryExpressionContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
   virtual std::any visitLiteral(Grammar::LiteralContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitNumberLiterals(Grammar::NumberLiteralsContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitStringLiterals(Grammar::StringLiteralsContext *ctx) override {
     return visitChildren(ctx);
   }
 
@@ -63,15 +79,15 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual std::any visitStringLiteral(Grammar::StringLiteralContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
   virtual std::any visitIntegerLiteral(Grammar::IntegerLiteralContext *ctx) override {
     return visitChildren(ctx);
   }
 
   virtual std::any visitFloatLiteral(Grammar::FloatLiteralContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual std::any visitStringLiteral(Grammar::StringLiteralContext *ctx) override {
     return visitChildren(ctx);
   }
 

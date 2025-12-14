@@ -43,8 +43,20 @@ public:
   virtual void enterExpression(Grammar::ExpressionContext * /*ctx*/) override { }
   virtual void exitExpression(Grammar::ExpressionContext * /*ctx*/) override { }
 
+  virtual void enterConcatenationExpression(Grammar::ConcatenationExpressionContext * /*ctx*/) override { }
+  virtual void exitConcatenationExpression(Grammar::ConcatenationExpressionContext * /*ctx*/) override { }
+
+  virtual void enterBinaryExpression(Grammar::BinaryExpressionContext * /*ctx*/) override { }
+  virtual void exitBinaryExpression(Grammar::BinaryExpressionContext * /*ctx*/) override { }
+
   virtual void enterLiteral(Grammar::LiteralContext * /*ctx*/) override { }
   virtual void exitLiteral(Grammar::LiteralContext * /*ctx*/) override { }
+
+  virtual void enterNumberLiterals(Grammar::NumberLiteralsContext * /*ctx*/) override { }
+  virtual void exitNumberLiterals(Grammar::NumberLiteralsContext * /*ctx*/) override { }
+
+  virtual void enterStringLiterals(Grammar::StringLiteralsContext * /*ctx*/) override { }
+  virtual void exitStringLiterals(Grammar::StringLiteralsContext * /*ctx*/) override { }
 
   virtual void enterFormattedString(Grammar::FormattedStringContext * /*ctx*/) override { }
   virtual void exitFormattedString(Grammar::FormattedStringContext * /*ctx*/) override { }
@@ -52,14 +64,14 @@ public:
   virtual void enterFormattedStringContent(Grammar::FormattedStringContentContext * /*ctx*/) override { }
   virtual void exitFormattedStringContent(Grammar::FormattedStringContentContext * /*ctx*/) override { }
 
+  virtual void enterStringLiteral(Grammar::StringLiteralContext * /*ctx*/) override { }
+  virtual void exitStringLiteral(Grammar::StringLiteralContext * /*ctx*/) override { }
+
   virtual void enterIntegerLiteral(Grammar::IntegerLiteralContext * /*ctx*/) override { }
   virtual void exitIntegerLiteral(Grammar::IntegerLiteralContext * /*ctx*/) override { }
 
   virtual void enterFloatLiteral(Grammar::FloatLiteralContext * /*ctx*/) override { }
   virtual void exitFloatLiteral(Grammar::FloatLiteralContext * /*ctx*/) override { }
-
-  virtual void enterStringLiteral(Grammar::StringLiteralContext * /*ctx*/) override { }
-  virtual void exitStringLiteral(Grammar::StringLiteralContext * /*ctx*/) override { }
 
   virtual void enterBooleanLiteral(Grammar::BooleanLiteralContext * /*ctx*/) override { }
   virtual void exitBooleanLiteral(Grammar::BooleanLiteralContext * /*ctx*/) override { }
