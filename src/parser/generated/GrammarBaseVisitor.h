@@ -127,7 +127,19 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual std::any visitArrays(Grammar::ArraysContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
   virtual std::any visitArrayDeclaration(Grammar::ArrayDeclarationContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitArrayItems(Grammar::ArrayItemsContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitArrayReAssignment(Grammar::ArrayReAssignmentContext *ctx) override {
     return visitChildren(ctx);
   }
 

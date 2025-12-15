@@ -35,8 +35,8 @@ public:
     RuleBooleanLiteral = 19, RuleNoneLiteral = 20, RuleIdentifierLiteral = 21, 
     RuleVariables = 22, RuleVariableDeclaration = 23, RuleVariableDeclarationWithoutAssignment = 24, 
     RuleVariableReAssignment = 25, RuleVariableAccessToMember = 26, RuleVariableDataType = 27, 
-    RuleArrayDeclaration = 28, RuleArrayType = 29, RuleArrayDeclarationTypeSize = 30, 
-    RuleArrayDataType = 31
+    RuleArrays = 28, RuleArrayDeclaration = 29, RuleArrayItems = 30, RuleArrayReAssignment = 31, 
+    RuleArrayType = 32, RuleArrayDeclarationTypeSize = 33, RuleArrayDataType = 34
   };
 
   explicit Grammar(antlr4::TokenStream *input);
@@ -89,7 +89,10 @@ public:
   class VariableReAssignmentContext;
   class VariableAccessToMemberContext;
   class VariableDataTypeContext;
+  class ArraysContext;
   class ArrayDeclarationContext;
+  class ArrayItemsContext;
+  class ArrayReAssignmentContext;
   class ArrayTypeContext;
   class ArrayDeclarationTypeSizeContext;
   class ArrayDataTypeContext; 
@@ -118,7 +121,7 @@ public:
     StatementsContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     VariablesContext *variables();
-    ArrayDeclarationContext *arrayDeclaration();
+    ArraysContext *arrays();
     DictionaryDeclarationContext *dictionaryDeclaration();
     ExpressionContext *expression();
 
@@ -587,11 +590,72 @@ public:
 
   VariableDataTypeContext* variableDataType();
 
+  class  ArraysContext : public antlr4::ParserRuleContext {
+  public:
+    ArraysContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    ArrayDeclarationContext *arrayDeclaration();
+    ArrayReAssignmentContext *arrayReAssignment();
+
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  ArraysContext* arrays();
+
   class  ArrayDeclarationContext : public antlr4::ParserRuleContext {
   public:
     ArrayDeclarationContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
     ArrayTypeContext *arrayType();
+    antlr4::tree::TerminalNode *IDENTIFIER();
+    antlr4::tree::TerminalNode *EQ();
+    antlr4::tree::TerminalNode *LBRACKET();
+    antlr4::tree::TerminalNode *RBRACKET();
+    std::vector<ArrayItemsContext *> arrayItems();
+    ArrayItemsContext* arrayItems(size_t i);
+    std::vector<antlr4::tree::TerminalNode *> COMMA();
+    antlr4::tree::TerminalNode* COMMA(size_t i);
+
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  ArrayDeclarationContext* arrayDeclaration();
+
+  class  ArrayItemsContext : public antlr4::ParserRuleContext {
+  public:
+    ArrayItemsContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    StringLiteralContext *stringLiteral();
+    FormattedStringContext *formattedString();
+    IdentifierLiteralContext *identifierLiteral();
+    IntegerLiteralContext *integerLiteral();
+    FloatLiteralContext *floatLiteral();
+    BooleanLiteralContext *booleanLiteral();
+    NoneLiteralContext *noneLiteral();
+    ConcatenationExpressionContext *concatenationExpression();
+    BinaryExpressionContext *binaryExpression();
+
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  ArrayItemsContext* arrayItems();
+
+  class  ArrayReAssignmentContext : public antlr4::ParserRuleContext {
+  public:
+    ArrayReAssignmentContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
     antlr4::tree::TerminalNode *IDENTIFIER();
     antlr4::tree::TerminalNode *EQ();
     antlr4::tree::TerminalNode *LBRACKET();
@@ -608,7 +672,7 @@ public:
    
   };
 
-  ArrayDeclarationContext* arrayDeclaration();
+  ArrayReAssignmentContext* arrayReAssignment();
 
   class  ArrayTypeContext : public antlr4::ParserRuleContext {
   public:

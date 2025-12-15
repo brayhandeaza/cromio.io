@@ -100,8 +100,17 @@ public:
   virtual void enterVariableDataType(Grammar::VariableDataTypeContext * /*ctx*/) override { }
   virtual void exitVariableDataType(Grammar::VariableDataTypeContext * /*ctx*/) override { }
 
+  virtual void enterArrays(Grammar::ArraysContext * /*ctx*/) override { }
+  virtual void exitArrays(Grammar::ArraysContext * /*ctx*/) override { }
+
   virtual void enterArrayDeclaration(Grammar::ArrayDeclarationContext * /*ctx*/) override { }
   virtual void exitArrayDeclaration(Grammar::ArrayDeclarationContext * /*ctx*/) override { }
+
+  virtual void enterArrayItems(Grammar::ArrayItemsContext * /*ctx*/) override { }
+  virtual void exitArrayItems(Grammar::ArrayItemsContext * /*ctx*/) override { }
+
+  virtual void enterArrayReAssignment(Grammar::ArrayReAssignmentContext * /*ctx*/) override { }
+  virtual void exitArrayReAssignment(Grammar::ArrayReAssignmentContext * /*ctx*/) override { }
 
   virtual void enterArrayType(Grammar::ArrayTypeContext * /*ctx*/) override { }
   virtual void exitArrayType(Grammar::ArrayTypeContext * /*ctx*/) override { }

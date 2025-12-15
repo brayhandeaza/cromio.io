@@ -98,8 +98,17 @@ public:
   virtual void enterVariableDataType(Grammar::VariableDataTypeContext *ctx) = 0;
   virtual void exitVariableDataType(Grammar::VariableDataTypeContext *ctx) = 0;
 
+  virtual void enterArrays(Grammar::ArraysContext *ctx) = 0;
+  virtual void exitArrays(Grammar::ArraysContext *ctx) = 0;
+
   virtual void enterArrayDeclaration(Grammar::ArrayDeclarationContext *ctx) = 0;
   virtual void exitArrayDeclaration(Grammar::ArrayDeclarationContext *ctx) = 0;
+
+  virtual void enterArrayItems(Grammar::ArrayItemsContext *ctx) = 0;
+  virtual void exitArrayItems(Grammar::ArrayItemsContext *ctx) = 0;
+
+  virtual void enterArrayReAssignment(Grammar::ArrayReAssignmentContext *ctx) = 0;
+  virtual void exitArrayReAssignment(Grammar::ArrayReAssignmentContext *ctx) = 0;
 
   virtual void enterArrayType(Grammar::ArrayTypeContext *ctx) = 0;
   virtual void exitArrayType(Grammar::ArrayTypeContext *ctx) = 0;
