@@ -89,6 +89,14 @@ public:
 
     virtual std::any visitArrayDataType(Grammar::ArrayDataTypeContext *context) = 0;
 
+    virtual std::any visitMemberExpression(Grammar::MemberExpressionContext *context) = 0;
+
+    virtual std::any visitValueAtom(Grammar::ValueAtomContext *context) = 0;
+
+    virtual std::any visitValuePostfix(Grammar::ValuePostfixContext *context) = 0;
+
+    virtual std::any visitArgumentList(Grammar::ArgumentListContext *context) = 0;
+
 
 };
 

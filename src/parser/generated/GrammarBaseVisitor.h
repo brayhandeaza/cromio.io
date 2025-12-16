@@ -155,6 +155,22 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual std::any visitMemberExpression(Grammar::MemberExpressionContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitValueAtom(Grammar::ValueAtomContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitValuePostfix(Grammar::ValuePostfixContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitArgumentList(Grammar::ArgumentListContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
 
 };
 
