@@ -92,9 +92,6 @@ public:
   virtual void enterVariableReAssignment(Grammar::VariableReAssignmentContext *ctx) = 0;
   virtual void exitVariableReAssignment(Grammar::VariableReAssignmentContext *ctx) = 0;
 
-  virtual void enterVariableAccessToMember(Grammar::VariableAccessToMemberContext *ctx) = 0;
-  virtual void exitVariableAccessToMember(Grammar::VariableAccessToMemberContext *ctx) = 0;
-
   virtual void enterVariableDataType(Grammar::VariableDataTypeContext *ctx) = 0;
   virtual void exitVariableDataType(Grammar::VariableDataTypeContext *ctx) = 0;
 
@@ -122,14 +119,14 @@ public:
   virtual void enterMemberExpression(Grammar::MemberExpressionContext *ctx) = 0;
   virtual void exitMemberExpression(Grammar::MemberExpressionContext *ctx) = 0;
 
-  virtual void enterValueAtom(Grammar::ValueAtomContext *ctx) = 0;
-  virtual void exitValueAtom(Grammar::ValueAtomContext *ctx) = 0;
-
   virtual void enterValuePostfix(Grammar::ValuePostfixContext *ctx) = 0;
   virtual void exitValuePostfix(Grammar::ValuePostfixContext *ctx) = 0;
 
   virtual void enterArgumentList(Grammar::ArgumentListContext *ctx) = 0;
   virtual void exitArgumentList(Grammar::ArgumentListContext *ctx) = 0;
+
+  virtual void enterValueAtom(Grammar::ValueAtomContext *ctx) = 0;
+  virtual void exitValueAtom(Grammar::ValueAtomContext *ctx) = 0;
 
 
 };

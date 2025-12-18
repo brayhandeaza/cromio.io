@@ -34,11 +34,11 @@ public:
     RuleStringLiteral = 16, RuleIntegerLiteral = 17, RuleFloatLiteral = 18, 
     RuleBooleanLiteral = 19, RuleNoneLiteral = 20, RuleIdentifierLiteral = 21, 
     RuleVariables = 22, RuleVariableDeclaration = 23, RuleVariableDeclarationWithoutAssignment = 24, 
-    RuleVariableReAssignment = 25, RuleVariableAccessToMember = 26, RuleVariableDataType = 27, 
-    RuleArrays = 28, RuleArrayDeclaration = 29, RuleArrayItems = 30, RuleArrayReAssignment = 31, 
-    RuleArrayType = 32, RuleArrayDeclarationTypeSize = 33, RuleArrayDataType = 34, 
-    RuleMemberExpression = 35, RuleValueAtom = 36, RuleValuePostfix = 37, 
-    RuleArgumentList = 38
+    RuleVariableReAssignment = 25, RuleVariableDataType = 26, RuleArrays = 27, 
+    RuleArrayDeclaration = 28, RuleArrayItems = 29, RuleArrayReAssignment = 30, 
+    RuleArrayType = 31, RuleArrayDeclarationTypeSize = 32, RuleArrayDataType = 33, 
+    RuleMemberExpression = 34, RuleValuePostfix = 35, RuleArgumentList = 36, 
+    RuleValueAtom = 37
   };
 
   explicit Grammar(antlr4::TokenStream *input);
@@ -89,7 +89,6 @@ public:
   class VariableDeclarationContext;
   class VariableDeclarationWithoutAssignmentContext;
   class VariableReAssignmentContext;
-  class VariableAccessToMemberContext;
   class VariableDataTypeContext;
   class ArraysContext;
   class ArrayDeclarationContext;
@@ -99,9 +98,9 @@ public:
   class ArrayDeclarationTypeSizeContext;
   class ArrayDataTypeContext;
   class MemberExpressionContext;
-  class ValueAtomContext;
   class ValuePostfixContext;
-  class ArgumentListContext; 
+  class ArgumentListContext;
+  class ValueAtomContext; 
 
   class  ProgramContext : public antlr4::ParserRuleContext {
   public:
@@ -262,6 +261,7 @@ public:
     BinaryExpressionContext *binaryExpression();
     StringLiteralsContext *stringLiterals();
     NumberLiteralsContext *numberLiterals();
+    MemberExpressionContext *memberExpression();
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
@@ -499,7 +499,6 @@ public:
     VariableDeclarationContext *variableDeclaration();
     VariableDeclarationWithoutAssignmentContext *variableDeclarationWithoutAssignment();
     VariableReAssignmentContext *variableReAssignment();
-    VariableAccessToMemberContext *variableAccessToMember();
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
@@ -560,23 +559,6 @@ public:
   };
 
   VariableReAssignmentContext* variableReAssignment();
-
-  class  VariableAccessToMemberContext : public antlr4::ParserRuleContext {
-  public:
-    VariableAccessToMemberContext(antlr4::ParserRuleContext *parent, size_t invokingState);
-    virtual size_t getRuleIndex() const override;
-    std::vector<antlr4::tree::TerminalNode *> IDENTIFIER();
-    antlr4::tree::TerminalNode* IDENTIFIER(size_t i);
-    antlr4::tree::TerminalNode *DOT();
-
-    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
-    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
-
-    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
-   
-  };
-
-  VariableAccessToMemberContext* variableAccessToMember();
 
   class  VariableDataTypeContext : public antlr4::ParserRuleContext {
   public:
@@ -750,27 +732,6 @@ public:
 
   MemberExpressionContext* memberExpression();
 
-  class  ValueAtomContext : public antlr4::ParserRuleContext {
-  public:
-    ValueAtomContext(antlr4::ParserRuleContext *parent, size_t invokingState);
-    virtual size_t getRuleIndex() const override;
-    IdentifierLiteralContext *identifierLiteral();
-    StringLiteralContext *stringLiteral();
-    NumberLiteralsContext *numberLiterals();
-    BooleanLiteralContext *booleanLiteral();
-    antlr4::tree::TerminalNode *LPAREN();
-    ExpressionContext *expression();
-    antlr4::tree::TerminalNode *RPAREN();
-
-    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
-    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
-
-    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
-   
-  };
-
-  ValueAtomContext* valueAtom();
-
   class  ValuePostfixContext : public antlr4::ParserRuleContext {
   public:
     ValuePostfixContext(antlr4::ParserRuleContext *parent, size_t invokingState);
@@ -807,6 +768,27 @@ public:
   };
 
   ArgumentListContext* argumentList();
+
+  class  ValueAtomContext : public antlr4::ParserRuleContext {
+  public:
+    ValueAtomContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    IdentifierLiteralContext *identifierLiteral();
+    StringLiteralContext *stringLiteral();
+    antlr4::tree::TerminalNode *LPAREN();
+    BooleanLiteralContext *booleanLiteral();
+    antlr4::tree::TerminalNode *RPAREN();
+    NumberLiteralsContext *numberLiterals();
+    ExpressionContext *expression();
+
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  ValueAtomContext* valueAtom();
 
 
   bool sempred(antlr4::RuleContext *_localctx, size_t ruleIndex, size_t predicateIndex) override;

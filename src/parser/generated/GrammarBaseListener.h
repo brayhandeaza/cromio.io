@@ -94,9 +94,6 @@ public:
   virtual void enterVariableReAssignment(Grammar::VariableReAssignmentContext * /*ctx*/) override { }
   virtual void exitVariableReAssignment(Grammar::VariableReAssignmentContext * /*ctx*/) override { }
 
-  virtual void enterVariableAccessToMember(Grammar::VariableAccessToMemberContext * /*ctx*/) override { }
-  virtual void exitVariableAccessToMember(Grammar::VariableAccessToMemberContext * /*ctx*/) override { }
-
   virtual void enterVariableDataType(Grammar::VariableDataTypeContext * /*ctx*/) override { }
   virtual void exitVariableDataType(Grammar::VariableDataTypeContext * /*ctx*/) override { }
 
@@ -124,14 +121,14 @@ public:
   virtual void enterMemberExpression(Grammar::MemberExpressionContext * /*ctx*/) override { }
   virtual void exitMemberExpression(Grammar::MemberExpressionContext * /*ctx*/) override { }
 
-  virtual void enterValueAtom(Grammar::ValueAtomContext * /*ctx*/) override { }
-  virtual void exitValueAtom(Grammar::ValueAtomContext * /*ctx*/) override { }
-
   virtual void enterValuePostfix(Grammar::ValuePostfixContext * /*ctx*/) override { }
   virtual void exitValuePostfix(Grammar::ValuePostfixContext * /*ctx*/) override { }
 
   virtual void enterArgumentList(Grammar::ArgumentListContext * /*ctx*/) override { }
   virtual void exitArgumentList(Grammar::ArgumentListContext * /*ctx*/) override { }
+
+  virtual void enterValueAtom(Grammar::ValueAtomContext * /*ctx*/) override { }
+  virtual void exitValueAtom(Grammar::ValueAtomContext * /*ctx*/) override { }
 
 
   virtual void enterEveryRule(antlr4::ParserRuleContext * /*ctx*/) override { }

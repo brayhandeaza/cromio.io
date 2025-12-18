@@ -71,8 +71,6 @@ public:
 
     virtual std::any visitVariableReAssignment(Grammar::VariableReAssignmentContext *context) = 0;
 
-    virtual std::any visitVariableAccessToMember(Grammar::VariableAccessToMemberContext *context) = 0;
-
     virtual std::any visitVariableDataType(Grammar::VariableDataTypeContext *context) = 0;
 
     virtual std::any visitArrays(Grammar::ArraysContext *context) = 0;
@@ -91,11 +89,11 @@ public:
 
     virtual std::any visitMemberExpression(Grammar::MemberExpressionContext *context) = 0;
 
-    virtual std::any visitValueAtom(Grammar::ValueAtomContext *context) = 0;
-
     virtual std::any visitValuePostfix(Grammar::ValuePostfixContext *context) = 0;
 
     virtual std::any visitArgumentList(Grammar::ArgumentListContext *context) = 0;
+
+    virtual std::any visitValueAtom(Grammar::ValueAtomContext *context) = 0;
 
 
 };
