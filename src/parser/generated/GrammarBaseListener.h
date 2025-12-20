@@ -82,6 +82,18 @@ public:
   virtual void enterIdentifierLiteral(Grammar::IdentifierLiteralContext * /*ctx*/) override { }
   virtual void exitIdentifierLiteral(Grammar::IdentifierLiteralContext * /*ctx*/) override { }
 
+  virtual void enterMemberExpression(Grammar::MemberExpressionContext * /*ctx*/) override { }
+  virtual void exitMemberExpression(Grammar::MemberExpressionContext * /*ctx*/) override { }
+
+  virtual void enterValuePostfix(Grammar::ValuePostfixContext * /*ctx*/) override { }
+  virtual void exitValuePostfix(Grammar::ValuePostfixContext * /*ctx*/) override { }
+
+  virtual void enterArgumentList(Grammar::ArgumentListContext * /*ctx*/) override { }
+  virtual void exitArgumentList(Grammar::ArgumentListContext * /*ctx*/) override { }
+
+  virtual void enterValueAtom(Grammar::ValueAtomContext * /*ctx*/) override { }
+  virtual void exitValueAtom(Grammar::ValueAtomContext * /*ctx*/) override { }
+
   virtual void enterVariables(Grammar::VariablesContext * /*ctx*/) override { }
   virtual void exitVariables(Grammar::VariablesContext * /*ctx*/) override { }
 
@@ -117,18 +129,6 @@ public:
 
   virtual void enterArrayDataType(Grammar::ArrayDataTypeContext * /*ctx*/) override { }
   virtual void exitArrayDataType(Grammar::ArrayDataTypeContext * /*ctx*/) override { }
-
-  virtual void enterMemberExpression(Grammar::MemberExpressionContext * /*ctx*/) override { }
-  virtual void exitMemberExpression(Grammar::MemberExpressionContext * /*ctx*/) override { }
-
-  virtual void enterValuePostfix(Grammar::ValuePostfixContext * /*ctx*/) override { }
-  virtual void exitValuePostfix(Grammar::ValuePostfixContext * /*ctx*/) override { }
-
-  virtual void enterArgumentList(Grammar::ArgumentListContext * /*ctx*/) override { }
-  virtual void exitArgumentList(Grammar::ArgumentListContext * /*ctx*/) override { }
-
-  virtual void enterValueAtom(Grammar::ValueAtomContext * /*ctx*/) override { }
-  virtual void exitValueAtom(Grammar::ValueAtomContext * /*ctx*/) override { }
 
 
   virtual void enterEveryRule(antlr4::ParserRuleContext * /*ctx*/) override { }

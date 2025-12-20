@@ -63,6 +63,14 @@ public:
 
     virtual std::any visitIdentifierLiteral(Grammar::IdentifierLiteralContext *context) = 0;
 
+    virtual std::any visitMemberExpression(Grammar::MemberExpressionContext *context) = 0;
+
+    virtual std::any visitValuePostfix(Grammar::ValuePostfixContext *context) = 0;
+
+    virtual std::any visitArgumentList(Grammar::ArgumentListContext *context) = 0;
+
+    virtual std::any visitValueAtom(Grammar::ValueAtomContext *context) = 0;
+
     virtual std::any visitVariables(Grammar::VariablesContext *context) = 0;
 
     virtual std::any visitVariableDeclaration(Grammar::VariableDeclarationContext *context) = 0;
@@ -86,14 +94,6 @@ public:
     virtual std::any visitArrayDeclarationTypeSize(Grammar::ArrayDeclarationTypeSizeContext *context) = 0;
 
     virtual std::any visitArrayDataType(Grammar::ArrayDataTypeContext *context) = 0;
-
-    virtual std::any visitMemberExpression(Grammar::MemberExpressionContext *context) = 0;
-
-    virtual std::any visitValuePostfix(Grammar::ValuePostfixContext *context) = 0;
-
-    virtual std::any visitArgumentList(Grammar::ArgumentListContext *context) = 0;
-
-    virtual std::any visitValueAtom(Grammar::ValueAtomContext *context) = 0;
 
 
 };

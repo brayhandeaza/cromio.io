@@ -80,6 +80,18 @@ public:
   virtual void enterIdentifierLiteral(Grammar::IdentifierLiteralContext *ctx) = 0;
   virtual void exitIdentifierLiteral(Grammar::IdentifierLiteralContext *ctx) = 0;
 
+  virtual void enterMemberExpression(Grammar::MemberExpressionContext *ctx) = 0;
+  virtual void exitMemberExpression(Grammar::MemberExpressionContext *ctx) = 0;
+
+  virtual void enterValuePostfix(Grammar::ValuePostfixContext *ctx) = 0;
+  virtual void exitValuePostfix(Grammar::ValuePostfixContext *ctx) = 0;
+
+  virtual void enterArgumentList(Grammar::ArgumentListContext *ctx) = 0;
+  virtual void exitArgumentList(Grammar::ArgumentListContext *ctx) = 0;
+
+  virtual void enterValueAtom(Grammar::ValueAtomContext *ctx) = 0;
+  virtual void exitValueAtom(Grammar::ValueAtomContext *ctx) = 0;
+
   virtual void enterVariables(Grammar::VariablesContext *ctx) = 0;
   virtual void exitVariables(Grammar::VariablesContext *ctx) = 0;
 
@@ -115,18 +127,6 @@ public:
 
   virtual void enterArrayDataType(Grammar::ArrayDataTypeContext *ctx) = 0;
   virtual void exitArrayDataType(Grammar::ArrayDataTypeContext *ctx) = 0;
-
-  virtual void enterMemberExpression(Grammar::MemberExpressionContext *ctx) = 0;
-  virtual void exitMemberExpression(Grammar::MemberExpressionContext *ctx) = 0;
-
-  virtual void enterValuePostfix(Grammar::ValuePostfixContext *ctx) = 0;
-  virtual void exitValuePostfix(Grammar::ValuePostfixContext *ctx) = 0;
-
-  virtual void enterArgumentList(Grammar::ArgumentListContext *ctx) = 0;
-  virtual void exitArgumentList(Grammar::ArgumentListContext *ctx) = 0;
-
-  virtual void enterValueAtom(Grammar::ValueAtomContext *ctx) = 0;
-  virtual void exitValueAtom(Grammar::ValueAtomContext *ctx) = 0;
 
 
 };
