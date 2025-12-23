@@ -79,6 +79,8 @@ public:
 
     virtual std::any visitVariableReAssignment(Grammar::VariableReAssignmentContext *context) = 0;
 
+    virtual std::any visitVariableValue(Grammar::VariableValueContext *context) = 0;
+
     virtual std::any visitVariableDataType(Grammar::VariableDataTypeContext *context) = 0;
 
     virtual std::any visitArrays(Grammar::ArraysContext *context) = 0;

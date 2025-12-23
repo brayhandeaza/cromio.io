@@ -135,6 +135,10 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual std::any visitVariableValue(Grammar::VariableValueContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
   virtual std::any visitVariableDataType(Grammar::VariableDataTypeContext *ctx) override {
     return visitChildren(ctx);
   }
