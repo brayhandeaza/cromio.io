@@ -282,6 +282,8 @@ public:
     virtual size_t getRuleIndex() const override;
     std::vector<StringLiteralsContext *> stringLiterals();
     StringLiteralsContext* stringLiterals(size_t i);
+    std::vector<IdentifierLiteralContext *> identifierLiteral();
+    IdentifierLiteralContext* identifierLiteral(size_t i);
     std::vector<antlr4::tree::TerminalNode *> PLUS();
     antlr4::tree::TerminalNode* PLUS(size_t i);
 
