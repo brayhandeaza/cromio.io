@@ -106,9 +106,6 @@ public:
   virtual void enterVariableReAssignment(Grammar::VariableReAssignmentContext * /*ctx*/) override { }
   virtual void exitVariableReAssignment(Grammar::VariableReAssignmentContext * /*ctx*/) override { }
 
-  virtual void enterVariableValue(Grammar::VariableValueContext * /*ctx*/) override { }
-  virtual void exitVariableValue(Grammar::VariableValueContext * /*ctx*/) override { }
-
   virtual void enterVariableDataType(Grammar::VariableDataTypeContext * /*ctx*/) override { }
   virtual void exitVariableDataType(Grammar::VariableDataTypeContext * /*ctx*/) override { }
 

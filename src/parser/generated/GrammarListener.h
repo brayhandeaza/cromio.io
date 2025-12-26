@@ -104,9 +104,6 @@ public:
   virtual void enterVariableReAssignment(Grammar::VariableReAssignmentContext *ctx) = 0;
   virtual void exitVariableReAssignment(Grammar::VariableReAssignmentContext *ctx) = 0;
 
-  virtual void enterVariableValue(Grammar::VariableValueContext *ctx) = 0;
-  virtual void exitVariableValue(Grammar::VariableValueContext *ctx) = 0;
-
   virtual void enterVariableDataType(Grammar::VariableDataTypeContext *ctx) = 0;
   virtual void exitVariableDataType(Grammar::VariableDataTypeContext *ctx) = 0;
 

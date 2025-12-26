@@ -36,9 +36,9 @@ public:
     RuleMemberExpression = 22, RuleValuePostfix = 23, RuleArgumentList = 24, 
     RuleValueAtom = 25, RuleVariables = 26, RuleVariableDeclaration = 27, 
     RuleVariableDeclarationWithoutAssignment = 28, RuleVariableReAssignment = 29, 
-    RuleVariableValue = 30, RuleVariableDataType = 31, RuleArrays = 32, 
-    RuleArrayDeclaration = 33, RuleArrayItems = 34, RuleArrayReAssignment = 35, 
-    RuleArrayType = 36, RuleArrayDeclarationTypeSize = 37, RuleArrayDataType = 38
+    RuleVariableDataType = 30, RuleArrays = 31, RuleArrayDeclaration = 32, 
+    RuleArrayItems = 33, RuleArrayReAssignment = 34, RuleArrayType = 35, 
+    RuleArrayDeclarationTypeSize = 36, RuleArrayDataType = 37
   };
 
   explicit Grammar(antlr4::TokenStream *input);
@@ -93,7 +93,6 @@ public:
   class VariableDeclarationContext;
   class VariableDeclarationWithoutAssignmentContext;
   class VariableReAssignmentContext;
-  class VariableValueContext;
   class VariableDataTypeContext;
   class ArraysContext;
   class ArrayDeclarationContext;
@@ -263,8 +262,8 @@ public:
     BooleanLiteralContext *booleanLiteral();
     NumberLiteralsContext *numberLiterals();
     IdentifierLiteralContext *identifierLiteral();
-    ConcatenationExpressionContext *concatenationExpression();
     BinaryExpressionContext *binaryExpression();
+    ConcatenationExpressionContext *concatenationExpression();
     MemberExpressionContext *memberExpression();
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
@@ -597,7 +596,7 @@ public:
     VariableDataTypeContext *variableDataType();
     antlr4::tree::TerminalNode *IDENTIFIER();
     antlr4::tree::TerminalNode *EQ();
-    VariableValueContext *variableValue();
+    ExpressionContext *expression();
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
@@ -630,7 +629,7 @@ public:
     virtual size_t getRuleIndex() const override;
     antlr4::tree::TerminalNode *IDENTIFIER();
     antlr4::tree::TerminalNode *EQ();
-    VariableValueContext *variableValue();
+    ExpressionContext *expression();
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
@@ -640,26 +639,6 @@ public:
   };
 
   VariableReAssignmentContext* variableReAssignment();
-
-  class  VariableValueContext : public antlr4::ParserRuleContext {
-  public:
-    VariableValueContext(antlr4::ParserRuleContext *parent, size_t invokingState);
-    virtual size_t getRuleIndex() const override;
-    IdentifierLiteralContext *identifierLiteral();
-    NumberLiteralsContext *numberLiterals();
-    BooleanLiteralContext *booleanLiteral();
-    ConcatenationExpressionContext *concatenationExpression();
-    BinaryExpressionContext *binaryExpression();
-    MemberExpressionContext *memberExpression();
-
-    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
-    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
-
-    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
-   
-  };
-
-  VariableValueContext* variableValue();
 
   class  VariableDataTypeContext : public antlr4::ParserRuleContext {
   public:
