@@ -115,6 +115,12 @@ public:
   virtual void enterArrayDeclaration(Grammar::ArrayDeclarationContext * /*ctx*/) override { }
   virtual void exitArrayDeclaration(Grammar::ArrayDeclarationContext * /*ctx*/) override { }
 
+  virtual void enterArrayValues(Grammar::ArrayValuesContext * /*ctx*/) override { }
+  virtual void exitArrayValues(Grammar::ArrayValuesContext * /*ctx*/) override { }
+
+  virtual void enterArrayItemsWithBrackets(Grammar::ArrayItemsWithBracketsContext * /*ctx*/) override { }
+  virtual void exitArrayItemsWithBrackets(Grammar::ArrayItemsWithBracketsContext * /*ctx*/) override { }
+
   virtual void enterArrayItems(Grammar::ArrayItemsContext * /*ctx*/) override { }
   virtual void exitArrayItems(Grammar::ArrayItemsContext * /*ctx*/) override { }
 

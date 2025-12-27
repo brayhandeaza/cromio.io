@@ -113,6 +113,12 @@ public:
   virtual void enterArrayDeclaration(Grammar::ArrayDeclarationContext *ctx) = 0;
   virtual void exitArrayDeclaration(Grammar::ArrayDeclarationContext *ctx) = 0;
 
+  virtual void enterArrayValues(Grammar::ArrayValuesContext *ctx) = 0;
+  virtual void exitArrayValues(Grammar::ArrayValuesContext *ctx) = 0;
+
+  virtual void enterArrayItemsWithBrackets(Grammar::ArrayItemsWithBracketsContext *ctx) = 0;
+  virtual void exitArrayItemsWithBrackets(Grammar::ArrayItemsWithBracketsContext *ctx) = 0;
+
   virtual void enterArrayItems(Grammar::ArrayItemsContext *ctx) = 0;
   virtual void exitArrayItems(Grammar::ArrayItemsContext *ctx) = 0;
 

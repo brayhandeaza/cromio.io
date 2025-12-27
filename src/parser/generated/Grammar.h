@@ -37,8 +37,9 @@ public:
     RuleValueAtom = 25, RuleVariables = 26, RuleVariableDeclaration = 27, 
     RuleVariableDeclarationWithoutAssignment = 28, RuleVariableReAssignment = 29, 
     RuleVariableDataType = 30, RuleArrays = 31, RuleArrayDeclaration = 32, 
-    RuleArrayItems = 33, RuleArrayReAssignment = 34, RuleArrayType = 35, 
-    RuleArrayDeclarationTypeSize = 36, RuleArrayDataType = 37
+    RuleArrayValues = 33, RuleArrayItemsWithBrackets = 34, RuleArrayItems = 35, 
+    RuleArrayReAssignment = 36, RuleArrayType = 37, RuleArrayDeclarationTypeSize = 38, 
+    RuleArrayDataType = 39
   };
 
   explicit Grammar(antlr4::TokenStream *input);
@@ -96,6 +97,8 @@ public:
   class VariableDataTypeContext;
   class ArraysContext;
   class ArrayDeclarationContext;
+  class ArrayValuesContext;
+  class ArrayItemsWithBracketsContext;
   class ArrayItemsContext;
   class ArrayReAssignmentContext;
   class ArrayTypeContext;
@@ -684,10 +687,43 @@ public:
     ArrayTypeContext *arrayType();
     antlr4::tree::TerminalNode *IDENTIFIER();
     antlr4::tree::TerminalNode *EQ();
+    ArrayValuesContext *arrayValues();
+
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  ArrayDeclarationContext* arrayDeclaration();
+
+  class  ArrayValuesContext : public antlr4::ParserRuleContext {
+  public:
+    ArrayValuesContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    ArrayItemsWithBracketsContext *arrayItemsWithBrackets();
+    std::vector<ExpressionContext *> expression();
+    ExpressionContext* expression(size_t i);
+    MemberExpressionContext *memberExpression();
+
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  ArrayValuesContext* arrayValues();
+
+  class  ArrayItemsWithBracketsContext : public antlr4::ParserRuleContext {
+  public:
+    ArrayItemsWithBracketsContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
     antlr4::tree::TerminalNode *LBRACKET();
     antlr4::tree::TerminalNode *RBRACKET();
-    std::vector<ArrayItemsContext *> arrayItems();
-    ArrayItemsContext* arrayItems(size_t i);
+    std::vector<ExpressionContext *> expression();
+    ExpressionContext* expression(size_t i);
     std::vector<antlr4::tree::TerminalNode *> COMMA();
     antlr4::tree::TerminalNode* COMMA(size_t i);
 
@@ -698,7 +734,7 @@ public:
    
   };
 
-  ArrayDeclarationContext* arrayDeclaration();
+  ArrayItemsWithBracketsContext* arrayItemsWithBrackets();
 
   class  ArrayItemsContext : public antlr4::ParserRuleContext {
   public:

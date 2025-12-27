@@ -147,6 +147,14 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual std::any visitArrayValues(Grammar::ArrayValuesContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitArrayItemsWithBrackets(Grammar::ArrayItemsWithBracketsContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
   virtual std::any visitArrayItems(Grammar::ArrayItemsContext *ctx) override {
     return visitChildren(ctx);
   }

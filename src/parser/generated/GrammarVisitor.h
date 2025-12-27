@@ -85,6 +85,10 @@ public:
 
     virtual std::any visitArrayDeclaration(Grammar::ArrayDeclarationContext *context) = 0;
 
+    virtual std::any visitArrayValues(Grammar::ArrayValuesContext *context) = 0;
+
+    virtual std::any visitArrayItemsWithBrackets(Grammar::ArrayItemsWithBracketsContext *context) = 0;
+
     virtual std::any visitArrayItems(Grammar::ArrayItemsContext *context) = 0;
 
     virtual std::any visitArrayReAssignment(Grammar::ArrayReAssignmentContext *context) = 0;
