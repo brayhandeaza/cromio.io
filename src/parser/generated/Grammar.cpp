@@ -68,7 +68,7 @@ void grammarParserInitialize() {
       "", "'regex'", "'dict'", "'bool'", "'str'", "", "", "", "", "", "", 
       "", "", "", "", "'%'", "'='", "", "", "", "", "'['", "']'", "'.'", 
       "','", "'&'", "'<'", "'>'", "':'", "", "", "", "", "", "", "", "", 
-      "", "'f\"'", "", "", "'\"'"
+      "", "", "", "", "'\"'"
     },
     std::vector<std::string>{
       "", "REGEX_TYPE", "DICT_KEYWORD", "BOOLEAN_TYPES", "STRING_TYPES", 
