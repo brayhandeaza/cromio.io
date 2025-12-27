@@ -19,9 +19,9 @@ public:
     LBRACKET = 21, RBRACKET = 22, DOT = 23, COMMA = 24, AMPERSAND = 25, 
     LESSTHAN = 26, GREATERTHAN = 27, COLON = 28, NEWLINE = 29, NEWLINE_VISIBLE = 30, 
     WS_VISIBLE = 31, COMMENT = 32, BLOCK_COMMENT = 33, WS = 34, FLOAT = 35, 
-    INTEGER = 36, STRING = 37, REGEX_START = 38, REGEX_CONTENT = 39, REGEX_END = 40, 
-    FORMATTED_STRING_START = 41, FORMATTED_STRING_TEXT = 42, LBRACE_IN_FSTRING = 43, 
-    FORMATTED_STRING_END = 44, RBRACE_IN_FSTRING = 45, EXPR_WS = 46
+    INTEGER = 36, STRING = 37, FORMATTED_STRING_START = 38, FORMATTED_STRING_TEXT = 39, 
+    LBRACE_IN_FSTRING = 40, FORMATTED_STRING_END = 41, RBRACE_IN_FSTRING = 42, 
+    EXPR_WS = 43
   };
 
   enum {
@@ -31,14 +31,14 @@ public:
     RuleDictionaryDataType = 7, RuleExpression = 8, RuleConcatenationExpression = 9, 
     RuleBinaryExpression = 10, RuleLiteral = 11, RuleNumberLiterals = 12, 
     RuleStringLiterals = 13, RuleFormattedString = 14, RuleFormattedStringContent = 15, 
-    RuleStringLiteral = 16, RuleRegexLiteral = 17, RuleIntegerLiteral = 18, 
-    RuleFloatLiteral = 19, RuleBooleanLiteral = 20, RuleNoneLiteral = 21, 
-    RuleIdentifierLiteral = 22, RuleMemberExpression = 23, RuleValuePostfix = 24, 
-    RuleArgumentList = 25, RuleValueAtom = 26, RuleVariables = 27, RuleVariableDeclaration = 28, 
-    RuleVariableDeclarationWithoutAssignment = 29, RuleVariableReAssignment = 30, 
-    RuleVariableDataType = 31, RuleArrays = 32, RuleArrayDeclaration = 33, 
-    RuleArrayItems = 34, RuleArrayReAssignment = 35, RuleArrayType = 36, 
-    RuleArrayDeclarationTypeSize = 37, RuleArrayDataType = 38
+    RuleStringLiteral = 16, RuleIntegerLiteral = 17, RuleFloatLiteral = 18, 
+    RuleBooleanLiteral = 19, RuleNoneLiteral = 20, RuleIdentifierLiteral = 21, 
+    RuleMemberExpression = 22, RuleValuePostfix = 23, RuleArgumentList = 24, 
+    RuleValueAtom = 25, RuleVariables = 26, RuleVariableDeclaration = 27, 
+    RuleVariableDeclarationWithoutAssignment = 28, RuleVariableReAssignment = 29, 
+    RuleVariableDataType = 30, RuleArrays = 31, RuleArrayDeclaration = 32, 
+    RuleArrayItems = 33, RuleArrayReAssignment = 34, RuleArrayType = 35, 
+    RuleArrayDeclarationTypeSize = 36, RuleArrayDataType = 37
   };
 
   explicit Grammar(antlr4::TokenStream *input);
@@ -80,7 +80,6 @@ public:
   class FormattedStringContext;
   class FormattedStringContentContext;
   class StringLiteralContext;
-  class RegexLiteralContext;
   class IntegerLiteralContext;
   class FloatLiteralContext;
   class BooleanLiteralContext;
@@ -361,7 +360,6 @@ public:
     virtual size_t getRuleIndex() const override;
     StringLiteralContext *stringLiteral();
     FormattedStringContext *formattedString();
-    RegexLiteralContext *regexLiteral();
     IdentifierLiteralContext *identifierLiteral();
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
@@ -423,23 +421,6 @@ public:
   };
 
   StringLiteralContext* stringLiteral();
-
-  class  RegexLiteralContext : public antlr4::ParserRuleContext {
-  public:
-    RegexLiteralContext(antlr4::ParserRuleContext *parent, size_t invokingState);
-    virtual size_t getRuleIndex() const override;
-    antlr4::tree::TerminalNode *REGEX_START();
-    antlr4::tree::TerminalNode *REGEX_CONTENT();
-    antlr4::tree::TerminalNode *REGEX_END();
-
-    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
-    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
-
-    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
-   
-  };
-
-  RegexLiteralContext* regexLiteral();
 
   class  IntegerLiteralContext : public antlr4::ParserRuleContext {
   public:
