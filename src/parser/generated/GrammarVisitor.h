@@ -53,6 +53,8 @@ public:
 
     virtual std::any visitStringLiteral(Grammar::StringLiteralContext *context) = 0;
 
+    virtual std::any visitRegexLiteral(Grammar::RegexLiteralContext *context) = 0;
+
     virtual std::any visitIntegerLiteral(Grammar::IntegerLiteralContext *context) = 0;
 
     virtual std::any visitFloatLiteral(Grammar::FloatLiteralContext *context) = 0;

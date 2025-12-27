@@ -19,9 +19,9 @@ public:
     RBRACKET = 21, DOT = 22, COMMA = 23, AMPERSAND = 24, LESSTHAN = 25, 
     GREATERTHAN = 26, COLON = 27, NEWLINE = 28, NEWLINE_VISIBLE = 29, WS_VISIBLE = 30, 
     COMMENT = 31, BLOCK_COMMENT = 32, WS = 33, FLOAT = 34, INTEGER = 35, 
-    STRING = 36, FORMATTED_STRING_START = 37, FORMATTED_STRING_TEXT = 38, 
-    LBRACE_IN_FSTRING = 39, FORMATTED_STRING_END = 40, RBRACE_IN_FSTRING = 41, 
-    EXPR_WS = 42
+    STRING = 36, REGEX_START = 37, REGEX_CONTENT = 38, REGEX_END = 39, FORMATTED_STRING_START = 40, 
+    FORMATTED_STRING_TEXT = 41, LBRACE_IN_FSTRING = 42, FORMATTED_STRING_END = 43, 
+    RBRACE_IN_FSTRING = 44, EXPR_WS = 45
   };
 
   enum {
@@ -31,14 +31,14 @@ public:
     RuleDictionaryDataType = 7, RuleExpression = 8, RuleConcatenationExpression = 9, 
     RuleBinaryExpression = 10, RuleLiteral = 11, RuleNumberLiterals = 12, 
     RuleStringLiterals = 13, RuleFormattedString = 14, RuleFormattedStringContent = 15, 
-    RuleStringLiteral = 16, RuleIntegerLiteral = 17, RuleFloatLiteral = 18, 
-    RuleBooleanLiteral = 19, RuleNoneLiteral = 20, RuleIdentifierLiteral = 21, 
-    RuleMemberExpression = 22, RuleValuePostfix = 23, RuleArgumentList = 24, 
-    RuleValueAtom = 25, RuleVariables = 26, RuleVariableDeclaration = 27, 
-    RuleVariableDeclarationWithoutAssignment = 28, RuleVariableReAssignment = 29, 
-    RuleVariableDataType = 30, RuleArrays = 31, RuleArrayDeclaration = 32, 
-    RuleArrayItems = 33, RuleArrayReAssignment = 34, RuleArrayType = 35, 
-    RuleArrayDeclarationTypeSize = 36, RuleArrayDataType = 37
+    RuleStringLiteral = 16, RuleRegexLiteral = 17, RuleIntegerLiteral = 18, 
+    RuleFloatLiteral = 19, RuleBooleanLiteral = 20, RuleNoneLiteral = 21, 
+    RuleIdentifierLiteral = 22, RuleMemberExpression = 23, RuleValuePostfix = 24, 
+    RuleArgumentList = 25, RuleValueAtom = 26, RuleVariables = 27, RuleVariableDeclaration = 28, 
+    RuleVariableDeclarationWithoutAssignment = 29, RuleVariableReAssignment = 30, 
+    RuleVariableDataType = 31, RuleArrays = 32, RuleArrayDeclaration = 33, 
+    RuleArrayItems = 34, RuleArrayReAssignment = 35, RuleArrayType = 36, 
+    RuleArrayDeclarationTypeSize = 37, RuleArrayDataType = 38
   };
 
   explicit Grammar(antlr4::TokenStream *input);
@@ -80,6 +80,7 @@ public:
   class FormattedStringContext;
   class FormattedStringContentContext;
   class StringLiteralContext;
+  class RegexLiteralContext;
   class IntegerLiteralContext;
   class FloatLiteralContext;
   class BooleanLiteralContext;
@@ -261,9 +262,9 @@ public:
     virtual size_t getRuleIndex() const override;
     BooleanLiteralContext *booleanLiteral();
     NumberLiteralsContext *numberLiterals();
-    IdentifierLiteralContext *identifierLiteral();
     BinaryExpressionContext *binaryExpression();
     ConcatenationExpressionContext *concatenationExpression();
+    IdentifierLiteralContext *identifierLiteral();
     MemberExpressionContext *memberExpression();
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
@@ -360,6 +361,7 @@ public:
     virtual size_t getRuleIndex() const override;
     StringLiteralContext *stringLiteral();
     FormattedStringContext *formattedString();
+    RegexLiteralContext *regexLiteral();
     IdentifierLiteralContext *identifierLiteral();
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
@@ -421,6 +423,23 @@ public:
   };
 
   StringLiteralContext* stringLiteral();
+
+  class  RegexLiteralContext : public antlr4::ParserRuleContext {
+  public:
+    RegexLiteralContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    antlr4::tree::TerminalNode *REGEX_START();
+    antlr4::tree::TerminalNode *REGEX_CONTENT();
+    antlr4::tree::TerminalNode *REGEX_END();
+
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  RegexLiteralContext* regexLiteral();
 
   class  IntegerLiteralContext : public antlr4::ParserRuleContext {
   public:

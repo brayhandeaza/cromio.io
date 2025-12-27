@@ -83,6 +83,10 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual std::any visitRegexLiteral(Grammar::RegexLiteralContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
   virtual std::any visitIntegerLiteral(Grammar::IntegerLiteralContext *ctx) override {
     return visitChildren(ctx);
   }

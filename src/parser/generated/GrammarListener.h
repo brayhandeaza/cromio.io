@@ -65,6 +65,9 @@ public:
   virtual void enterStringLiteral(Grammar::StringLiteralContext *ctx) = 0;
   virtual void exitStringLiteral(Grammar::StringLiteralContext *ctx) = 0;
 
+  virtual void enterRegexLiteral(Grammar::RegexLiteralContext *ctx) = 0;
+  virtual void exitRegexLiteral(Grammar::RegexLiteralContext *ctx) = 0;
+
   virtual void enterIntegerLiteral(Grammar::IntegerLiteralContext *ctx) = 0;
   virtual void exitIntegerLiteral(Grammar::IntegerLiteralContext *ctx) = 0;
 

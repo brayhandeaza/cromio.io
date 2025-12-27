@@ -67,6 +67,9 @@ public:
   virtual void enterStringLiteral(Grammar::StringLiteralContext * /*ctx*/) override { }
   virtual void exitStringLiteral(Grammar::StringLiteralContext * /*ctx*/) override { }
 
+  virtual void enterRegexLiteral(Grammar::RegexLiteralContext * /*ctx*/) override { }
+  virtual void exitRegexLiteral(Grammar::RegexLiteralContext * /*ctx*/) override { }
+
   virtual void enterIntegerLiteral(Grammar::IntegerLiteralContext * /*ctx*/) override { }
   virtual void exitIntegerLiteral(Grammar::IntegerLiteralContext * /*ctx*/) override { }
 
