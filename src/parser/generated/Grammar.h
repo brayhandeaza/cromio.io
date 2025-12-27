@@ -20,8 +20,8 @@ public:
     LESSTHAN = 26, GREATERTHAN = 27, COLON = 28, NEWLINE = 29, NEWLINE_VISIBLE = 30, 
     WS_VISIBLE = 31, COMMENT = 32, BLOCK_COMMENT = 33, WS = 34, FLOAT = 35, 
     INTEGER = 36, STRING = 37, FORMATTED_STRING_START = 38, FORMATTED_STRING_TEXT = 39, 
-    LBRACE_IN_FSTRING = 40, FORMATTED_STRING_END = 41, RBRACE_IN_FSTRING = 42, 
-    EXPR_WS = 43
+    REGEX_LITERAL = 40, LBRACE_IN_FSTRING = 41, FORMATTED_STRING_END = 42, 
+    RBRACE_IN_FSTRING = 43, EXPR_WS = 44
   };
 
   enum {
@@ -393,6 +393,7 @@ public:
   public:
     FormattedStringContentContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
+    antlr4::tree::TerminalNode *REGEX_LITERAL();
     antlr4::tree::TerminalNode *FORMATTED_STRING_TEXT();
     antlr4::tree::TerminalNode *LBRACE_IN_FSTRING();
     ExpressionContext *expression();
